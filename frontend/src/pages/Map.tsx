@@ -1,11 +1,21 @@
 import React from "react";
-import { Typography } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 
 const Map: React.FC = () => {
   return (
-    <Typography variant="h1" align="center" sx={{ marginTop: "20px" }}>
-      Map Page
-    </Typography>
+    <Container>
+      <Typography variant="h1" align="center" sx={{ marginTop: "20px" }}>
+        Map Page
+      </Typography>
+      <Box
+        component="img"
+        src="../images/hehe.jpeg"
+        sx={{
+          width: "300px",
+          height: "auto",
+        }}
+      />
+    </Container>
   );
 };
 
