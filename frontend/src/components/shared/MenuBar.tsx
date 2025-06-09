@@ -57,6 +57,15 @@ const MenuBar: React.FC = () => {
             <Button
               color="inherit"
               onClick={() => {
+                navigate("/map");
+              }}
+            >
+              Map
+            </Button>
+
+            <Button
+              color="inherit"
+              onClick={() => {
                 navigate("/report");
               }}
             >

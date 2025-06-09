@@ -18,6 +18,7 @@ import EditCharacter from "./pages/EditCharacter";
 import CreateCampaign from "./pages/CreateCampaign";
 import EditCampaign from "./pages/EditCampaign";
 import Report from "./pages/Report";
+import Map from "./pages/Map";
 
 const App: React.FC = () => {
   return (
@@ -40,6 +41,7 @@ const App: React.FC = () => {
                     <Route element={<ProtectedRoute />}>
                       <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/report" element={<Report />} />
+                      <Route path="/map" element={<Map />} />
                       <Route
                         path="/createcharacter"
                         element={<CreateCharacter />}
