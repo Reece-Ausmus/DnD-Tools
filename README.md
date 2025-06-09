@@ -6,6 +6,7 @@
 
 ```
 cd backend
+pip install -r requirements.txt
 python run.py
 ```
 
@@ -13,6 +14,6 @@ python run.py
 
 ```
 cd frontend
-npm install -r requirements.txt
+npm install
 npm run dev
 ```
