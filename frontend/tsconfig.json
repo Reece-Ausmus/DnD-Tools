@@ -7,7 +7,8 @@
     "strict": true,
     "jsx": "react-jsx",
     "moduleResolution": "node",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "target": "es2024"
   },
   "include": ["src"],
   "exclude": ["node_modules"]
