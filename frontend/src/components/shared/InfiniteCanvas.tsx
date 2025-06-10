@@ -19,6 +19,11 @@ const InfiniteCanvas: React.FC = () => {
     lastX: 0,
     lastY: 0,
   });
+  const markers = useRef<Set<string>>(new Set());
+  const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Drag marker state
+  const draggingMarker = useRef<string | null>(null);
+  const isOverGrid = useRef<boolean>(false);
 
   const draw = (
     ctx: CanvasRenderingContext2D,
@@ -52,6 +57,14 @@ const InfiniteCanvas: React.FC = () => {
       }
     }
 
+    ctx.fillStyle = "red";
+    markers.current.forEach((key) => {
+      const [x, y] = key.split(",").map(Number);
+      ctx.beginPath();
+      ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
     ctx.restore();
   };
 
@@ -66,6 +79,7 @@ const InfiniteCanvas: React.FC = () => {
     if (!ctx) return;
 
     const s = state.current;
+    const gridSize = 50;
 
     const resize = () => {
       canvas.width = canvas.parentElement?.clientWidth || 800;
@@ -76,12 +90,46 @@ const InfiniteCanvas: React.FC = () => {
     resize();
 
     const onMouseDown = (e: MouseEvent) => {
-      s.isDragging = true;
-      s.lastX = e.clientX;
-      s.lastY = e.clientY;
+      const gridX =
+        Math.floor(
+          (e.clientX - canvas.getBoundingClientRect().left - s.offsetX) /
+            s.scale /
+            gridSize
+        ) * gridSize;
+      const gridY =
+        Math.floor(
+          (e.clientY - canvas.getBoundingClientRect().top - s.offsetY) /
+            s.scale /
+            gridSize
+        ) * gridSize;
+      const key = `${gridX},${gridY}`;
+      if (markers.current.has(key)) {
+        draggingMarker.current = key;
+      } else {
+        s.isDragging = true;
+        s.lastX = e.clientX;
+        s.lastY = e.clientY;
+        dragStart.current = { x: e.clientX, y: e.clientY };
+      }
     };
 
     const onMouseMove = (e: MouseEvent) => {
+      if (draggingMarker.current) {
+        const mouseX = e.clientX - canvas.getBoundingClientRect().left;
+        const mouseY = e.clientY - canvas.getBoundingClientRect().top;
+        const x = (mouseX - s.offsetX) / s.scale;
+        const y = (mouseY - s.offsetY) / s.scale;
+        const gridX = Math.floor(x / gridSize) * gridSize;
+        const gridY = Math.floor(y / gridSize) * gridSize;
+        const newKey = `${gridX},${gridY}`;
+        if (newKey !== draggingMarker.current) {
+          markers.current.delete(draggingMarker.current);
+          markers.current.add(newKey);
+          draggingMarker.current = newKey;
+          draw(ctx, s);
+        }
+        return;
+      }
       if (!s.isDragging) return;
       const dx = e.clientX - s.lastX;
       const dy = e.clientY - s.lastY;
@@ -92,8 +140,30 @@ const InfiniteCanvas: React.FC = () => {
       draw(ctx, s);
     };
 
-    const onMouseUp = () => {
+    const onMouseUp = (e: MouseEvent) => {
+      const moved =
+        Math.abs(e.clientX - dragStart.current.x) > 2 ||
+        Math.abs(e.clientY - dragStart.current.y) > 2;
+
+      if (!draggingMarker.current && !moved) {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const x = (mouseX - s.offsetX) / s.scale;
+        const y = (mouseY - s.offsetY) / s.scale;
+        const gridX = Math.floor(x / gridSize) * gridSize;
+        const gridY = Math.floor(y / gridSize) * gridSize;
+        const key = `${gridX},${gridY}`;
+        if (markers.current.has(key)) {
+          markers.current.delete(key);
+        } else {
+          markers.current.add(key);
+        }
+      }
+
+      draggingMarker.current = null;
       s.isDragging = false;
+      draw(ctx, s);
     };
 
     const onWheel = (e: WheelEvent) => {
