@@ -9,6 +9,7 @@ import {
   FormControlLabel,
   FormGroup,
   FormLabel,
+  Grid,
   Input,
   InputLabel,
   MenuItem,
@@ -27,7 +28,6 @@ import {
   Typography,
 } from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
-import Grid from "@mui/material/Grid2";
 import { DatePicker, TimeField } from "@mui/x-date-pickers";
 import React, { useEffect, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";

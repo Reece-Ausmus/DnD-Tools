@@ -1,8 +1,7 @@
 import Welcome from "@/components/dashboard/Welcome";
 import Characters from "@/components/dashboard/Characters";
 import Campaigns from "@/components/dashboard/Campaigns";
-import { Box } from "@mui/material";
-import Grid from "@mui/material/Grid2";
+import { Box, Grid } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import Loading from "@/components/shared/Loading";
 
