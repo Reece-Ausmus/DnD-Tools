@@ -2,8 +2,6 @@ import React from "react";
 import { Box, Container, Typography, Grid } from "@mui/material";
 import InfiniteCanvas from "@/components/shared/InfiniteCanvas";
 
-const CELL_SIZE = 50;
-
 const Map: React.FC = () => {
   return (
     <Container>
