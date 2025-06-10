@@ -19,7 +19,7 @@ const InfiniteCanvas: React.FC = () => {
     lastX: 0,
     lastY: 0,
   });
-  const markers = useRef<Set<string>>(new Set());
+  const markers = useRef<Map<string, { id: string; color: string }>>(new Map());
   const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   // Drag marker state
   const draggingMarker = useRef<string | null>(null);
@@ -57,9 +57,9 @@ const InfiniteCanvas: React.FC = () => {
       }
     }
 
-    ctx.fillStyle = "red";
-    markers.current.forEach((key) => {
+    markers.current.forEach((marker, key) => {
       const [x, y] = key.split(",").map(Number);
+      ctx.fillStyle = marker.color;
       ctx.beginPath();
       ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 4, 0, Math.PI * 2);
       ctx.fill();
@@ -122,11 +122,14 @@ const InfiniteCanvas: React.FC = () => {
         const gridX = Math.floor(x / gridSize) * gridSize;
         const gridY = Math.floor(y / gridSize) * gridSize;
         const newKey = `${gridX},${gridY}`;
-        if (newKey !== draggingMarker.current) {
-          markers.current.delete(draggingMarker.current);
-          markers.current.add(newKey);
-          draggingMarker.current = newKey;
-          draw(ctx, s);
+        if (newKey !== draggingMarker.current && !markers.current.has(newKey)) {
+          const markerData = markers.current.get(draggingMarker.current);
+          if (markerData) {
+            markers.current.delete(draggingMarker.current);
+            markers.current.set(newKey, markerData);
+            draggingMarker.current = newKey;
+            draw(ctx, s);
+          }
         }
         return;
       }
@@ -157,7 +160,13 @@ const InfiniteCanvas: React.FC = () => {
         if (markers.current.has(key)) {
           markers.current.delete(key);
         } else {
-          markers.current.add(key);
+          const randomColor = `hsl(${Math.floor(
+            Math.random() * 360
+          )}, 70%, 50%)`;
+          markers.current.set(key, {
+            id: crypto.randomUUID(),
+            color: randomColor,
+          });
         }
       }
 
