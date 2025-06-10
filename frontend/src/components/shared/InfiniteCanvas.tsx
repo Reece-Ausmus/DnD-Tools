@@ -56,6 +56,9 @@ const InfiniteCanvas: React.FC = () => {
   };
 
   useEffect(() => {
+    const MIN_SCALE = 0.5;
+    const MAX_SCALE = 5;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -101,10 +104,14 @@ const InfiniteCanvas: React.FC = () => {
       const { scale, offsetX, offsetY } = s;
 
       const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      const newScale = scale * zoomFactor;
+      const newScale = Math.min(
+        MAX_SCALE,
+        Math.max(MIN_SCALE, scale * zoomFactor)
+      );
+      const actualZoomFactor = newScale / scale;
 
-      s.offsetX = mouseX - (mouseX - offsetX) * zoomFactor;
-      s.offsetY = mouseY - (mouseY - offsetY) * zoomFactor;
+      s.offsetX = mouseX - (mouseX - offsetX) * actualZoomFactor;
+      s.offsetY = mouseY - (mouseY - offsetY) * actualZoomFactor;
       s.scale = newScale;
 
       draw(ctx, s);
