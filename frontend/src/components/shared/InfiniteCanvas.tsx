@@ -19,7 +19,13 @@ type HistoryEntry =
   | { type: "ADD_MARKER"; payload: { key: string } }
   | { type: "DELETE_MARKER"; payload: { key: string; marker: Marker } }
   | { type: "ADD_LINE"; payload: { line: Line } }
+  | { type: "DELETE_LINE"; payload: { line: Line; index: number } }
   | { type: "MOVE_MARKER"; payload: { oldKey: string; newKey: string; marker: Marker } };
+
+// Selection Type
+type Selection = 
+  | { type: 'marker', key: string }
+  | { type: 'line', index: number };
 
 const InfiniteCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -39,12 +45,11 @@ const InfiniteCanvas: React.FC = () => {
   const lastMousePos = useRef<Point | null>(null);
   const lines = useRef<Line[]>([]);
   const lineDrawingStart = useRef<Point | null>(null);
-
-  // Refs for Undo functionality
   const history = useRef<HistoryEntry[]>([]);
   const MAX_HISTORY_LENGTH = 100;
-  // This ref helps track a marker's original position before a drag
   const dragStartMarkerKey = useRef<string | null>(null);
+  
+  const selectedObject = useRef<Selection | null>(null);
 
   const draw = () => {
     const canvas = canvasRef.current;
@@ -72,24 +77,37 @@ const InfiniteCanvas: React.FC = () => {
       }
     }
     
+    // Draw lines with selection highlight
     ctx.save();
-    ctx.lineWidth = 3 / scale;
-    lines.current.forEach(line => {
-      ctx.strokeStyle = line.color;
+    lines.current.forEach((line, index) => {
+      if (selectedObject.current?.type === 'line' && selectedObject.current.index === index) {
+        ctx.strokeStyle = 'cyan';
+        ctx.lineWidth = 5 / scale;
+      } else {
+        ctx.strokeStyle = line.color;
+        ctx.lineWidth = 3 / scale;
+      }
       ctx.beginPath();
       ctx.moveTo(line.start.x, line.start.y);
       ctx.lineTo(line.end.x, line.end.y);
       ctx.stroke();
     });
-    if (lineDrawingStart.current && highlightedVertex.current) {
-      ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
-      ctx.setLineDash([8 / scale, 4 / scale]);
-      ctx.beginPath();
-      ctx.moveTo(lineDrawingStart.current.x, lineDrawingStart.current.y);
-      ctx.lineTo(highlightedVertex.current.x, highlightedVertex.current.y);
-      ctx.stroke();
-    }
     ctx.restore();
+
+    // Draw preview line
+    if (lineDrawingStart.current && highlightedVertex.current) {
+        ctx.save();
+        ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+        ctx.setLineDash([8 / scale, 4 / scale]);
+        ctx.lineWidth = 3 / scale;
+        ctx.beginPath();
+        ctx.moveTo(lineDrawingStart.current.x, lineDrawingStart.current.y);
+        ctx.lineTo(highlightedVertex.current.x, highlightedVertex.current.y);
+        ctx.stroke();
+        ctx.restore();
+    }
+    
+    // Draw vertex highlight
     if (highlightedVertex.current) {
       ctx.save();
       ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
@@ -99,12 +117,20 @@ const InfiniteCanvas: React.FC = () => {
       ctx.fill();
       ctx.restore();
     }
+
+    // Draw markers with selection highlight
     markers.current.forEach((marker, key) => {
       const [x, y] = key.split(",").map(Number);
       ctx.fillStyle = marker.color;
       ctx.beginPath();
       ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 4, 0, Math.PI * 2);
       ctx.fill();
+
+      if (selectedObject.current?.type === 'marker' && selectedObject.current.key === key) {
+        ctx.strokeStyle = 'cyan';
+        ctx.lineWidth = 2 / scale;
+        ctx.stroke();
+      }
     });
     ctx.restore();
   };
@@ -128,30 +154,47 @@ const InfiniteCanvas: React.FC = () => {
     resize();
     
     const addHistoryEntry = (entry: HistoryEntry) => {
-      history.current.push(entry);
-      if (history.current.length > MAX_HISTORY_LENGTH) {
-        history.current.shift();
-      }
+        history.current.push(entry);
+        if (history.current.length > MAX_HISTORY_LENGTH) {
+            history.current.shift();
+        }
+    };
+
+    const isPointOnLine = (point: Point, line: Line, threshold: number): boolean => {
+        const { start, end } = line;
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq === 0) {
+            const distSq = (point.x - start.x) ** 2 + (point.y - start.y) ** 2;
+            return Math.sqrt(distSq) < threshold;
+        }
+        let t = ((point.x - start.x) * dx + (point.y - start.y) * dy) / lenSq;
+        t = Math.max(0, Math.min(1, t));
+        const closestX = start.x + t * dx;
+        const closestY = start.y + t * dy;
+        const distSq = (point.x - closestX) ** 2 + (point.y - closestY) ** 2;
+        return Math.sqrt(distSq) < threshold;
     };
 
     const updateHighlight = (clientX: number, clientY: number) => {
-      const rect = canvas.getBoundingClientRect();
-      const worldX = (clientX - rect.left - s.offsetX) / s.scale;
-      const worldY = (clientY - rect.top - s.offsetY) / s.scale;
-      const nearestX = Math.round(worldX / gridSize) * gridSize;
-      const nearestY = Math.round(worldY / gridSize) * gridSize;
-      
-      if (highlightedVertex.current?.x !== nearestX || highlightedVertex.current?.y !== nearestY) {
-        highlightedVertex.current = { x: nearestX, y: nearestY };
-        draw();
-      }
+        const rect = canvas.getBoundingClientRect();
+        const worldX = (clientX - rect.left - s.offsetX) / s.scale;
+        const worldY = (clientY - rect.top - s.offsetY) / s.scale;
+        const nearestX = Math.round(worldX / gridSize) * gridSize;
+        const nearestY = Math.round(worldY / gridSize) * gridSize;
+        
+        if (highlightedVertex.current?.x !== nearestX || highlightedVertex.current?.y !== nearestY) {
+            highlightedVertex.current = { x: nearestX, y: nearestY };
+            draw();
+        }
     };
 
     const clearHighlight = () => {
-      if (highlightedVertex.current) {
-        highlightedVertex.current = null;
-        draw();
-      }
+        if (highlightedVertex.current) {
+            highlightedVertex.current = null;
+            draw();
+        }
     };
 
     const onMouseDown = (e: MouseEvent) => {
@@ -161,7 +204,6 @@ const InfiniteCanvas: React.FC = () => {
         const gridY = Math.floor(((e.clientY - canvas.getBoundingClientRect().top) - s.offsetY) / s.scale / gridSize) * gridSize;
         const key = `${gridX},${gridY}`;
         if (markers.current.has(key)) {
-          draggingMarker.current = key;
           dragStartMarkerKey.current = key;
         } else {
           s.isDragging = true;
@@ -178,6 +220,13 @@ const InfiniteCanvas: React.FC = () => {
       } else if (highlightedVertex.current) {
           clearHighlight();
       }
+
+      const moved = Math.abs(e.clientX - dragStart.current.x) > 2 || Math.abs(e.clientY - dragStart.current.y) > 2;
+      if (dragStartMarkerKey.current && !draggingMarker.current && moved) {
+        draggingMarker.current = dragStartMarkerKey.current;
+        selectedObject.current = null;
+      }
+
       if (draggingMarker.current) {
         const mouseX = e.clientX - canvas.getBoundingClientRect().left;
         const mouseY = e.clientY - canvas.getBoundingClientRect().top;
@@ -197,6 +246,7 @@ const InfiniteCanvas: React.FC = () => {
         }
         return;
       }
+      
       if (!s.isDragging) return;
       s.offsetX += e.clientX - s.lastX;
       s.offsetY += e.clientY - s.lastY;
@@ -207,43 +257,60 @@ const InfiniteCanvas: React.FC = () => {
 
     const onMouseUp = (e: MouseEvent) => {
       const moved = Math.abs(e.clientX - dragStart.current.x) > 2 || Math.abs(e.clientY - dragStart.current.y) > 2;
-
-      if (dragStartMarkerKey.current && draggingMarker.current && dragStartMarkerKey.current !== draggingMarker.current) {
+      
+      if (dragStartMarkerKey.current && draggingMarker.current && moved) {
         const marker = markers.current.get(draggingMarker.current);
         if (marker) {
-          addHistoryEntry({
-            type: "MOVE_MARKER",
-            payload: { oldKey: dragStartMarkerKey.current, newKey: draggingMarker.current, marker },
-          });
+          addHistoryEntry({ type: "MOVE_MARKER", payload: { oldKey: dragStartMarkerKey.current, newKey: draggingMarker.current, marker } });
         }
       } else if (isShiftDown.current && !moved && highlightedVertex.current) {
         if (lineDrawingStart.current) {
-          const newLine: Line = {
-            start: lineDrawingStart.current,
-            end: highlightedVertex.current,
-            color: "red",
-          };
+          const newLine: Line = { start: lineDrawingStart.current, end: highlightedVertex.current, color: "red" };
           lines.current.push(newLine);
           addHistoryEntry({ type: "ADD_LINE", payload: { line: newLine } });
           lineDrawingStart.current = null;
         } else {
           lineDrawingStart.current = highlightedVertex.current;
         }
-      } else if (!isShiftDown.current && !draggingMarker.current && !moved) {
+      } else if (!moved) {
         const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left - s.offsetX) / s.scale;
-        const y = (e.clientY - rect.top - s.offsetY) / s.scale;
-        const gridX = Math.floor(x / gridSize) * gridSize;
-        const gridY = Math.floor(y / gridSize) * gridSize;
+        const mouseWorldX = (e.clientX - rect.left - s.offsetX) / s.scale;
+        const mouseWorldY = (e.clientY - rect.top - s.offsetY) / s.scale;
+        let didSelectSomething = false;
+
+        const gridX = Math.floor(mouseWorldX / gridSize) * gridSize;
+        const gridY = Math.floor(mouseWorldY / gridSize) * gridSize;
         const key = `${gridX},${gridY}`;
         if (markers.current.has(key)) {
-          const deletedMarker = markers.current.get(key)!;
-          markers.current.delete(key);
-          addHistoryEntry({ type: "DELETE_MARKER", payload: { key, marker: deletedMarker } });
-        } else {
-          const newMarker: Marker = { id: crypto.randomUUID(), color: `hsl(${Math.random() * 360}, 70%, 50%)` };
-          markers.current.set(key, newMarker);
-          addHistoryEntry({ type: "ADD_MARKER", payload: { key } });
+            const markerCenterX = gridX + gridSize / 2;
+            const markerCenterY = gridY + gridSize / 2;
+            const markerRadius = gridSize / 4;
+            const distance = Math.sqrt((mouseWorldX - markerCenterX)**2 + (mouseWorldY - markerCenterY)**2);
+            if (distance <= markerRadius) {
+                selectedObject.current = { type: 'marker', key };
+                didSelectSomething = true;
+            }
+        }
+
+        if (!didSelectSomething) {
+            const clickThreshold = 5 / s.scale;
+            for (let i = lines.current.length - 1; i >= 0; i--) {
+                if (isPointOnLine({x: mouseWorldX, y: mouseWorldY}, lines.current[i], clickThreshold)) {
+                    selectedObject.current = { type: 'line', index: i };
+                    didSelectSomething = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!didSelectSomething) {
+            if(selectedObject.current) {
+                selectedObject.current = null;
+            } else {
+                const newMarker: Marker = { id: crypto.randomUUID(), color: `hsl(${Math.random() * 360}, 70%, 50%)` };
+                markers.current.set(key, newMarker);
+                addHistoryEntry({ type: "ADD_MARKER", payload: { key } });
+            }
         }
       }
       
@@ -268,46 +335,76 @@ const InfiniteCanvas: React.FC = () => {
     };
 
     const handleUndo = () => {
-      const lastAction = history.current.pop();
-      if (!lastAction) return;
+        const lastAction = history.current.pop();
+        if (!lastAction) return;
 
-      switch (lastAction.type) {
-        case "ADD_MARKER":
-          markers.current.delete(lastAction.payload.key);
-          break;
-        case "DELETE_MARKER":
-          markers.current.set(lastAction.payload.key, lastAction.payload.marker);
-          break;
-        case "ADD_LINE":
-          // This assumes the last line added is the one to undo, which is correct for a stack.
-          lines.current.pop(); 
-          break;
-        case "MOVE_MARKER":
-          const { oldKey, newKey, marker } = lastAction.payload;
-          markers.current.delete(newKey);
-          markers.current.set(oldKey, marker);
-          break;
-      }
-      draw();
+        switch (lastAction.type) {
+            case "ADD_MARKER":
+                markers.current.delete(lastAction.payload.key);
+                break;
+            case "DELETE_MARKER":
+                markers.current.set(lastAction.payload.key, lastAction.payload.marker);
+                break;
+            case "ADD_LINE":
+                lines.current.pop();
+                break;
+            case "DELETE_LINE":
+                lines.current.splice(lastAction.payload.index, 0, lastAction.payload.line);
+                break;
+            case "MOVE_MARKER":
+                const { oldKey, newKey, marker } = lastAction.payload;
+                markers.current.delete(newKey);
+                markers.current.set(oldKey, marker);
+                break;
+        }
+        selectedObject.current = null; // Deselect after undoing
+        draw();
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        handleUndo();
-        return;
-      }
-
-      if (e.key === 'Escape' && lineDrawingStart.current) {
-        lineDrawingStart.current = null;
-        draw();
-      }
-      if (e.key === 'Shift' && !isShiftDown.current) {
-        isShiftDown.current = true;
-        if (lastMousePos.current) {
-          updateHighlight(lastMousePos.current.x, lastMousePos.current.y);
+        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedObject.current) {
+            e.preventDefault();
+            if (selectedObject.current.type === 'marker') {
+                const { key } = selectedObject.current;
+                const deletedMarker = markers.current.get(key);
+                if (deletedMarker) {
+                    markers.current.delete(key);
+                    addHistoryEntry({ type: "DELETE_MARKER", payload: { key, marker: deletedMarker } });
+                }
+            } else if (selectedObject.current.type === 'line') {
+                const { index } = selectedObject.current;
+                const deletedLine = lines.current[index];
+                if (deletedLine) {
+                    lines.current.splice(index, 1);
+                    addHistoryEntry({ type: 'DELETE_LINE', payload: { line: deletedLine, index } });
+                }
+            }
+            selectedObject.current = null;
+            draw();
+            return;
         }
-      }
+
+        if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+            e.preventDefault();
+            handleUndo();
+            return;
+        }
+
+        if (e.key === 'Escape') {
+            if (lineDrawingStart.current) {
+                lineDrawingStart.current = null;
+            } else if (selectedObject.current) {
+                selectedObject.current = null;
+            }
+            draw();
+        }
+
+        if (e.key === 'Shift' && !isShiftDown.current) {
+            isShiftDown.current = true;
+            if (lastMousePos.current) {
+                updateHighlight(lastMousePos.current.x, lastMousePos.current.y);
+            }
+        }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -321,10 +418,10 @@ const InfiniteCanvas: React.FC = () => {
     };
     
     const onMouseLeave = () => {
-      lastMousePos.current = null;
-      if (!lineDrawingStart.current) {
-        clearHighlight();
-      }
+        lastMousePos.current = null;
+        if (!lineDrawingStart.current) {
+          clearHighlight();
+        }
     };
 
     canvas.addEventListener("mousedown", onMouseDown);
