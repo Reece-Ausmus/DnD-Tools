@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from "react";
 
+// --- TYPES ---
 interface CanvasState {
   scale: number;
   offsetX: number;
@@ -10,14 +11,15 @@ interface CanvasState {
 }
 
 type Point = { x: number; y: number };
+type Marker = { id: string; color: string };
+type Line = { start: Point; end: Point; color: string };
 
-// --- MODIFICATION 1: Update the Line type ---
-type Line = {
-  start: Point;
-  end: Point;
-  color: string;
-};
-// --- END MODIFICATION ---
+// History types for the Undo feature
+type HistoryEntry =
+  | { type: "ADD_MARKER"; payload: { key: string } }
+  | { type: "DELETE_MARKER"; payload: { key: string; marker: Marker } }
+  | { type: "ADD_LINE"; payload: { line: Line } }
+  | { type: "MOVE_MARKER"; payload: { oldKey: string; newKey: string; marker: Marker } };
 
 const InfiniteCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -29,21 +31,28 @@ const InfiniteCanvas: React.FC = () => {
     lastX: 0,
     lastY: 0,
   });
-  const markers = useRef<Map<string, { id: string; color: string }>>(new Map());
+  const markers = useRef<Map<string, Marker>>(new Map());
   const dragStart = useRef<Point>({ x: 0, y: 0 });
   const draggingMarker = useRef<string | null>(null);
-
   const isShiftDown = useRef<boolean>(false);
   const highlightedVertex = useRef<Point | null>(null);
   const lastMousePos = useRef<Point | null>(null);
-
   const lines = useRef<Line[]>([]);
   const lineDrawingStart = useRef<Point | null>(null);
 
-  const draw = (
-    ctx: CanvasRenderingContext2D,
-    { scale, offsetX, offsetY }: CanvasState
-  ) => {
+  // Refs for Undo functionality
+  const history = useRef<HistoryEntry[]>([]);
+  const MAX_HISTORY_LENGTH = 100;
+  // This ref helps track a marker's original position before a drag
+  const dragStartMarkerKey = useRef<string | null>(null);
+
+  const draw = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const { scale, offsetX, offsetY } = state.current;
     const { width, height } = ctx.canvas;
     ctx.save();
     ctx.clearRect(0, 0, width, height);
@@ -51,66 +60,45 @@ const InfiniteCanvas: React.FC = () => {
     ctx.scale(scale, scale);
 
     const gridSize = 50;
-    // Draw grid
     ctx.strokeStyle = "#ccc";
-    for (
-      let x = Math.floor((-offsetX / scale) / gridSize) * gridSize;
-      x < (-offsetX / scale) + width / scale;
-      x += gridSize
-    ) {
-      for (
-        let y = Math.floor((-offsetY / scale) / gridSize) * gridSize;
-        y < (-offsetY / scale) + height / scale;
-        y += gridSize
-      ) {
+    const startX = Math.floor((-offsetX / scale) / gridSize) * gridSize;
+    const endX = startX + width / scale + gridSize;
+    const startY = Math.floor((-offsetY / scale) / gridSize) * gridSize;
+    const endY = startY + height / scale + gridSize;
+
+    for (let x = startX; x < endX; x += gridSize) {
+      for (let y = startY; y < endY; y += gridSize) {
         ctx.strokeRect(x, y, gridSize, gridSize);
       }
     }
-
-    // Draw lines
+    
     ctx.save();
     ctx.lineWidth = 3 / scale;
-    
-    // --- MODIFICATION 2: Use the color from the line object ---
-    // 1. Draw all completed, persistent lines from the array
     lines.current.forEach(line => {
-      ctx.strokeStyle = line.color; // Use the line's specific color
+      ctx.strokeStyle = line.color;
       ctx.beginPath();
       ctx.moveTo(line.start.x, line.start.y);
       ctx.lineTo(line.end.x, line.end.y);
       ctx.stroke();
     });
-    // --- END MODIFICATION ---
-    
-    // 2. Draw the temporary preview line if currently drawing
     if (lineDrawingStart.current && highlightedVertex.current) {
-        ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
-        ctx.setLineDash([8 / scale, 4 / scale]);
-        ctx.beginPath();
-        ctx.moveTo(lineDrawingStart.current.x, lineDrawingStart.current.y);
-        ctx.lineTo(highlightedVertex.current.x, highlightedVertex.current.y);
-        ctx.stroke();
+      ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+      ctx.setLineDash([8 / scale, 4 / scale]);
+      ctx.beginPath();
+      ctx.moveTo(lineDrawingStart.current.x, lineDrawingStart.current.y);
+      ctx.lineTo(highlightedVertex.current.x, highlightedVertex.current.y);
+      ctx.stroke();
     }
     ctx.restore();
-
-    // Draw highlight for nearest vertex
     if (highlightedVertex.current) {
       ctx.save();
       ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
       ctx.beginPath();
       const radius = 8 / scale;
-      ctx.arc(
-        highlightedVertex.current.x,
-        highlightedVertex.current.y,
-        radius,
-        0,
-        Math.PI * 2
-      );
+      ctx.arc(highlightedVertex.current.x, highlightedVertex.current.y, radius, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
-
-    // Draw markers
     markers.current.forEach((marker, key) => {
       const [x, y] = key.split(",").map(Number);
       ctx.fillStyle = marker.color;
@@ -118,7 +106,6 @@ const InfiniteCanvas: React.FC = () => {
       ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 4, 0, Math.PI * 2);
       ctx.fill();
     });
-
     ctx.restore();
   };
 
@@ -135,41 +122,47 @@ const InfiniteCanvas: React.FC = () => {
     const resize = () => {
       canvas.width = canvas.parentElement?.clientWidth || 800;
       canvas.height = canvas.parentElement?.clientHeight || 600;
-      draw(ctx, s);
+      draw();
     };
     window.addEventListener("resize", resize);
     resize();
     
+    const addHistoryEntry = (entry: HistoryEntry) => {
+      history.current.push(entry);
+      if (history.current.length > MAX_HISTORY_LENGTH) {
+        history.current.shift();
+      }
+    };
+
     const updateHighlight = (clientX: number, clientY: number) => {
-        const rect = canvas.getBoundingClientRect();
-        const worldX = (clientX - rect.left - s.offsetX) / s.scale;
-        const worldY = (clientY - rect.top - s.offsetY) / s.scale;
-        const nearestX = Math.round(worldX / gridSize) * gridSize;
-        const nearestY = Math.round(worldY / gridSize) * gridSize;
-        
-        if (highlightedVertex.current?.x !== nearestX || highlightedVertex.current?.y !== nearestY) {
-            highlightedVertex.current = { x: nearestX, y: nearestY };
-            draw(ctx, s);
-        }
+      const rect = canvas.getBoundingClientRect();
+      const worldX = (clientX - rect.left - s.offsetX) / s.scale;
+      const worldY = (clientY - rect.top - s.offsetY) / s.scale;
+      const nearestX = Math.round(worldX / gridSize) * gridSize;
+      const nearestY = Math.round(worldY / gridSize) * gridSize;
+      
+      if (highlightedVertex.current?.x !== nearestX || highlightedVertex.current?.y !== nearestY) {
+        highlightedVertex.current = { x: nearestX, y: nearestY };
+        draw();
+      }
     };
 
     const clearHighlight = () => {
-        if (highlightedVertex.current) {
-            highlightedVertex.current = null;
-            draw(ctx, s);
-        }
+      if (highlightedVertex.current) {
+        highlightedVertex.current = null;
+        draw();
+      }
     };
 
     const onMouseDown = (e: MouseEvent) => {
       dragStart.current = { x: e.clientX, y: e.clientY };
-
       if (!isShiftDown.current) {
         const gridX = Math.floor(((e.clientX - canvas.getBoundingClientRect().left) - s.offsetX) / s.scale / gridSize) * gridSize;
         const gridY = Math.floor(((e.clientY - canvas.getBoundingClientRect().top) - s.offsetY) / s.scale / gridSize) * gridSize;
         const key = `${gridX},${gridY}`;
-        
         if (markers.current.has(key)) {
           draggingMarker.current = key;
+          dragStartMarkerKey.current = key;
         } else {
           s.isDragging = true;
           s.lastX = e.clientX;
@@ -199,7 +192,7 @@ const InfiniteCanvas: React.FC = () => {
             markers.current.delete(draggingMarker.current);
             markers.current.set(newKey, markerData);
             draggingMarker.current = newKey;
-            draw(ctx, s);
+            draw();
           }
         }
         return;
@@ -209,21 +202,29 @@ const InfiniteCanvas: React.FC = () => {
       s.offsetY += e.clientY - s.lastY;
       s.lastX = e.clientX;
       s.lastY = e.clientY;
-      draw(ctx, s);
+      draw();
     };
 
     const onMouseUp = (e: MouseEvent) => {
       const moved = Math.abs(e.clientX - dragStart.current.x) > 2 || Math.abs(e.clientY - dragStart.current.y) > 2;
-      
-      if (isShiftDown.current && !moved && highlightedVertex.current) {
+
+      if (dragStartMarkerKey.current && draggingMarker.current && dragStartMarkerKey.current !== draggingMarker.current) {
+        const marker = markers.current.get(draggingMarker.current);
+        if (marker) {
+          addHistoryEntry({
+            type: "MOVE_MARKER",
+            payload: { oldKey: dragStartMarkerKey.current, newKey: draggingMarker.current, marker },
+          });
+        }
+      } else if (isShiftDown.current && !moved && highlightedVertex.current) {
         if (lineDrawingStart.current) {
-          // --- MODIFICATION 3: Add the color when creating the line object ---
-          lines.current.push({
+          const newLine: Line = {
             start: lineDrawingStart.current,
             end: highlightedVertex.current,
             color: "red",
-          });
-          // --- END MODIFICATION ---
+          };
+          lines.current.push(newLine);
+          addHistoryEntry({ type: "ADD_LINE", payload: { line: newLine } });
           lineDrawingStart.current = null;
         } else {
           lineDrawingStart.current = highlightedVertex.current;
@@ -236,15 +237,20 @@ const InfiniteCanvas: React.FC = () => {
         const gridY = Math.floor(y / gridSize) * gridSize;
         const key = `${gridX},${gridY}`;
         if (markers.current.has(key)) {
+          const deletedMarker = markers.current.get(key)!;
           markers.current.delete(key);
+          addHistoryEntry({ type: "DELETE_MARKER", payload: { key, marker: deletedMarker } });
         } else {
-          markers.current.set(key, { id: crypto.randomUUID(), color: `hsl(${Math.random() * 360}, 70%, 50%)` });
+          const newMarker: Marker = { id: crypto.randomUUID(), color: `hsl(${Math.random() * 360}, 70%, 50%)` };
+          markers.current.set(key, newMarker);
+          addHistoryEntry({ type: "ADD_MARKER", payload: { key } });
         }
       }
-
+      
       draggingMarker.current = null;
+      dragStartMarkerKey.current = null;
       s.isDragging = false;
-      draw(ctx, s);
+      draw();
     };
 
     const onWheel = (e: WheelEvent) => {
@@ -252,27 +258,56 @@ const InfiniteCanvas: React.FC = () => {
       const rect = canvas.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
-      const { scale, offsetX, offsetY } = s;
       const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * zoomFactor));
-      const actualZoomFactor = newScale / scale;
-      s.offsetX = mouseX - (mouseX - offsetX) * actualZoomFactor;
-      s.offsetY = mouseY - (mouseY - offsetY) * actualZoomFactor;
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, s.scale * zoomFactor));
+      const actualZoomFactor = newScale / s.scale;
+      s.offsetX = mouseX - (mouseX - s.offsetX) * actualZoomFactor;
+      s.offsetY = mouseY - (mouseY - s.offsetY) * actualZoomFactor;
       s.scale = newScale;
-      draw(ctx, s);
+      draw();
+    };
+
+    const handleUndo = () => {
+      const lastAction = history.current.pop();
+      if (!lastAction) return;
+
+      switch (lastAction.type) {
+        case "ADD_MARKER":
+          markers.current.delete(lastAction.payload.key);
+          break;
+        case "DELETE_MARKER":
+          markers.current.set(lastAction.payload.key, lastAction.payload.marker);
+          break;
+        case "ADD_LINE":
+          // This assumes the last line added is the one to undo, which is correct for a stack.
+          lines.current.pop(); 
+          break;
+        case "MOVE_MARKER":
+          const { oldKey, newKey, marker } = lastAction.payload;
+          markers.current.delete(newKey);
+          markers.current.set(oldKey, marker);
+          break;
+      }
+      draw();
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape' && lineDrawingStart.current) {
-            lineDrawingStart.current = null;
-            draw(ctx, s);
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+
+      if (e.key === 'Escape' && lineDrawingStart.current) {
+        lineDrawingStart.current = null;
+        draw();
+      }
+      if (e.key === 'Shift' && !isShiftDown.current) {
+        isShiftDown.current = true;
+        if (lastMousePos.current) {
+          updateHighlight(lastMousePos.current.x, lastMousePos.current.y);
         }
-        if (e.key === 'Shift' && !isShiftDown.current) {
-            isShiftDown.current = true;
-            if (lastMousePos.current) {
-                updateHighlight(lastMousePos.current.x, lastMousePos.current.y);
-            }
-        }
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -286,10 +321,10 @@ const InfiniteCanvas: React.FC = () => {
     };
     
     const onMouseLeave = () => {
-        lastMousePos.current = null;
-        if (!lineDrawingStart.current) {
-          clearHighlight();
-        }
+      lastMousePos.current = null;
+      if (!lineDrawingStart.current) {
+        clearHighlight();
+      }
     };
 
     canvas.addEventListener("mousedown", onMouseDown);
