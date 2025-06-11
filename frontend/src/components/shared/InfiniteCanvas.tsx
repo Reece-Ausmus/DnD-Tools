@@ -11,7 +11,7 @@ interface CanvasState {
 }
 
 type Point = { x: number; y: number };
-type Marker = { id: string; color: string };
+type Marker = { id: string; pos: Point, color: string };
 type Line = { start: Point; end: Point; color: string };
 
 // History types for the Undo feature
@@ -133,6 +133,29 @@ const InfiniteCanvas: React.FC = () => {
       }
     });
     ctx.restore();
+  };
+
+  const pointFromKey = (key: string): Point => {
+    if (!key || typeof key !== 'string') {
+      throw new Error('Invalid input: key must be a non-empty string.');
+    }
+
+    const parts = key.split(',');
+
+    if (parts.length !== 2) {
+      throw new Error(`Invalid key format: Expected "x,y" but got "${key}".`);
+    }
+
+    const x = parseInt(parts[0], 10);
+    const y = parseInt(parts[1], 10);
+
+    // Check if parseInt resulted in NaN (e.g., from "hello,world")
+    if (isNaN(x) || isNaN(y)) {
+      throw new Error(`Invalid key content: Could not parse numbers from "${key}".`);
+    }
+
+    const newPoint: Point = { x, y };
+    return newPoint;
   };
 
   useEffect(() => {
@@ -307,7 +330,7 @@ const InfiniteCanvas: React.FC = () => {
             if(selectedObject.current) {
                 selectedObject.current = null;
             } else {
-                const newMarker: Marker = { id: crypto.randomUUID(), color: `hsl(${Math.random() * 360}, 70%, 50%)` };
+                const newMarker: Marker = { id: crypto.randomUUID(), pos: pointFromKey(key), color: `hsl(${Math.random() * 360}, 70%, 50%)` };
                 markers.current.set(key, newMarker);
                 addHistoryEntry({ type: "ADD_MARKER", payload: { key } });
             }
