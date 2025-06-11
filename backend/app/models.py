@@ -12,6 +12,12 @@ campaign_invites = db.Table('campaign_invites',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
 
+# Define relationship for Campaign to Map
+map_campaigns = db.Table('map_campaigns',
+    db.Column('map_id', db.Integer, db.ForeignKey('map.id'), primary_key=True),
+    db.Column('campaign_id', db.Integer, db.ForeignKey('campaign.id'), primary_key=True)
+)
+
 class Campaign(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
@@ -25,6 +31,7 @@ class Campaign(db.Model):
     meeting_time = db.Column(db.Time, nullable=False)
     meeting_day = db.Column(db.String(50), nullable=False)
     meeting_frequency = db.Column(db.String(50), nullable=False)
+    maps = db.relationship("Map", secondary=map_campaigns, back_populates="campaigns")
 
     def __init__(self, name, description, dm_id, start_date, end_date, meeting_time, meeting_day, meeting_frequency):
         self.name = name
@@ -132,3 +139,16 @@ class Character(db.Model):
         db.Index('ix_race_id', 'race_id'),
         db.Index('ix_class_id', 'class_id'),
     )
+
+class Map(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    campaigns = db.relationship("Campaign", secondary=map_campaigns, back_populates="maps")
+    markers = db.Column(db.JSON, nullable=True, default=[])
+    lines = db.Column(db.JSON, nullable=True, default=[])
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return f'<Map: {self.name}>'
