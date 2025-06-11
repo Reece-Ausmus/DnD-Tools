@@ -12,12 +12,6 @@ campaign_invites = db.Table('campaign_invites',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
 
-# Define relationship for Campaign to Map
-map_campaigns = db.Table('map_campaigns',
-    db.Column('map_id', db.Integer, db.ForeignKey('map.id'), primary_key=True),
-    db.Column('campaign_id', db.Integer, db.ForeignKey('campaign.id'), primary_key=True)
-)
-
 class Campaign(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
@@ -31,7 +25,7 @@ class Campaign(db.Model):
     meeting_time = db.Column(db.Time, nullable=False)
     meeting_day = db.Column(db.String(50), nullable=False)
     meeting_frequency = db.Column(db.String(50), nullable=False)
-    maps = db.relationship("Map", secondary=map_campaigns, back_populates="campaigns")
+    maps = db.relationship("Map", back_populates="campaign", cascade="all, delete-orphan")
 
     def __init__(self, name, description, dm_id, start_date, end_date, meeting_time, meeting_day, meeting_frequency):
         self.name = name
@@ -96,6 +90,7 @@ class User(db.Model):
         secondaryjoin=(campaign_users.c.campaign_id==Campaign.id),
         back_populates="players"
     )
+    maps = db.relationship("Map", back_populates="owner", cascade="all, delete-orphan")
 
     def __init__(self, first, last, email, password, username):
         self.first = first
@@ -143,12 +138,18 @@ class Character(db.Model):
 class Map(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    campaigns = db.relationship("Campaign", secondary=map_campaigns, back_populates="maps")
+    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    campaign_id = db.Column(db.Integer, db.ForeignKey("campaign.id"), nullable=False)
     markers = db.Column(db.JSON, nullable=True, default=[])
     lines = db.Column(db.JSON, nullable=True, default=[])
 
-    def __init__(self, name):
+    campaign = db.relationship("Campaign", back_populates="maps")
+    owner = db.relationship("User", back_populates="maps")
+
+    def __init__(self, name, owner_id, campaign_id):
+        self.owner_id = owner_id
         self.name = name
+        self.campaign_id = campaign_id
 
     def __repr__(self):
         return f'<Map: {self.name}>'
