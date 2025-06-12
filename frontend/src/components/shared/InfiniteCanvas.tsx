@@ -19,6 +19,7 @@ type MapPageProps = {
     | "dance-time"
     | "erase"
     | null;
+  markerColor: string;
 };
 
 type Point = { x: number; y: number };
@@ -41,7 +42,10 @@ type Selection =
   | { type: "marker"; marker: Marker }
   | { type: "line"; index: number };
 
-const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
+const InfiniteCanvas: React.FC<MapPageProps> = ({
+  activeDrawButton,
+  markerColor,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const state = useRef<CanvasState>({
     scale: 1,
@@ -418,7 +422,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
                     ? markers.current[markers.current.length - 1].id + 1
                     : 1,
                 pos: { x: gridX, y: gridY },
-                color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                color: markerColor,
               };
               markers.current.push(newMarker);
               addHistoryEntry({
@@ -576,7 +580,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
       window.removeEventListener("keyup", handleKeyUp);
       canvas.removeEventListener("mouseleave", onMouseLeave);
     };
-  }, [activeDrawButton]);
+  }, [activeDrawButton, markerColor]);
 
   return (
     <canvas

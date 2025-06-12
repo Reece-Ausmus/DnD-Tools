@@ -26,7 +26,7 @@ const Map: React.FC = () => {
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState(-1);
-  const [currentColor, setCurrentColor] = useState<string>("#E57373");
+  const [markerColor, setMarkerColor] = useState<string>("#E57373");
 
   const { campaigns, fetchCampaigns, campaignsLoading } = useCampaigns();
 
@@ -169,7 +169,7 @@ const Map: React.FC = () => {
                   height: "40px",
                   borderRadius: "4px",
                   cursor: "pointer",
-                  backgroundColor: currentColor,
+                  backgroundColor: markerColor,
                   // Simple hover effect
                   "&:hover": {
                     border: "2px solid gray",
@@ -179,8 +179,8 @@ const Map: React.FC = () => {
               <input
                 type="color"
                 id="color-picker"
-                value={currentColor}
-                onChange={(e) => setCurrentColor(e.target.value)}
+                value={markerColor}
+                onChange={(e) => setMarkerColor(e.target.value)}
                 style={{
                   // Hide the default input but keep it functional
                   visibility: "hidden",
@@ -203,7 +203,10 @@ const Map: React.FC = () => {
             marginTop: "20px",
           }}
         >
-          <InfiniteCanvas activeDrawButton={activeDrawButton} />
+          <InfiniteCanvas
+            activeDrawButton={activeDrawButton}
+            markerColor={markerColor}
+          />
         </Box>
 
         <Dialog open={newMapOpen} onClose={handleNewMapClose}>
