@@ -68,6 +68,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   const dragStartMarker = useRef<Marker | null>(null);
   const dragStartMarkerPos = useRef<Point | null>(null);
   const hasMovedMarker = useRef<boolean>(false);
+  const isErasing = useRef<boolean>(false);
 
   const selectedObject = useRef<Selection | null>(null);
 
@@ -186,6 +187,57 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     window.addEventListener("resize", resize);
     resize();
 
+    const eraseAtPoint = (worldX: number, worldY: number) => {
+      // Check for markers first
+      const markerIndex = markers.current.findIndex((marker) => {
+        const markerCenterX = marker.pos.x + gridSize / 2;
+        const markerCenterY = marker.pos.y + gridSize / 2;
+        const markerRadius = gridSize / 4;
+        const distance = Math.sqrt(
+          (worldX - markerCenterX) ** 2 + (worldY - markerCenterY) ** 2
+        );
+        return distance <= markerRadius;
+      });
+
+      if (markerIndex !== -1) {
+        const [deletedMarker] = markers.current.splice(markerIndex, 1);
+        addHistoryEntry({
+          type: "DELETE_MARKER",
+          payload: { marker: deletedMarker },
+        });
+        if (
+          selectedObject.current?.type === "marker" &&
+          selectedObject.current.marker.id === deletedMarker.id
+        ) {
+          selectedObject.current = null;
+        }
+        draw();
+        return;
+      }
+
+      const eraseThreshold = 5 / s.scale;
+      const lineIndex = lines.current.findIndex((line) =>
+        isPointOnLine({ x: worldX, y: worldY }, line, eraseThreshold)
+      );
+
+      if (lineIndex !== -1) {
+        const [deletedLine] = lines.current.splice(lineIndex, 1);
+        addHistoryEntry({
+          type: "DELETE_LINE",
+          payload: { line: deletedLine }, // V&@H payload might change with refactor
+        });
+        // V&@H check uses line index logic
+        if (
+          selectedObject.current?.type === "line" &&
+          selectedObject.current.index >= lineIndex
+        ) {
+          // Deselect or update index if needed. Deselecting is simplest.
+          selectedObject.current = null;
+        }
+        draw();
+      }
+    };
+
     const addHistoryEntry = (entry: HistoryEntry) => {
       history.current.push(entry);
       if (history.current.length > MAX_HISTORY_LENGTH) {
@@ -245,6 +297,17 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         isShiftDown.current || activeDrawButton === "draw-lines";
       const isMarkerPlaceMode = activeDrawButton === "place-marker";
 
+      if (activeDrawButton === "erase") {
+        isErasing.current = true; // set isErasing true when mouse down
+        selectedObject.current = null; // deselect current when erasing
+        const rect = canvas.getBoundingClientRect();
+        const worldX = (e.clientX - rect.left - s.offsetX) / s.scale;
+        const worldY = (e.clientY - rect.top - s.offsetY) / s.scale;
+        eraseAtPoint(worldX, worldY); // Erase on initial click
+        e.stopPropagation(); // Prevent other handlers
+        return;
+      }
+
       if (!isShiftDown.current) {
         const gridX =
           Math.floor(
@@ -279,6 +342,15 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       const isLineDrawingMode =
         isShiftDown.current || activeDrawButton === "draw-lines";
       const isMarkerPlaceMode = activeDrawButton === "place-marker";
+
+      // erase at spot under moving mouse
+      if (isErasing.current) {
+        const rect = canvas.getBoundingClientRect();
+        const worldX = (e.clientX - rect.left - s.offsetX) / s.scale;
+        const worldY = (e.clientY - rect.top - s.offsetY) / s.scale;
+        eraseAtPoint(worldX, worldY);
+        return;
+      }
 
       // hightlight nearest vertex if in line drawing mode
       if (isLineDrawingMode && !s.isDragging && !draggingMarker.current) {
@@ -332,6 +404,12 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       const isLineDrawingMode =
         isShiftDown.current || activeDrawButton === "draw-lines";
       const isMarkerPlaceMode = activeDrawButton === "place-marker";
+
+      // set isErasing to false when mouse lifted
+      if (isErasing.current) {
+        isErasing.current = false;
+        return;
+      }
 
       if (
         dragStartMarker.current &&
