@@ -10,6 +10,11 @@ interface CanvasState {
   lastY: number;
 }
 
+// statuses from Map.tsx
+type MapPageProps = {
+  activeDrawButton: "place-marker" | "draw-lines" | "draw-box" | null;
+};
+
 type Point = { x: number; y: number };
 type Marker = { id: string; pos: Point; color: string };
 type Line = { start: Point; end: Point; color: string };
@@ -30,7 +35,7 @@ type Selection =
   | { type: "marker"; key: string }
   | { type: "line"; index: number };
 
-const InfiniteCanvas: React.FC = () => {
+const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const state = useRef<CanvasState>({
     scale: 1,
@@ -246,6 +251,15 @@ const InfiniteCanvas: React.FC = () => {
 
     const onMouseDown = (e: MouseEvent) => {
       dragStart.current = { x: e.clientX, y: e.clientY };
+
+      const isLineDrawingMode =
+        isShiftDown.current || activeDrawButton === "draw-lines";
+
+      // Prioritize line drawing clicks over panning if in line drawing mode.
+      if (isLineDrawingMode) {
+        return;
+      }
+
       if (!isShiftDown.current) {
         const gridX =
           Math.floor(
@@ -272,7 +286,15 @@ const InfiniteCanvas: React.FC = () => {
 
     const onMouseMove = (e: MouseEvent) => {
       lastMousePos.current = { x: e.clientX, y: e.clientY };
-      if (isShiftDown.current && !s.isDragging && !draggingMarker.current) {
+
+      const isLineDrawingMode =
+        isShiftDown.current || activeDrawButton === "draw-lines";
+
+      if (
+        (isShiftDown.current || isLineDrawingMode) &&
+        !s.isDragging &&
+        !draggingMarker.current
+      ) {
         updateHighlight(e.clientX, e.clientY);
       } else if (highlightedVertex.current) {
         clearHighlight();
@@ -319,6 +341,9 @@ const InfiniteCanvas: React.FC = () => {
         Math.abs(e.clientX - dragStart.current.x) > 2 ||
         Math.abs(e.clientY - dragStart.current.y) > 2;
 
+      const isLineDrawingMode =
+        isShiftDown.current || activeDrawButton === "draw-lines";
+
       if (dragStartMarkerKey.current && draggingMarker.current && moved) {
         const marker = markers.current.get(draggingMarker.current);
         if (marker) {
@@ -331,7 +356,11 @@ const InfiniteCanvas: React.FC = () => {
             },
           });
         }
-      } else if (isShiftDown.current && !moved && highlightedVertex.current) {
+      } else if (
+        (isShiftDown.current || isLineDrawingMode) &&
+        !moved &&
+        highlightedVertex.current
+      ) {
         if (lineDrawingStart.current) {
           const newLine: Line = {
             start: lineDrawingStart.current,
@@ -546,7 +575,7 @@ const InfiniteCanvas: React.FC = () => {
       window.removeEventListener("keyup", handleKeyUp);
       canvas.removeEventListener("mouseleave", onMouseLeave);
     };
-  }, []);
+  }, [activeDrawButton]);
 
   return (
     <canvas
