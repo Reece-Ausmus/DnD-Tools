@@ -16,23 +16,23 @@ type MapPageProps = {
 };
 
 type Point = { x: number; y: number };
-type Marker = { id: string; pos: Point; color: string };
-type Line = { start: Point; end: Point; color: string };
+type Marker = { id: number; pos: Point; color: string };
+type Line = { id: number; start: Point; end: Point; color: string };
 
 // History types for the Undo feature
 type HistoryEntry =
-  | { type: "ADD_MARKER"; payload: { key: string } }
-  | { type: "DELETE_MARKER"; payload: { key: string; marker: Marker } }
+  | { type: "ADD_MARKER"; payload: { marker: Marker } }
+  | { type: "DELETE_MARKER"; payload: { marker: Marker } }
   | { type: "ADD_LINE"; payload: { line: Line } }
-  | { type: "DELETE_LINE"; payload: { line: Line; index: number } }
+  | { type: "DELETE_LINE"; payload: { line: Line } }
   | {
       type: "MOVE_MARKER";
-      payload: { oldKey: string; newKey: string; marker: Marker };
+      payload: { oldPos: Point; newPos: Point; marker: Marker };
     };
 
 // Selection Type
 type Selection =
-  | { type: "marker"; key: string }
+  | { type: "marker"; marker: Marker }
   | { type: "line"; index: number };
 
 const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
@@ -45,9 +45,9 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
     lastX: 0,
     lastY: 0,
   });
-  const markers = useRef<Map<string, Marker>>(new Map());
+  const markers = useRef<Marker[]>([]);
   const dragStart = useRef<Point>({ x: 0, y: 0 });
-  const draggingMarker = useRef<string | null>(null);
+  const draggingMarker = useRef<Marker | null>(null);
   const isShiftDown = useRef<boolean>(false);
   const highlightedVertex = useRef<Point | null>(null);
   const lastMousePos = useRef<Point | null>(null);
@@ -55,7 +55,9 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
   const lineDrawingStart = useRef<Point | null>(null);
   const history = useRef<HistoryEntry[]>([]);
   const MAX_HISTORY_LENGTH = 100;
-  const dragStartMarkerKey = useRef<string | null>(null);
+  const dragStartMarker = useRef<Marker | null>(null);
+  const dragStartMarkerPos = useRef<Point | null>(null);
+  const hasMovedMarker = useRef<boolean>(false);
 
   const selectedObject = useRef<Selection | null>(null);
 
@@ -136,16 +138,15 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
     }
 
     // Draw markers with selection highlight
-    markers.current.forEach((marker, key) => {
-      const [x, y] = key.split(",").map(Number);
+    markers.current.forEach((marker) => {
+      const { x, y } = marker.pos;
       ctx.fillStyle = marker.color;
       ctx.beginPath();
       ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 4, 0, Math.PI * 2);
       ctx.fill();
-
       if (
         selectedObject.current?.type === "marker" &&
-        selectedObject.current.key === key
+        selectedObject.current.marker === marker
       ) {
         ctx.strokeStyle = "cyan";
         ctx.lineWidth = 2 / scale;
@@ -155,30 +156,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
     ctx.restore();
   };
 
-  const pointFromKey = (key: string): Point => {
-    if (!key || typeof key !== "string") {
-      throw new Error("Invalid input: key must be a non-empty string.");
-    }
-
-    const parts = key.split(",");
-
-    if (parts.length !== 2) {
-      throw new Error(`Invalid key format: Expected "x,y" but got "${key}".`);
-    }
-
-    const x = parseInt(parts[0], 10);
-    const y = parseInt(parts[1], 10);
-
-    // Check if parseInt resulted in NaN (e.g., from "hello,world")
-    if (isNaN(x) || isNaN(y)) {
-      throw new Error(
-        `Invalid key content: Could not parse numbers from "${key}".`
-      );
-    }
-
-    const newPoint: Point = { x, y };
-    return newPoint;
-  };
+  // pointFromKey removed
 
   useEffect(() => {
     const MIN_SCALE = 0.5;
@@ -251,6 +229,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
 
     const onMouseDown = (e: MouseEvent) => {
       dragStart.current = { x: e.clientX, y: e.clientY };
+      hasMovedMarker.current = false;
 
       const isLineDrawingMode =
         isShiftDown.current || activeDrawButton === "draw-lines";
@@ -269,9 +248,13 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
               s.scale /
               gridSize
           ) * gridSize;
-        const key = `${gridX},${gridY}`;
-        if (markers.current.has(key)) {
-          dragStartMarkerKey.current = key;
+        // Find marker at this position
+        const markerAt = markers.current.find(
+          (m) => m.pos.x === gridX && m.pos.y === gridY
+        );
+        if (markerAt) {
+          dragStartMarker.current = markerAt;
+          dragStartMarkerPos.current = { ...markerAt.pos };
         } else {
           s.isDragging = true;
           s.lastX = e.clientX;
@@ -297,8 +280,8 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
       const moved =
         Math.abs(e.clientX - dragStart.current.x) > 2 ||
         Math.abs(e.clientY - dragStart.current.y) > 2;
-      if (dragStartMarkerKey.current && !draggingMarker.current && moved) {
-        draggingMarker.current = dragStartMarkerKey.current;
+      if (dragStartMarker.current && !draggingMarker.current && moved) {
+        draggingMarker.current = dragStartMarker.current;
         selectedObject.current = null;
       }
 
@@ -309,15 +292,16 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
         const y = (mouseY - s.offsetY) / s.scale;
         const gridX = Math.floor(x / gridSize) * gridSize;
         const gridY = Math.floor(y / gridSize) * gridSize;
-        const newKey = `${gridX},${gridY}`;
-        if (newKey !== draggingMarker.current && !markers.current.has(newKey)) {
-          const markerData = markers.current.get(draggingMarker.current);
-          if (markerData) {
-            markers.current.delete(draggingMarker.current);
-            markers.current.set(newKey, markerData);
-            draggingMarker.current = newKey;
-            draw();
-          }
+        // Only move if new position and no marker there
+        if (
+          (draggingMarker.current.pos.x !== gridX ||
+            draggingMarker.current.pos.y !== gridY) &&
+          !markers.current.some((m) => m.pos.x === gridX && m.pos.y === gridY)
+        ) {
+          // Update marker position
+          draggingMarker.current.pos = { x: gridX, y: gridY };
+          hasMovedMarker.current = true;
+          draw();
         }
         return;
       }
@@ -339,21 +323,27 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
         isShiftDown.current || activeDrawButton === "draw-lines";
       const isMarkerPlaceMode = activeDrawButton === "place-marker";
 
-      if (dragStartMarkerKey.current && draggingMarker.current && moved) {
-        const marker = markers.current.get(draggingMarker.current);
-        if (marker) {
-          addHistoryEntry({
-            type: "MOVE_MARKER",
-            payload: {
-              oldKey: dragStartMarkerKey.current,
-              newKey: draggingMarker.current,
-              marker,
-            },
-          });
-        }
+      if (
+        dragStartMarker.current &&
+        draggingMarker.current &&
+        hasMovedMarker.current
+      ) {
+        addHistoryEntry({
+          type: "MOVE_MARKER",
+          payload: {
+            oldPos: dragStartMarkerPos.current!,
+            newPos: { ...draggingMarker.current.pos },
+            marker: draggingMarker.current,
+          },
+        });
+        hasMovedMarker.current = false;
       } else if (isLineDrawingMode && !moved && highlightedVertex.current) {
         if (lineDrawingStart.current) {
           const newLine: Line = {
+            id:
+              lines.current.length > 0
+                ? lines.current[lines.current.length - 1].id + 1
+                : 1,
             start: lineDrawingStart.current,
             end: highlightedVertex.current,
             color: "red",
@@ -372,8 +362,11 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
 
         const gridX = Math.floor(mouseWorldX / gridSize) * gridSize;
         const gridY = Math.floor(mouseWorldY / gridSize) * gridSize;
-        const key = `${gridX},${gridY}`;
-        if (markers.current.has(key)) {
+        // Find marker at this position
+        const markerAt = markers.current.find(
+          (m) => m.pos.x === gridX && m.pos.y === gridY
+        );
+        if (markerAt) {
           const markerCenterX = gridX + gridSize / 2;
           const markerCenterY = gridY + gridSize / 2;
           const markerRadius = gridSize / 4;
@@ -382,7 +375,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
               (mouseWorldY - markerCenterY) ** 2
           );
           if (distance <= markerRadius) {
-            selectedObject.current = { type: "marker", key };
+            selectedObject.current = { type: "marker", marker: markerAt };
             didSelectSomething = true;
           }
         }
@@ -407,20 +400,35 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
           if (selectedObject.current) {
             selectedObject.current = null;
           } else {
-            const newMarker: Marker = {
-              id: crypto.randomUUID(),
-              pos: pointFromKey(key),
-              color: `hsl(${Math.random() * 360}, 70%, 50%)`,
-            };
-            markers.current.set(key, newMarker);
-            addHistoryEntry({ type: "ADD_MARKER", payload: { key } });
+            // Only add marker if not present at this position
+            if (
+              !markers.current.some(
+                (m) => m.pos.x === gridX && m.pos.y === gridY
+              )
+            ) {
+              const newMarker: Marker = {
+                id:
+                  markers.current.length > 0
+                    ? markers.current[markers.current.length - 1].id + 1
+                    : 1,
+                pos: { x: gridX, y: gridY },
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+              };
+              markers.current.push(newMarker);
+              addHistoryEntry({
+                type: "ADD_MARKER",
+                payload: { marker: newMarker },
+              });
+            }
           }
         }
       }
 
       draggingMarker.current = null;
-      dragStartMarkerKey.current = null;
+      dragStartMarker.current = null;
       s.isDragging = false;
+      hasMovedMarker.current = false;
+      dragStartMarkerPos.current = null;
       draw();
     };
 
@@ -447,29 +455,26 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
 
       switch (lastAction.type) {
         case "ADD_MARKER":
-          markers.current.delete(lastAction.payload.key);
+          markers.current.pop();
           break;
         case "DELETE_MARKER":
-          markers.current.set(
-            lastAction.payload.key,
-            lastAction.payload.marker
-          );
+          markers.current.push(lastAction.payload.marker);
           break;
         case "ADD_LINE":
           lines.current.pop();
           break;
         case "DELETE_LINE":
-          lines.current.splice(
-            lastAction.payload.index,
-            0,
-            lastAction.payload.line
+          lines.current.push(lastAction.payload.line);
+          break;
+        case "MOVE_MARKER": {
+          const { oldPos, newPos, marker } = lastAction.payload;
+          const markerToUpdate = markers.current.find(
+            (m) => m.id === marker.id
           );
-          break;
-        case "MOVE_MARKER":
-          const { oldKey, newKey, marker } = lastAction.payload;
-          markers.current.delete(newKey);
-          markers.current.set(oldKey, marker);
-          break;
+          if (markerToUpdate) {
+            markerToUpdate.pos = oldPos;
+          }
+        }
       }
       selectedObject.current = null; // Deselect after undoing
       draw();
@@ -482,13 +487,13 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
       ) {
         e.preventDefault();
         if (selectedObject.current.type === "marker") {
-          const { key } = selectedObject.current;
-          const deletedMarker = markers.current.get(key);
-          if (deletedMarker) {
-            markers.current.delete(key);
+          const marker = selectedObject.current.marker;
+          const idx = markers.current.indexOf(marker);
+          if (idx !== -1) {
+            markers.current.splice(idx, 1);
             addHistoryEntry({
               type: "DELETE_MARKER",
-              payload: { key, marker: deletedMarker },
+              payload: { marker },
             });
           }
         } else if (selectedObject.current.type === "line") {
@@ -498,7 +503,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
             lines.current.splice(index, 1);
             addHistoryEntry({
               type: "DELETE_LINE",
-              payload: { line: deletedLine, index },
+              payload: { line: deletedLine },
             });
           }
         }
