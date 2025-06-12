@@ -254,11 +254,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
 
       const isLineDrawingMode =
         isShiftDown.current || activeDrawButton === "draw-lines";
-
-      // Prioritize line drawing clicks over panning if in line drawing mode.
-      if (isLineDrawingMode) {
-        return;
-      }
+      const isMarkerPlaceMode = activeDrawButton === "place-marker";
 
       if (!isShiftDown.current) {
         const gridX =
@@ -289,12 +285,10 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
 
       const isLineDrawingMode =
         isShiftDown.current || activeDrawButton === "draw-lines";
+      const isMarkerPlaceMode = activeDrawButton === "place-marker";
 
-      if (
-        (isShiftDown.current || isLineDrawingMode) &&
-        !s.isDragging &&
-        !draggingMarker.current
-      ) {
+      // hightlight nearest vertex if in line drawing mode
+      if (isLineDrawingMode && !s.isDragging && !draggingMarker.current) {
         updateHighlight(e.clientX, e.clientY);
       } else if (highlightedVertex.current) {
         clearHighlight();
@@ -343,6 +337,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
 
       const isLineDrawingMode =
         isShiftDown.current || activeDrawButton === "draw-lines";
+      const isMarkerPlaceMode = activeDrawButton === "place-marker";
 
       if (dragStartMarkerKey.current && draggingMarker.current && moved) {
         const marker = markers.current.get(draggingMarker.current);
@@ -356,11 +351,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
             },
           });
         }
-      } else if (
-        (isShiftDown.current || isLineDrawingMode) &&
-        !moved &&
-        highlightedVertex.current
-      ) {
+      } else if (isLineDrawingMode && !moved && highlightedVertex.current) {
         if (lineDrawingStart.current) {
           const newLine: Line = {
             start: lineDrawingStart.current,
@@ -412,8 +403,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({ activeDrawButton }) => {
             }
           }
         }
-
-        if (!didSelectSomething) {
+        if (!didSelectSomething && isMarkerPlaceMode) {
           if (selectedObject.current) {
             selectedObject.current = null;
           } else {
