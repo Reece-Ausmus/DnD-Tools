@@ -101,20 +101,30 @@ const Map: React.FC = () => {
       : null;
 
   return (
-    <Container>
-      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-        <Typography variant="h1" align="center" sx={{ marginTop: "20px" }}>
-          Map Page
-        </Typography>
+    <Container sx={{ border: "1px solid gray" }}>
+      <Typography variant="h1" align="center" sx={{ margin: "20px" }}>
+        Map Page
+      </Typography>
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "space-between",
+          border: "1px solid gray",
+        }}
+      >
         <Button variant="contained" onClick={handleClickNewMap}>
           New Map
         </Button>
       </Box>
-      <Container
-        sx={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0px" }}
-      >
+      <Container sx={{ display: "grid", gridTemplateColumns: "auto 1fr" }}>
         {/* Left column */}
-        <Box>
+        <Box
+          sx={{
+            border: "1px solid gray",
+            marginTop: "20px",
+          }}
+        >
           <Box
             sx={{
               display: "flex",
@@ -122,6 +132,8 @@ const Map: React.FC = () => {
               alignItems: "flex-start",
               gap: 2, // Adds space between buttons
               padding: 4,
+              width: "300px",
+              border: "1px solid gray",
             }}
           >
             {/* Map over the `drawButtonOptions` data array */}
