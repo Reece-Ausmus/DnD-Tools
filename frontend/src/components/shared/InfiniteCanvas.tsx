@@ -12,7 +12,13 @@ interface CanvasState {
 
 // statuses from Map.tsx
 type MapPageProps = {
-  activeDrawButton: "place-marker" | "draw-lines" | "draw-box" | null;
+  activeDrawButton:
+    | "place-marker"
+    | "draw-lines"
+    | "draw-box"
+    | "dance-time"
+    | "erase"
+    | null;
 };
 
 type Point = { x: number; y: number };

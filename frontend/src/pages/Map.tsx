@@ -18,12 +18,15 @@ const drawButtonOptions = [
   { id: "place-marker", label: "Place Marker" },
   { id: "draw-lines", label: "Draw Line" },
   { id: "draw-box", label: "Draw box" },
+  { id: "dance-time", label: "Do a little dance" },
+  { id: "erase", label: "Erase" },
 ] as const;
 
 const Map: React.FC = () => {
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState(-1);
+  const [currentColor, setCurrentColor] = useState<string>("#E57373");
 
   const { campaigns, fetchCampaigns, campaignsLoading } = useCampaigns();
 
@@ -149,6 +152,44 @@ const Map: React.FC = () => {
               </Button>
             ))}
             <div>Current Mode: {activeDrawButton || "None"}</div>
+            {/* 3. Add the Color Picker UI Element */}
+            <Box
+              sx={{
+                mt: 2,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <Box
+                component="label"
+                htmlFor="color-picker"
+                sx={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  backgroundColor: currentColor,
+                  // Simple hover effect
+                  "&:hover": {
+                    border: "2px solid gray",
+                  },
+                }}
+              />
+              <input
+                type="color"
+                id="color-picker"
+                value={currentColor}
+                onChange={(e) => setCurrentColor(e.target.value)}
+                style={{
+                  // Hide the default input but keep it functional
+                  visibility: "hidden",
+                  width: 0,
+                  height: 0,
+                  position: "absolute",
+                }}
+              />
+            </Box>
           </Box>
         </Box>
         {/* Right column */}
