@@ -27,6 +27,7 @@ const Map: React.FC = () => {
   const [newMapName, setNewMapName] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState(-1);
   const [markerColor, setMarkerColor] = useState<string>("#E57373");
+  const [wallColor, setWallColor] = useState<string>("#E57373");
 
   const { campaigns, fetchCampaigns, campaignsLoading } = useCampaigns();
 
@@ -141,55 +142,103 @@ const Map: React.FC = () => {
           >
             {/* Map over the `drawButtonOptions` data array */}
             {drawButtonOptions.map((option, index) => (
-              <Button
+              <Container
                 key={option.id}
-                variant="contained"
-                // set button color based on activeDrawButton array
-                color={activeDrawButtonIndex === index ? "primary" : "inherit"}
-                onClick={() => handleDrawButtonClick(index)}
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "auto 1fr",
+                  alignItems: "center",
+                }}
               >
-                {option.label} {/* Use the unique label from our data */}
-              </Button>
+                {/* First Column: button */}
+                <Button
+                  variant="contained"
+                  color={
+                    activeDrawButtonIndex === index ? "primary" : "inherit"
+                  }
+                  onClick={() => handleDrawButtonClick(index)}
+                >
+                  {option.label}
+                </Button>
+                {/* Second Column: marker color circle */}
+                {option.id === "place-marker" && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box
+                      component="label"
+                      htmlFor="marker-color-picker"
+                      sx={{
+                        width: "35px",
+                        height: "35px",
+                        borderRadius: "35px",
+                        cursor: "pointer",
+                        backgroundColor: markerColor,
+                        "&:hover": {
+                          border: "2px solid gray",
+                        },
+                      }}
+                    />
+                    <input
+                      type="color"
+                      id="marker-color-picker"
+                      value={markerColor}
+                      onChange={(e) => setMarkerColor(e.target.value)}
+                      style={{
+                        // Hide the default input but keep it functional
+                        visibility: "hidden",
+                        width: 0,
+                        height: 0,
+                        position: "absolute",
+                      }}
+                    />
+                  </Box>
+                )}
+                {/* Second Column: wall color circle */}
+                {option.id === "draw-lines" && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Box
+                      component="label"
+                      htmlFor="wall-color-picker"
+                      sx={{
+                        width: "35px",
+                        height: "35px",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        backgroundColor: wallColor,
+                        "&:hover": {
+                          border: "2px solid gray",
+                        },
+                      }}
+                    />
+                    <input
+                      type="color"
+                      id="wall-color-picker"
+                      value={wallColor}
+                      onChange={(e) => setWallColor(e.target.value)}
+                      style={{
+                        // Hide the default input but keep it functional
+                        visibility: "hidden",
+                        width: 0,
+                        height: 0,
+                        position: "absolute",
+                      }}
+                    />
+                  </Box>
+                )}
+              </Container>
             ))}
             <div>Current Mode: {activeDrawButton || "None"}</div>
-            {/* 3. Add the Color Picker UI Element */}
-            <Box
-              sx={{
-                mt: 2,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <Box
-                component="label"
-                htmlFor="color-picker"
-                sx={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  backgroundColor: markerColor,
-                  // Simple hover effect
-                  "&:hover": {
-                    border: "2px solid gray",
-                  },
-                }}
-              />
-              <input
-                type="color"
-                id="color-picker"
-                value={markerColor}
-                onChange={(e) => setMarkerColor(e.target.value)}
-                style={{
-                  // Hide the default input but keep it functional
-                  visibility: "hidden",
-                  width: 0,
-                  height: 0,
-                  position: "absolute",
-                }}
-              />
-            </Box>
           </Box>
         </Box>
         {/* Right column */}
@@ -206,6 +255,7 @@ const Map: React.FC = () => {
           <InfiniteCanvas
             activeDrawButton={activeDrawButton}
             markerColor={markerColor}
+            wallColor={wallColor}
           />
         </Box>
 

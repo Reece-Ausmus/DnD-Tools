@@ -20,6 +20,7 @@ type MapPageProps = {
     | "erase"
     | null;
   markerColor: string;
+  wallColor: string;
 };
 
 type Point = { x: number; y: number };
@@ -45,6 +46,7 @@ type Selection =
 const InfiniteCanvas: React.FC<MapPageProps> = ({
   activeDrawButton,
   markerColor,
+  wallColor,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const state = useRef<CanvasState>({
@@ -121,7 +123,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     // Draw preview line
     if (lineDrawingStart.current && highlightedVertex.current) {
       ctx.save();
-      ctx.strokeStyle = "rgba(255, 0, 0, 0.5)";
+      ctx.strokeStyle = wallColor;
       ctx.setLineDash([8 / scale, 4 / scale]);
       ctx.lineWidth = 3 / scale;
       ctx.beginPath();
@@ -434,7 +436,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
                 : 1,
             start: lineDrawingStart.current,
             end: highlightedVertex.current,
-            color: "red",
+            color: wallColor,
           };
           lines.current.push(newLine);
           addHistoryEntry({ type: "ADD_LINE", payload: { line: newLine } });
@@ -672,7 +674,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       window.removeEventListener("keyup", handleKeyUp);
       canvas.removeEventListener("mouseleave", onMouseLeave);
     };
-  }, [activeDrawButton, markerColor]);
+  }, [activeDrawButton, markerColor, wallColor]);
 
   return (
     <canvas
