@@ -640,6 +640,20 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       }
     };
 
+    // dynamic cursor changing
+    if (activeDrawButton === "erase") {
+      canvas.style.cursor = "crosshair";
+    } else if (s.isDragging) {
+      canvas.style.cursor = "grabbing";
+    } else if (
+      activeDrawButton === "place-marker" ||
+      activeDrawButton === "draw-lines"
+    ) {
+      canvas.style.cursor = "crosshair";
+    } else {
+      canvas.style.cursor = "grab";
+    }
+
     canvas.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mouseup", onMouseUp);
     canvas.addEventListener("mousemove", onMouseMove);
