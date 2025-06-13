@@ -17,6 +17,7 @@
     "@mui/x-date-pickers": "^7.28.0",
     "@types/node": "^22.13.10",
     "axios": "^1.8.2",
+    "colord": "^2.9.3",
     "dayjs": "^1.11.13",
     "path": "^0.12.7",
     "react": "^18.3.1",

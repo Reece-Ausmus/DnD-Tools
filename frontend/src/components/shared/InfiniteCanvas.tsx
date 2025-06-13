@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from "react";
+import { colord } from "colord";
 
 // --- TYPES ---
 interface CanvasState {
@@ -136,7 +137,8 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     // Draw vertex highlight
     if (highlightedVertex.current) {
       ctx.save();
-      ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
+      const highlightColor = colord(wallColor).alpha(0.5).toRgbString();
+      ctx.fillStyle = highlightColor;
       ctx.beginPath();
       const radius = 8 / scale;
       ctx.arc(
