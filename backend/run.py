@@ -1,11 +1,11 @@
-from app import create_app, db
+from app import *
 import os
 from dotenv import load_dotenv
 from app.models import ClassType, Race
 
 load_dotenv()
 
-app = create_app()
+app, socketio = create_app()
 
 def populate_class_types():
     if not ClassType.query.first():
@@ -59,4 +59,6 @@ if __name__ == '__main__':
         populate_class_types()
         populate_races()
 
-    app.run(debug=True, port=os.getenv('PORT') or 5001)
+    # app.run(debug=True, port=os.getenv('PORT') or 5001)
+    # sockio.run() essentially wraps app.run() to enable socket support
+    socketio.run(app, debug=True, host="0.0.0.0", port=os.getenv('PORT') or 5001)

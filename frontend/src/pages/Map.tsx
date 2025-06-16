@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Container,
@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import InfiniteCanvas from "@/components/shared/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
+import { io, Socket } from "socket.io-client";
 
 const drawButtonOptions = [
   { id: "place-marker", label: "Place Marker" },
@@ -23,6 +24,7 @@ const drawButtonOptions = [
 ] as const;
 
 const Map: React.FC = () => {
+  const socket: Socket = useMemo(() => io("http://localhost:5001"), []);
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState(-1);
@@ -256,6 +258,7 @@ const Map: React.FC = () => {
             activeDrawButton={activeDrawButton}
             markerColor={markerColor}
             wallColor={wallColor}
+            socket={socket}
           />
         </Box>
 
