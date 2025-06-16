@@ -13,6 +13,8 @@ import {
 } from "@mui/material";
 import InfiniteCanvas from "@/components/shared/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
+import CampaignContext from "@/context/CampaignContext";
+import { Campaign, Character } from "@/util/types";
 
 const drawButtonOptions = [
   { id: "place-marker", label: "Place Marker" },
@@ -25,11 +27,25 @@ const drawButtonOptions = [
 const Map: React.FC = () => {
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
-  const [selectedCampaignId, setSelectedCampaignId] = useState(-1);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<Number | null>(
+    null
+  );
   const [markerColor, setMarkerColor] = useState<string>("#E57373");
   const [wallColor, setWallColor] = useState<string>("#E57373");
 
   const { campaigns, fetchCampaigns, campaignsLoading } = useCampaigns();
+  const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null);
+
+  const updateCurrentCampaign = (campaign_id: number) => {
+    // find campaign by id
+    const foundCampaign = campaigns.find(
+      (campaign) => campaign.id === campaign_id
+    );
+
+    setCurrentCampaign(foundCampaign || null);
+  };
+
+  const handlePlayerTokenClick = (character: Character) => {};
 
   const handleClickNewMap = () => {
     setNewMapOpen(true);
@@ -135,7 +151,7 @@ const Map: React.FC = () => {
               flexDirection: "column", // Stacks buttons vertically
               alignItems: "flex-start",
               gap: 2, // Adds space between buttons
-              padding: 4,
+              paddingTop: "20px",
               width: "300px",
               border: "1px solid gray",
             }}
@@ -166,7 +182,8 @@ const Map: React.FC = () => {
                     sx={{
                       display: "flex",
                       flexDirection: "column",
-                      alignItems: "center",
+                      alignItems: "left",
+                      marginLeft: "20px",
                     }}
                   >
                     <Box
@@ -204,7 +221,8 @@ const Map: React.FC = () => {
                     sx={{
                       display: "flex",
                       flexDirection: "column",
-                      alignItems: "center",
+                      alignItems: "left",
+                      marginLeft: "20px",
                     }}
                   >
                     <Box
@@ -238,7 +256,60 @@ const Map: React.FC = () => {
                 )}
               </Container>
             ))}
-            <div>Current Mode: {activeDrawButton || "None"}</div>
+            <div style={{ paddingLeft: "20px" }}>
+              Current Mode: {activeDrawButton || "None"}
+            </div>
+            <div style={{ paddingLeft: "20px" }}>
+              {/* Select Campaign Drop Down */}
+              <TextField
+                select
+                fullWidth
+                label="Select Campaign"
+                value={selectedCampaignId}
+                onChange={(e) => {
+                  const newId = Number(e.target.value);
+                  setSelectedCampaignId(newId);
+                  updateCurrentCampaign(newId);
+                }}
+                variant="standard"
+                margin="dense"
+              >
+                <MenuItem key={""} value={""}>
+                  {"None"}
+                </MenuItem>
+                {campaigns.map((campaign) => (
+                  <MenuItem key={campaign.id} value={campaign.id}>
+                    {campaign.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <div>
+                Current Campaign id: {String(selectedCampaignId) || "None"}
+              </div>
+              <div>Current DM id: {currentCampaign?.dm || "None"}</div>
+              <div>
+                Current campaign name: {currentCampaign?.name || "None"}
+              </div>
+              <div>Char count: {currentCampaign?.char_count || "None"}</div>
+            </div>
+            {/* player token area */}
+            <div style={{ border: "1px solid gray", width: "100%" }}>
+              <Typography variant="h2" align="left" sx={{ margin: "20px" }}>
+                Player tokens:
+              </Typography>
+              <Box sx={{ border: "1px solid gray", margin: "20px" }}>
+                Toekn
+                {currentCampaign?.characters.map((character) => (
+                  <button
+                    key={character.id}
+                    onClick={() => handlePlayerTokenClick(character)}
+                    style={{ margin: "5px" }}
+                  >
+                    {character.name}
+                  </button>
+                ))}
+              </Box>
+            </div>
           </Box>
         </Box>
         {/* Right column */}
@@ -259,6 +330,7 @@ const Map: React.FC = () => {
           />
         </Box>
 
+        {/* New Map Button Dialogue Box */}
         <Dialog open={newMapOpen} onClose={handleNewMapClose}>
           <DialogTitle>New Map</DialogTitle>
           <DialogContent>
