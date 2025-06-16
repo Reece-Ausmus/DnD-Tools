@@ -300,13 +300,38 @@ const Map: React.FC = () => {
               <Box sx={{ border: "1px solid gray", margin: "20px" }}>
                 Toekn
                 {currentCampaign?.characters.map((character) => (
-                  <button
-                    key={character.id}
-                    onClick={() => handlePlayerTokenClick(character)}
-                    style={{ margin: "5px" }}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "left",
+                      marginLeft: "20px",
+                    }}
                   >
-                    {character.name}
-                  </button>
+                    <Box
+                      component="label"
+                      sx={{
+                        width: "35px",
+                        height: "35px",
+                        borderRadius: "35px",
+                        cursor: "pointer",
+                        backgroundColor: "blueviolet",
+                        "&:hover": {
+                          border: "2px solid gray",
+                        },
+                      }}
+                    />
+                    <input
+                      onChange={(e) => handlePlayerTokenClick(character)}
+                      style={{
+                        // Hide the default input but keep it functional
+                        visibility: "hidden",
+                        width: 0,
+                        height: 0,
+                        position: "absolute",
+                      }}
+                    />
+                  </Box>
                 ))}
               </Box>
             </div>
