@@ -10,10 +10,12 @@ import {
   DialogActions,
   TextField,
   MenuItem,
+  ButtonGroup,
 } from "@mui/material";
 import InfiniteCanvas from "@/components/shared/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
 import { io, Socket } from "socket.io-client";
+import { Map as MapType } from "@/util/types";
 
 const drawButtonOptions = [
   { id: "place-marker", label: "Place Marker" },
@@ -32,6 +34,30 @@ const Map: React.FC = () => {
   const [wallColor, setWallColor] = useState<string>("#E57373");
 
   const { campaigns, fetchCampaigns, campaignsLoading } = useCampaigns();
+
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [availableMaps, setAvailableMaps] = useState<MapType[]>([]);
+  const [selectedMap, setSelectedMap] = useState<number | null>(null);
+
+  const handleConnectToMap = async () => {
+    setConnectOpen(true);
+    try {
+      const response = await fetch("api/map/get_maps", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch available maps.");
+      }
+      setAvailableMaps(data.maps || []);
+    } catch (error) {
+      console.error("Error fetching available maps:", error);
+    }
+  };
 
   const handleClickNewMap = () => {
     setNewMapOpen(true);
@@ -119,9 +145,17 @@ const Map: React.FC = () => {
           border: "1px solid gray",
         }}
       >
-        <Button variant="contained" onClick={handleClickNewMap}>
-          New Map
-        </Button>
+        <ButtonGroup variant="text" color="secondary">
+          <Button color="primary" onClick={handleClickNewMap}>
+            New Map
+          </Button>
+          <Button color="primary" onClick={() => console.log("Load Map")}>
+            Load Map
+          </Button>
+          <Button color="primary" onClick={handleConnectToMap}>
+            Connect to Map
+          </Button>
+        </ButtonGroup>
       </Box>
       <Container sx={{ display: "grid", gridTemplateColumns: "auto 1fr" }}>
         {/* Left column */}
@@ -295,6 +329,41 @@ const Map: React.FC = () => {
             <Button onClick={handleNewMapClose}>Cancel</Button>
             <Button variant="contained" onClick={handleSubmit}>
               Create
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={connectOpen} onClose={() => setConnectOpen(false)}>
+          <DialogTitle>Connect to Map</DialogTitle>
+          <DialogContent>
+            <TextField
+              select
+              fullWidth
+              label="Select Map"
+              value={selectedMap || ""}
+              onChange={(e) => setSelectedMap(Number(e.target.value))}
+              variant="standard"
+              margin="dense"
+            >
+              {availableMaps.map((map) => (
+                <MenuItem key={map.id} value={map.id}>
+                  {map.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConnectOpen(false)}>Cancel</Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                if (selectedMap) {
+                  socket.emit("connect-to-map", { mapId: selectedMap });
+                  setConnectOpen(false);
+                }
+              }}
+            >
+              Connect
             </Button>
           </DialogActions>
         </Dialog>

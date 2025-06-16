@@ -33,3 +33,9 @@ export interface Invite {
   meeting_frequency: string;
   dm: string;
 }
+
+export interface Map {
+  id: number;
+  name: string;
+  campaign_id: number;
+}
