@@ -358,7 +358,7 @@ const Map: React.FC = () => {
               variant="contained"
               onClick={() => {
                 if (selectedMap) {
-                  socket.emit("connect-to-map", { mapId: selectedMap });
+                  socket.emit("connect_to_map", { mapId: selectedMap });
                   setConnectOpen(false);
                 }
               }}
