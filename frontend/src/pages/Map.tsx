@@ -11,6 +11,7 @@ import {
   TextField,
   MenuItem,
   ButtonGroup,
+  Tooltip,
 } from "@mui/material";
 import InfiniteCanvas from "@/components/shared/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
@@ -379,12 +380,19 @@ const Map: React.FC = () => {
                       margin: "5px",
                     }}
                   >
-                    <div style={{ paddingRight: "10px" }}>
-                      {character.name.length > 15
-                        ? `${character.name.substring(0, 15)}...`
-                        : character.name}
-                      :
-                    </div>
+                    <Tooltip title={character.name} arrow>
+                      <Typography
+                        noWrap
+                        sx={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          cursor: "default",
+                          paddingRight: "10px",
+                        }}
+                      >
+                        {character.name}:
+                      </Typography>
+                    </Tooltip>
                     <Box
                       component="label"
                       sx={{
