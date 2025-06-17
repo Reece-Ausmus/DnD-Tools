@@ -38,7 +38,7 @@ const Map: React.FC = () => {
   );
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
-  const [selectedCampaignId, setSelectedCampaignId] = useState<Number | null>(
+  const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(
     null
   );
   const [markerColor, setMarkerColor] = useState<string>("#E57373");
@@ -62,7 +62,51 @@ const Map: React.FC = () => {
   const [availableMaps, setAvailableMaps] = useState<MapType[]>([]);
   const [selectedMap, setSelectedMap] = useState<number | null>(null);
 
-  const handleConnectToMap = async () => {
+  // Create a map and emit to server
+  const handleCreateMap = async () => {
+    if (!socket.connected) {
+      console.error("Socket is not connected.");
+      return;
+    }
+    if (!newMapName.trim()) {
+      console.error("Map name cannot be empty.");
+      return;
+    }
+    if (selectedCampaignId === null || selectedCampaignId < 0) {
+      console.error("Please select a valid campaign.");
+      return;
+    }
+
+    socket.emit("create_map", {
+      name: newMapName,
+      campaign_id: selectedCampaignId,
+    });
+
+    setNewMapName("");
+    setNewMapOpen(false);
+    setSelectedCampaignId(-1);
+  };
+
+  // Join a map room
+  const handleJoinMapRoom = (mapId: number) => {
+    if (!socket.connected) {
+      console.error("Socket is not connected.");
+      return;
+    }
+    if (mapId < 0) {
+      console.error("Invalid map ID.");
+      return;
+    }
+    if (selectedMap !== null) {
+      socket.emit("join_map_room", { map_id: mapId });
+      setConnectOpen(false);
+    } else {
+      console.error("No map selected to join.");
+    }
+  };
+
+  // Get available maps from the server
+  const handleConnectToMapButton = async () => {
     setConnectOpen(true);
     try {
       const response = await fetch("api/map/get_maps", {
@@ -87,7 +131,10 @@ const Map: React.FC = () => {
     // Connect to the socket server when the component mounts
     socket.connect();
 
-    // Listen for the 'map_connected' event from the server
+    socket.on("map_created", (data) => {
+      console.log("Map created:", data);
+    });
+
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
       // this is where you would update the canvas to the connected map state
@@ -99,8 +146,11 @@ const Map: React.FC = () => {
     });
 
     return () => {
+      // Cleanup: disconnect the socket when the component unmounts
+      socket.off("map_created");
       socket.off("map_connected");
       socket.off("error");
+      socket.disconnect();
     };
   }, [socket]);
 
@@ -110,35 +160,6 @@ const Map: React.FC = () => {
 
   const handleNewMapClose = () => {
     setNewMapOpen(false);
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const response = await fetch("api/map/create_map", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          name: newMapName,
-          campaign_id: selectedCampaignId,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create map.");
-      }
-      console.log("Map created successfully:", data);
-    } catch (error) {
-      console.error("Error creating map:", error);
-    }
-
-    setNewMapName("");
-    setNewMapOpen(false);
-    setSelectedCampaignId(-1);
   };
 
   // ActiveIndex holds the index of currently selecting drawing button
@@ -197,7 +218,7 @@ const Map: React.FC = () => {
           <Button color="primary" onClick={() => console.log("Load Map")}>
             Load Map
           </Button>
-          <Button color="primary" onClick={handleConnectToMap}>
+          <Button color="primary" onClick={handleConnectToMapButton}>
             Connect to Map
           </Button>
         </ButtonGroup>
@@ -453,7 +474,7 @@ const Map: React.FC = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleNewMapClose}>Cancel</Button>
-            <Button variant="contained" onClick={handleSubmit}>
+            <Button variant="contained" onClick={handleCreateMap}>
               Create
             </Button>
           </DialogActions>
@@ -482,16 +503,7 @@ const Map: React.FC = () => {
             <Button onClick={() => setConnectOpen(false)}>Cancel</Button>
             <Button
               variant="contained"
-              onClick={() => {
-                if (selectedMap) {
-                  if (socket.connected) {
-                    socket.emit("join_map_room", { mapId: selectedMap });
-                    setConnectOpen(false);
-                  } else {
-                    console.error("Socket is not connected.");
-                  }
-                }
-              }}
+              onClick={() => handleJoinMapRoom(selectedMap || -1)}
             >
               Connect
             </Button>
