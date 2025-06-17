@@ -11,6 +11,7 @@ import {
   TextField,
   MenuItem,
   ButtonGroup,
+  Tooltip,
 } from "@mui/material";
 import InfiniteCanvas from "@/components/shared/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
@@ -383,17 +384,36 @@ const Map: React.FC = () => {
               <Typography variant="h2" align="left" sx={{ margin: "20px" }}>
                 Player tokens:
               </Typography>
-              <Box sx={{ border: "1px solid gray", margin: "20px" }}>
-                Toekn
+              <Box
+                sx={{
+                  border: "1px solid gray",
+                  margin: "20px",
+                  padding: "10px",
+                }}
+              >
                 {currentCampaign?.characters.map((character) => (
                   <Box
                     sx={{
-                      display: "flex",
+                      display: "grid",
+                      gridTemplateColumns: "auto 1fr",
                       flexDirection: "column",
-                      alignItems: "left",
-                      marginLeft: "20px",
+                      alignItems: "center",
+                      margin: "5px",
                     }}
                   >
+                    <Tooltip title={character.name} arrow>
+                      <Typography
+                        noWrap
+                        sx={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          cursor: "default",
+                          paddingRight: "10px",
+                        }}
+                      >
+                        {character.name}:
+                      </Typography>
+                    </Tooltip>
                     <Box
                       component="label"
                       sx={{
