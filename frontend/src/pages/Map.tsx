@@ -297,17 +297,29 @@ const Map: React.FC = () => {
               <Typography variant="h2" align="left" sx={{ margin: "20px" }}>
                 Player tokens:
               </Typography>
-              <Box sx={{ border: "1px solid gray", margin: "20px" }}>
-                Toekn
+              <Box
+                sx={{
+                  border: "1px solid gray",
+                  margin: "20px",
+                  padding: "10px",
+                }}
+              >
                 {currentCampaign?.characters.map((character) => (
                   <Box
                     sx={{
-                      display: "flex",
+                      display: "grid",
+                      gridTemplateColumns: "auto 1fr",
                       flexDirection: "column",
-                      alignItems: "left",
-                      marginLeft: "20px",
+                      alignItems: "center",
+                      margin: "5px",
                     }}
                   >
+                    <div style={{ paddingRight: "10px" }}>
+                      {character.name.length > 15
+                        ? `${character.name.substring(0, 15)}...`
+                        : character.name}
+                      :
+                    </div>
                     <Box
                       component="label"
                       sx={{
