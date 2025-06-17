@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Container,
@@ -10,11 +10,14 @@ import {
   DialogActions,
   TextField,
   MenuItem,
+  ButtonGroup,
 } from "@mui/material";
 import InfiniteCanvas from "@/components/shared/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
 import CampaignContext from "@/context/CampaignContext";
 import { Campaign, Character } from "@/util/types";
+import { io, Socket } from "socket.io-client";
+import { Map as MapType } from "@/util/types";
 
 const drawButtonOptions = [
   { id: "place-marker", label: "Place Marker" },
@@ -25,6 +28,14 @@ const drawButtonOptions = [
 ] as const;
 
 const Map: React.FC = () => {
+  const socket: Socket = useMemo(
+    () =>
+      io("http://localhost:5001", {
+        withCredentials: true,
+        transports: ["websocket"],
+      }),
+    []
+  );
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState<Number | null>(
@@ -46,6 +57,51 @@ const Map: React.FC = () => {
   };
 
   const handlePlayerTokenClick = (character: Character) => {};
+
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [availableMaps, setAvailableMaps] = useState<MapType[]>([]);
+  const [selectedMap, setSelectedMap] = useState<number | null>(null);
+
+  const handleConnectToMap = async () => {
+    setConnectOpen(true);
+    try {
+      const response = await fetch("api/map/get_maps", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch available maps.");
+      }
+      setAvailableMaps(data.maps || []);
+    } catch (error) {
+      console.error("Error fetching available maps:", error);
+    }
+  };
+
+  // Effect for socket stuff
+  useEffect(() => {
+    // Connect to the socket server when the component mounts
+    socket.connect();
+
+    // Listen for the 'map_connected' event from the server
+    socket.on("map_connected", (data) => {
+      console.log("Connected to map:", data);
+      // this is where you would update the canvas to the connected map state
+    });
+
+    socket.on("error", (error) => {
+      console.error("Socket error:", error);
+    });
+
+    return () => {
+      socket.off("map_connected");
+      socket.off("error");
+    };
+  }, [socket]);
 
   const handleClickNewMap = () => {
     setNewMapOpen(true);
@@ -133,9 +189,17 @@ const Map: React.FC = () => {
           border: "1px solid gray",
         }}
       >
-        <Button variant="contained" onClick={handleClickNewMap}>
-          New Map
-        </Button>
+        <ButtonGroup variant="text" color="secondary">
+          <Button color="primary" onClick={handleClickNewMap}>
+            New Map
+          </Button>
+          <Button color="primary" onClick={() => console.log("Load Map")}>
+            Load Map
+          </Button>
+          <Button color="primary" onClick={handleConnectToMap}>
+            Connect to Map
+          </Button>
+        </ButtonGroup>
       </Box>
       <Container sx={{ display: "grid", gridTemplateColumns: "auto 1fr" }}>
         {/* Left column */}
@@ -364,6 +428,7 @@ const Map: React.FC = () => {
             activeDrawButton={activeDrawButton}
             markerColor={markerColor}
             wallColor={wallColor}
+            socket={socket}
           />
         </Box>
 
@@ -401,6 +466,45 @@ const Map: React.FC = () => {
             <Button onClick={handleNewMapClose}>Cancel</Button>
             <Button variant="contained" onClick={handleSubmit}>
               Create
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={connectOpen} onClose={() => setConnectOpen(false)}>
+          <DialogTitle>Connect to Map</DialogTitle>
+          <DialogContent>
+            <TextField
+              select
+              fullWidth
+              label="Select Map"
+              value={selectedMap || ""}
+              onChange={(e) => setSelectedMap(Number(e.target.value))}
+              variant="standard"
+              margin="dense"
+            >
+              {availableMaps.map((map) => (
+                <MenuItem key={map.id} value={map.id}>
+                  {map.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConnectOpen(false)}>Cancel</Button>
+            <Button
+              variant="contained"
+              onClick={() => {
+                if (selectedMap) {
+                  if (socket.connected) {
+                    socket.emit("join_map_room", { mapId: selectedMap });
+                    setConnectOpen(false);
+                  } else {
+                    console.error("Socket is not connected.");
+                  }
+                }
+              }}
+            >
+              Connect
             </Button>
           </DialogActions>
         </Dialog>

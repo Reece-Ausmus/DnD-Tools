@@ -11,7 +11,8 @@ interface CanvasState {
   lastY: number;
 }
 
-// statuses from Map.tsx
+import type { Socket } from "socket.io-client";
+
 type MapPageProps = {
   activeDrawButton:
     | "place-marker"
@@ -22,6 +23,7 @@ type MapPageProps = {
     | null;
   markerColor: string;
   wallColor: string;
+  socket: Socket;
 };
 
 type Point = { x: number; y: number };
@@ -48,6 +50,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   activeDrawButton,
   markerColor,
   wallColor,
+  socket,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const state = useRef<CanvasState>({
