@@ -91,6 +91,7 @@ const Map: React.FC = () => {
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
       // this is where you would update the canvas to the connected map state
+      updateCurrentCampaign(data.campaign_id);
     });
 
     socket.on("error", (error) => {

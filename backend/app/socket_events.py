@@ -28,10 +28,12 @@ def handle_join_map_room(data):
     if not map:
         emit('error', {'message': 'Map not found'})
         return
+    
+    campaign_id = map.campaign_id
 
     join_room(f'map_{map_id}')
-    emit('map_connected', {'message': f'Connected to map {map.name}'}, room=f'map_{map_id}', to=request.sid)
-    print(f'\033[94mUser {user.username} joined map room {map_id}\033[0m')
+    emit('map_connected', {'message': f'Connected to map {map.name}', 'campaign_id': campaign_id}, room=f'map_{map_id}', to=request.sid)
+    print(f'\033[94mUser {user.username} joined map room {map_id} (campaign id: {campaign_id})\033[0m')
 
 @socketio.on_error_default
 def default_error_handler(e):
