@@ -26,7 +26,14 @@ const drawButtonOptions = [
 ] as const;
 
 const Map: React.FC = () => {
-  const socket: Socket = useMemo(() => io("http://localhost:5001"), []);
+  const socket: Socket = useMemo(
+    () =>
+      io("http://localhost:5001", {
+        withCredentials: true,
+        transports: ["websocket"],
+      }),
+    []
+  );
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState(-1);
@@ -58,6 +65,27 @@ const Map: React.FC = () => {
       console.error("Error fetching available maps:", error);
     }
   };
+
+  // Effect for socket stuff
+  useEffect(() => {
+    // Connect to the socket server when the component mounts
+    socket.connect();
+
+    // Listen for the 'map_connected' event from the server
+    socket.on("map_connected", (data) => {
+      console.log("Connected to map:", data);
+      // this is where you would update the canvas to the connected map state
+    });
+
+    socket.on("error", (error) => {
+      console.error("Socket error:", error);
+    });
+
+    return () => {
+      socket.off("map_connected");
+      socket.off("error");
+    };
+  }, [socket]);
 
   const handleClickNewMap = () => {
     setNewMapOpen(true);
@@ -358,8 +386,12 @@ const Map: React.FC = () => {
               variant="contained"
               onClick={() => {
                 if (selectedMap) {
-                  socket.emit("connect_to_map", { mapId: selectedMap });
-                  setConnectOpen(false);
+                  if (socket.connected) {
+                    socket.emit("join_map_room", { mapId: selectedMap });
+                    setConnectOpen(false);
+                  } else {
+                    console.error("Socket is not connected.");
+                  }
                 }
               }}
             >
