@@ -169,6 +169,14 @@ const Map: React.FC = () => {
     // Connect to the socket server when the component mounts
     socket.connect();
 
+    const lastMapId = localStorage.getItem("mapId");
+    if (lastMapId) {
+      const mapId = Number(lastMapId);
+      if (!isNaN(mapId) && mapId > 0) {
+        socket.emit("join_map_room", { map_id: mapId });
+      }
+    }
+
     socket.on("error", (error) => {
       console.error("Socket error:", error);
     });
@@ -187,6 +195,7 @@ const Map: React.FC = () => {
 
     socket.on("map_disconnected", (data) => {
       console.log("Disconnected from map:", data);
+      localStorage.removeItem("mapId");
       setMapConnected(false);
       setMapId(null);
     });
@@ -240,6 +249,12 @@ const Map: React.FC = () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []); // An empty dependency array ensures this effect runs only once on mount and cleans up on unmount.
+
+  useEffect(() => {
+    if (mapConnected && mapId !== null) {
+      localStorage.setItem("mapId", String(mapId));
+    }
+  }, [mapConnected, mapId]);
 
   const activeDrawButton =
     activeDrawButtonIndex !== null
