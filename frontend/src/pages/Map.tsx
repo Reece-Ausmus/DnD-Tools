@@ -60,15 +60,37 @@ const Map: React.FC = () => {
   const handlePlayerTokenClick = (character: Character) => {};
 
   const [connectOpen, setConnectOpen] = useState(false);
-  const [availableMaps, setAvailableMaps] = useState<MapType[]>([]);
+  const [dmMaps, setDmMaps] = useState<MapType[]>([]);
+  const [dmOpen, setDmOpen] = useState(false);
+  const [playerMaps, setPlayerMaps] = useState<MapType[]>([]);
   const [selectedMap, setSelectedMap] = useState<number | null>(null);
   const [mapConnected, setMapConnected] = useState(false);
   const [mapId, setMapId] = useState<number | null>(null);
 
-  // Get available maps from the server
-  const handleConnectToMapButton = async () => {
+  const handleClickOpenMap = async () => {
     try {
-      const response = await fetch("api/map/get_maps", {
+      const response = await fetch("api/map/get_dm_maps", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch DM maps.");
+      }
+      setDmMaps(data.maps || []);
+      setDmOpen(true);
+    } catch (error) {
+      console.error("Error fetching DM maps:", error);
+    }
+  };
+
+  // Get available maps from the server
+  const handleClickConnectMap = async () => {
+    try {
+      const response = await fetch("api/map/get_player_maps", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -79,7 +101,7 @@ const Map: React.FC = () => {
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch available maps.");
       }
-      setAvailableMaps(data.maps || []);
+      setPlayerMaps(data.maps || []);
       setConnectOpen(true);
     } catch (error) {
       console.error("Error fetching available maps:", error);
@@ -124,6 +146,7 @@ const Map: React.FC = () => {
     if (selectedMap !== null) {
       socket.emit("join_map_room", { map_id: mapId });
       setConnectOpen(false);
+      setDmOpen(false);
     } else {
       console.error("No map selected to join.");
     }
@@ -138,11 +161,7 @@ const Map: React.FC = () => {
       console.error("Invalid map ID.");
       return;
     }
-    if (selectedMap !== null) {
-      socket.emit("leave_map_room", { map_id: mapId });
-    } else {
-      console.error("No map selected to leave.");
-    }
+    socket.emit("leave_map_room", { map_id: mapId });
   };
 
   // Effect for socket stuff
@@ -241,21 +260,22 @@ const Map: React.FC = () => {
         }}
       >
         <ButtonGroup variant="text" color="secondary">
-          <Button color="primary" onClick={handleClickNewMap}>
-            New Map
-          </Button>
-          <Button color="primary" onClick={() => console.log("Load Map")}>
-            Load Map
-          </Button>
-
           {mapConnected ? (
             <Button color="primary" onClick={handleLeaveMapRoom}>
               Disconnect from Map
             </Button>
           ) : (
-            <Button color="primary" onClick={handleConnectToMapButton}>
-              Connect to Map
-            </Button>
+            <>
+              <Button color="primary" onClick={handleClickNewMap}>
+                New Map
+              </Button>
+              <Button color="primary" onClick={handleClickOpenMap}>
+                Open Map (DM)
+              </Button>
+              <Button color="primary" onClick={handleClickConnectMap}>
+                Connect to Map (Player)
+              </Button>
+            </>
           )}
         </ButtonGroup>
       </Box>
@@ -535,33 +555,80 @@ const Map: React.FC = () => {
           </DialogActions>
         </Dialog>
 
+        {/* DM Map Selection Dialogue Box */}
+        <Dialog open={dmOpen} onClose={() => setDmOpen(false)}>
+          <DialogTitle>Select a Map</DialogTitle>
+          <DialogContent>
+            {dmMaps.length === 0 ? (
+              <Typography variant="body1">
+                No maps available. Create a new map first.
+              </Typography>
+            ) : (
+              <TextField
+                select
+                fullWidth
+                label="Select Map"
+                value={selectedMap || ""}
+                onChange={(e) => setSelectedMap(Number(e.target.value))}
+                variant="standard"
+                margin="dense"
+              >
+                {dmMaps.map((map) => (
+                  <MenuItem key={map.id} value={map.id}>
+                    {map.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDmOpen(false)}>Close</Button>
+            {dmMaps.length > 0 && (
+              <Button
+                variant="contained"
+                onClick={() => handleJoinMapRoom(selectedMap || -1)}
+              >
+                Connect
+              </Button>
+            )}
+          </DialogActions>
+        </Dialog>
+
         <Dialog open={connectOpen} onClose={() => setConnectOpen(false)}>
           <DialogTitle>Connect to Map</DialogTitle>
           <DialogContent>
-            <TextField
-              select
-              fullWidth
-              label="Select Map"
-              value={selectedMap || ""}
-              onChange={(e) => setSelectedMap(Number(e.target.value))}
-              variant="standard"
-              margin="dense"
-            >
-              {availableMaps.map((map) => (
-                <MenuItem key={map.id} value={map.id}>
-                  {map.name}
-                </MenuItem>
-              ))}
-            </TextField>
+            {playerMaps.length === 0 ? (
+              <Typography variant="body1">
+                No available maps to connect to.
+              </Typography>
+            ) : (
+              <TextField
+                select
+                fullWidth
+                label="Select Map"
+                value={selectedMap || ""}
+                onChange={(e) => setSelectedMap(Number(e.target.value))}
+                variant="standard"
+                margin="dense"
+              >
+                {playerMaps.map((map) => (
+                  <MenuItem key={map.id} value={map.id}>
+                    {map.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setConnectOpen(false)}>Cancel</Button>
-            <Button
-              variant="contained"
-              onClick={() => handleJoinMapRoom(selectedMap || -1)}
-            >
-              Connect
-            </Button>
+            <Button onClick={() => setConnectOpen(false)}>Close</Button>
+            {playerMaps.length > 0 && (
+              <Button
+                variant="contained"
+                onClick={() => handleJoinMapRoom(selectedMap || -1)}
+              >
+                Connect
+              </Button>
+            )}
           </DialogActions>
         </Dialog>
       </Container>
