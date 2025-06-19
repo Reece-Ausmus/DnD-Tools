@@ -1,7 +1,11 @@
 import React, { useRef, useEffect } from "react";
 import { colord } from "colord";
-import { Point, Marker, Line } from "@/util/types";
-import { preview_line } from "@/util/draw_util";
+import { Point, Marker, Line, Selection } from "@/util/types";
+import {
+  preview_line,
+  isPointOnLine,
+  draw_selected_highlight,
+} from "@/util/draw_util";
 
 // --- TYPES ---
 interface CanvasState {
@@ -38,11 +42,6 @@ type HistoryEntry =
       type: "MOVE_MARKER";
       payload: { oldPos: Point; newPos: Point; marker: Marker };
     };
-
-// Selection Type
-type Selection =
-  | { type: "marker"; marker: Marker }
-  | { type: "line"; index: number };
 
 const InfiniteCanvas: React.FC<MapPageProps> = ({
   activeDrawButton,
@@ -105,20 +104,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     // Draw lines with selection highlight
     ctx.save();
     lines.current.forEach((line, index) => {
-      if (
-        selectedObject.current?.type === "line" &&
-        selectedObject.current.index === index
-      ) {
-        ctx.strokeStyle = "cyan";
-        ctx.lineWidth = 5 / scale;
-      } else {
-        ctx.strokeStyle = line.color;
-        ctx.lineWidth = 3 / scale;
-      }
-      ctx.beginPath();
-      ctx.moveTo(line.start.x, line.start.y);
-      ctx.lineTo(line.end.x, line.end.y);
-      ctx.stroke();
+      draw_selected_highlight(ctx, line, index, selectedObject.current, scale);
     });
     ctx.restore();
 
@@ -134,8 +120,8 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     }
 
     // Draw vertex highlight
+    ctx.save();
     if (highlightedVertex.current) {
-      ctx.save();
       const highlightColor = colord(wallColor).alpha(0.5).toRgbString();
       ctx.fillStyle = highlightColor;
       ctx.beginPath();
@@ -148,8 +134,8 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         Math.PI * 2
       );
       ctx.fill();
-      ctx.restore();
     }
+    ctx.restore();
 
     // Draw markers with selection highlight
     markers.current.forEach((marker) => {
@@ -254,27 +240,6 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       if (history.current.length > MAX_HISTORY_LENGTH) {
         history.current.shift();
       }
-    };
-
-    const isPointOnLine = (
-      point: Point,
-      line: Line,
-      threshold: number
-    ): boolean => {
-      const { start, end } = line;
-      const dx = end.x - start.x;
-      const dy = end.y - start.y;
-      const lenSq = dx * dx + dy * dy;
-      if (lenSq === 0) {
-        const distSq = (point.x - start.x) ** 2 + (point.y - start.y) ** 2;
-        return Math.sqrt(distSq) < threshold;
-      }
-      let t = ((point.x - start.x) * dx + (point.y - start.y) * dy) / lenSq;
-      t = Math.max(0, Math.min(1, t));
-      const closestX = start.x + t * dx;
-      const closestY = start.y + t * dy;
-      const distSq = (point.x - closestX) ** 2 + (point.y - closestY) ** 2;
-      return Math.sqrt(distSq) < threshold;
     };
 
     const updateHighlight = (clientX: number, clientY: number) => {

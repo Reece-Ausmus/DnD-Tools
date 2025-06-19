@@ -58,3 +58,16 @@ export interface Line {
   end: Point;
   color: string;
 }
+// Selection Type
+interface SelectionBase {
+  readonly type: "marker" | "line";
+}
+export interface MarkerSelection extends SelectionBase {
+  readonly type: "marker";
+  marker: Marker;
+}
+export interface LineSelection extends SelectionBase {
+  readonly type: "line";
+  index: number;
+}
+export type Selection = MarkerSelection | LineSelection;
