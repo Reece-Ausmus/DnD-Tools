@@ -1,10 +1,11 @@
 import React, { useRef, useEffect } from "react";
-import { colord } from "colord";
+
 import { Point, Marker, Line, Selection } from "@/util/types";
 import {
   preview_line,
   isPointOnLine,
-  draw_selected_highlight,
+  draw_selected_line_highlight,
+  draw_selected_marker_highlight,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -104,7 +105,13 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     // Draw lines with selection highlight
     ctx.save();
     lines.current.forEach((line, index) => {
-      draw_selected_highlight(ctx, line, index, selectedObject.current, scale);
+      draw_selected_line_highlight(
+        ctx,
+        line,
+        index,
+        selectedObject.current,
+        scale
+      );
     });
     ctx.restore();
 
@@ -122,19 +129,14 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     // Draw vertex highlight
     ctx.save();
     if (highlightedVertex.current) {
-      const highlightColor = colord(wallColor).alpha(0.5).toRgbString();
-      ctx.fillStyle = highlightColor;
-      ctx.beginPath();
-      const radius = 8 / scale;
-      ctx.arc(
-        highlightedVertex.current.x,
-        highlightedVertex.current.y,
-        radius,
-        0,
-        Math.PI * 2
+      draw_selected_marker_highlight(
+        ctx,
+        highlightedVertex.current,
+        scale,
+        wallColor
       );
-      ctx.fill();
     }
+    ctx.fill();
     ctx.restore();
 
     // Draw markers with selection highlight

@@ -1,4 +1,5 @@
 import { Point, Marker, Line, Selection } from "@/util/types";
+import { colord } from "colord";
 
 // ======================
 // Line drawing functions
@@ -28,7 +29,7 @@ export const preview_line = (
 //
 // if line is selected, draw with blue highlight
 //
-export const draw_selected_highlight = (
+export const draw_selected_line_highlight = (
   ctx: CanvasRenderingContext2D,
   line: Line,
   index: number,
@@ -50,6 +51,23 @@ export const draw_selected_highlight = (
   ctx.moveTo(line.start.x, line.start.y);
   ctx.lineTo(line.end.x, line.end.y);
   ctx.stroke();
+};
+
+// ========================
+// Marker drawing functions
+// ========================
+
+export const draw_selected_marker_highlight = (
+  ctx: CanvasRenderingContext2D,
+  highlightedVertex: Point,
+  scale: number,
+  wallColor: string
+) => {
+  const highlightColor = colord(wallColor).alpha(0.5).toRgbString();
+  ctx.fillStyle = highlightColor;
+  ctx.beginPath();
+  const radius = 8 / scale;
+  ctx.arc(highlightedVertex.x, highlightedVertex.y, radius, 0, Math.PI * 2);
 };
 
 // ============================
