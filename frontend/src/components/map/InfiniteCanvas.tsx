@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { colord } from "colord";
-import { Point, Marker, Line, preview_line } from "@/util/draw_util";
+import { Point, Marker, Line } from "@/util/types";
+import { preview_line } from "@/util/draw_util";
 
 // --- TYPES ---
 interface CanvasState {

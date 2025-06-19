@@ -1,21 +1,4 @@
-//
-// Types for canvas
-//
-export interface Point {
-  x: number;
-  y: number;
-}
-export interface Marker {
-  id: number;
-  pos: Point;
-  color: string;
-}
-export interface Line {
-  id: number;
-  start: Point;
-  end: Point;
-  color: string;
-}
+import { Point, Marker, Line } from "@/util/types";
 
 //
 // Line drawing functions

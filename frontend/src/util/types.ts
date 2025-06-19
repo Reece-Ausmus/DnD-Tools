@@ -39,3 +39,22 @@ export interface Map {
   name: string;
   campaign_id: number;
 }
+
+//
+// Types for map/canvas
+//
+export interface Point {
+  x: number;
+  y: number;
+}
+export interface Marker {
+  id: number;
+  pos: Point;
+  color: string;
+}
+export interface Line {
+  id: number;
+  start: Point;
+  end: Point;
+  color: string;
+}
