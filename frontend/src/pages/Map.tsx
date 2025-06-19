@@ -13,7 +13,7 @@ import {
   ButtonGroup,
   Tooltip,
 } from "@mui/material";
-import InfiniteCanvas from "@/components/shared/InfiniteCanvas";
+import InfiniteCanvas from "@/components/map/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
 import CampaignContext from "@/context/CampaignContext";
 import { Campaign, Character } from "@/util/types";
