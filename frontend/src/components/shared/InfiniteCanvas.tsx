@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { colord } from "colord";
+import { Point, Marker, Line, preview_line } from "@/util/draw_util";
 
 // --- TYPES ---
 interface CanvasState {
@@ -25,10 +26,6 @@ type MapPageProps = {
   wallColor: string;
   socket: Socket;
 };
-
-type Point = { x: number; y: number };
-type Marker = { id: number; pos: Point; color: string };
-type Line = { id: number; start: Point; end: Point; color: string };
 
 // History types for the Undo feature
 type HistoryEntry =
@@ -126,15 +123,13 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
 
     // Draw preview line
     if (lineDrawingStart.current && highlightedVertex.current) {
-      ctx.save();
-      ctx.strokeStyle = wallColor;
-      ctx.setLineDash([8 / scale, 4 / scale]);
-      ctx.lineWidth = 3 / scale;
-      ctx.beginPath();
-      ctx.moveTo(lineDrawingStart.current.x, lineDrawingStart.current.y);
-      ctx.lineTo(highlightedVertex.current.x, highlightedVertex.current.y);
-      ctx.stroke();
-      ctx.restore();
+      preview_line(
+        ctx,
+        lineDrawingStart.current,
+        highlightedVertex.current,
+        scale,
+        wallColor
+      );
     }
 
     // Draw vertex highlight
@@ -174,7 +169,15 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     ctx.restore();
   };
 
-  // pointFromKey removed
+  //   ____________________
+  //  /                    \
+  // |                      |
+  // |         RIP          |
+  // | pointFromKey removed |
+  // |                      |
+  // |    6/11/25-6/12/25   |
+  // |                    _ |
+  // |__\|____|/____|___\/ \|
 
   useEffect(() => {
     const MIN_SCALE = 0.5;
