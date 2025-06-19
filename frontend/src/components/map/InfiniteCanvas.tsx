@@ -5,7 +5,8 @@ import {
   preview_line,
   isPointOnLine,
   draw_selected_line_highlight,
-  draw_selected_marker_highlight,
+  draw_vertex_highlight,
+  draw_marker_selection_highlight,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -129,31 +130,20 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     // Draw vertex highlight
     ctx.save();
     if (highlightedVertex.current) {
-      draw_selected_marker_highlight(
-        ctx,
-        highlightedVertex.current,
-        scale,
-        wallColor
-      );
+      draw_vertex_highlight(ctx, highlightedVertex.current, scale, wallColor);
     }
     ctx.fill();
     ctx.restore();
 
     // Draw markers with selection highlight
     markers.current.forEach((marker) => {
-      const { x, y } = marker.pos;
-      ctx.fillStyle = marker.color;
-      ctx.beginPath();
-      ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 4, 0, Math.PI * 2);
-      ctx.fill();
-      if (
-        selectedObject.current?.type === "marker" &&
-        selectedObject.current.marker === marker
-      ) {
-        ctx.strokeStyle = "cyan";
-        ctx.lineWidth = 2 / scale;
-        ctx.stroke();
-      }
+      draw_marker_selection_highlight(
+        ctx,
+        marker,
+        selectedObject.current,
+        scale,
+        gridSize
+      );
     });
     ctx.restore();
   };

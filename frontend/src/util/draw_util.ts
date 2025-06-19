@@ -1,4 +1,5 @@
 import { Point, Marker, Line, Selection } from "@/util/types";
+import { Mark } from "@mui/material/Slider/useSlider.types";
 import { colord } from "colord";
 
 // ======================
@@ -54,10 +55,10 @@ export const draw_selected_line_highlight = (
 };
 
 // ========================
-// Marker drawing functions
+// vertex drawing functions
 // ========================
 
-export const draw_selected_marker_highlight = (
+export const draw_vertex_highlight = (
   ctx: CanvasRenderingContext2D,
   highlightedVertex: Point,
   scale: number,
@@ -68,6 +69,33 @@ export const draw_selected_marker_highlight = (
   ctx.beginPath();
   const radius = 8 / scale;
   ctx.arc(highlightedVertex.x, highlightedVertex.y, radius, 0, Math.PI * 2);
+};
+
+// ========================
+// Marker drawing functions
+// ========================
+
+export const draw_marker_selection_highlight = (
+  ctx: CanvasRenderingContext2D,
+  marker: Marker,
+  selectedObject: Selection | null,
+  scale: number,
+  gridSize: number
+) => {
+  const { x, y } = marker.pos;
+  ctx.fillStyle = marker.color;
+  ctx.beginPath();
+  ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 4, 0, Math.PI * 2);
+  ctx.fill();
+  if (
+    selectedObject &&
+    selectedObject.type === "marker" &&
+    selectedObject.marker === marker
+  ) {
+    ctx.strokeStyle = "cyan";
+    ctx.lineWidth = 2 / scale;
+    ctx.stroke();
+  }
 };
 
 // ============================
