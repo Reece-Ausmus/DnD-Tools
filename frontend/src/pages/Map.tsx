@@ -62,6 +62,29 @@ const Map: React.FC = () => {
   const [connectOpen, setConnectOpen] = useState(false);
   const [availableMaps, setAvailableMaps] = useState<MapType[]>([]);
   const [selectedMap, setSelectedMap] = useState<number | null>(null);
+  const [mapConnected, setMapConnected] = useState(false);
+  const [mapId, setMapId] = useState<number | null>(null);
+
+  // Get available maps from the server
+  const handleConnectToMapButton = async () => {
+    try {
+      const response = await fetch("api/map/get_maps", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch available maps.");
+      }
+      setAvailableMaps(data.maps || []);
+      setConnectOpen(true);
+    } catch (error) {
+      console.error("Error fetching available maps:", error);
+    }
+  };
 
   // Create a map and emit to server
   const handleCreateMap = async () => {
@@ -94,7 +117,7 @@ const Map: React.FC = () => {
       console.error("Socket is not connected.");
       return;
     }
-    if (mapId < 0) {
+    if (mapId === null || mapId < 0) {
       console.error("Invalid map ID.");
       return;
     }
@@ -106,24 +129,19 @@ const Map: React.FC = () => {
     }
   };
 
-  // Get available maps from the server
-  const handleConnectToMapButton = async () => {
-    setConnectOpen(true);
-    try {
-      const response = await fetch("api/map/get_maps", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch available maps.");
-      }
-      setAvailableMaps(data.maps || []);
-    } catch (error) {
-      console.error("Error fetching available maps:", error);
+  const handleLeaveMapRoom = () => {
+    if (!socket.connected) {
+      console.error("Socket is not connected.");
+      return;
+    }
+    if (mapId === null || mapId < 0) {
+      console.error("Invalid map ID.");
+      return;
+    }
+    if (selectedMap !== null) {
+      socket.emit("leave_map_room", { map_id: mapId });
+    } else {
+      console.error("No map selected to leave.");
     }
   };
 
@@ -131,6 +149,10 @@ const Map: React.FC = () => {
   useEffect(() => {
     // Connect to the socket server when the component mounts
     socket.connect();
+
+    socket.on("error", (error) => {
+      console.error("Socket error:", error);
+    });
 
     socket.on("map_created", (data) => {
       console.log("Map created:", data);
@@ -140,17 +162,23 @@ const Map: React.FC = () => {
       console.log("Connected to map:", data);
       // this is where you would update the canvas to the connected map state
       updateCurrentCampaign(data.campaign_id);
+      setMapConnected(true);
+      setMapId(data.map_id);
     });
 
-    socket.on("error", (error) => {
-      console.error("Socket error:", error);
+    socket.on("map_disconnected", (data) => {
+      console.log("Disconnected from map:", data);
+      setMapConnected(false);
+      setMapId(null);
     });
 
     return () => {
       // Cleanup: disconnect the socket when the component unmounts
+      socket.off("error");
       socket.off("map_created");
       socket.off("map_connected");
-      socket.off("error");
+      socket.off("map_disconnected");
+
       socket.disconnect();
     };
   }, [socket]);
@@ -219,9 +247,16 @@ const Map: React.FC = () => {
           <Button color="primary" onClick={() => console.log("Load Map")}>
             Load Map
           </Button>
-          <Button color="primary" onClick={handleConnectToMapButton}>
-            Connect to Map
-          </Button>
+
+          {mapConnected ? (
+            <Button color="primary" onClick={handleLeaveMapRoom}>
+              Disconnect from Map
+            </Button>
+          ) : (
+            <Button color="primary" onClick={handleConnectToMapButton}>
+              Connect to Map
+            </Button>
+          )}
         </ButtonGroup>
       </Box>
       <Container sx={{ display: "grid", gridTemplateColumns: "auto 1fr" }}>
