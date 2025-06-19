@@ -62,6 +62,7 @@ const Map: React.FC = () => {
   const [connectOpen, setConnectOpen] = useState(false);
   const [availableMaps, setAvailableMaps] = useState<MapType[]>([]);
   const [selectedMap, setSelectedMap] = useState<number | null>(null);
+  const [mapConnected, setMapConnected] = useState(false);
 
   // Create a map and emit to server
   const handleCreateMap = async () => {
@@ -132,6 +133,10 @@ const Map: React.FC = () => {
     // Connect to the socket server when the component mounts
     socket.connect();
 
+    socket.on("error", (error) => {
+      console.error("Socket error:", error);
+    });
+
     socket.on("map_created", (data) => {
       console.log("Map created:", data);
     });
@@ -140,17 +145,21 @@ const Map: React.FC = () => {
       console.log("Connected to map:", data);
       // this is where you would update the canvas to the connected map state
       updateCurrentCampaign(data.campaign_id);
+      setMapConnected(true);
     });
 
-    socket.on("error", (error) => {
-      console.error("Socket error:", error);
+    socket.on("map_disconnected", (data) => {
+      console.log("Disconnected from map:", data);
+      setMapConnected(false);
     });
 
     return () => {
       // Cleanup: disconnect the socket when the component unmounts
+      socket.off("error");
       socket.off("map_created");
       socket.off("map_connected");
-      socket.off("error");
+      socket.off("map_disconnected");
+
       socket.disconnect();
     };
   }, [socket]);
