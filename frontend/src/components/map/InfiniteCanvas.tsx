@@ -131,8 +131,8 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     ctx.save();
     if (highlightedVertex.current) {
       draw_vertex_highlight(ctx, highlightedVertex.current, scale, wallColor);
+      ctx.fill();
     }
-    ctx.fill();
     ctx.restore();
 
     // Draw markers with selection highlight
