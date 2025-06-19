@@ -8,8 +8,8 @@ def on_connect():
     print(f'\033[92mClient {request.sid} connected\033[0m')
 
 @socketio.on('disconnect')
-def on_disconnect():
-    print(f'\033[91mClient {request.sid} disconnected\033[0m')
+def on_disconnect(reason):
+    print(f'\033[91mClient {request.sid} disconnected (reason: {reason})\033[0m')
 
 @socketio.on_error_default
 def default_error_handler(e):
