@@ -670,6 +670,64 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     };
   }, [activeDrawButton, markerColor, wallColor]);
 
+  // --- SOCKET EVENTS SYNC ---
+  useEffect(() => {
+    const handleMarkerAdded = (data: { marker: Marker }) => {
+      if (!markers.current.some((m) => m.id === data.marker.id)) {
+        markers.current.push(data.marker);
+        draw();
+      }
+    };
+
+    const handleMarkerRemoved = (data: { marker_id: number }) => {
+      const index = markers.current.findIndex((m) => m.id === data.marker_id);
+      if (index !== -1) {
+        markers.current.splice(index, 1);
+        draw();
+      }
+    };
+
+    const handleMarkerMoved = (data: {
+      marker_id: number;
+      new_position: Point;
+    }) => {
+      const marker = markers.current.find((m) => m.id === data.marker_id);
+      if (marker) {
+        marker.pos = data.new_position;
+        draw();
+      }
+    };
+
+    const handleLineAdded = (data: { line: Line }) => {
+      if (!lines.current.some((l) => l.id === data.line.id)) {
+        lines.current.push(data.line);
+        draw();
+      }
+    };
+
+    const handleLineRemoved = (data: { line_id: number }) => {
+      const index = lines.current.findIndex((l) => l.id === data.line_id);
+      if (index !== -1) {
+        lines.current.splice(index, 1);
+        draw();
+      }
+    };
+
+    socket.on("marker_added", handleMarkerAdded);
+    socket.on("marker_removed", handleMarkerRemoved);
+    socket.on("marker_moved", handleMarkerMoved);
+    socket.on("line_added", handleLineAdded);
+    socket.on("line_removed", handleLineRemoved);
+
+    return () => {
+      socket.off("marker_added", handleMarkerAdded);
+      socket.off("marker_removed", handleMarkerRemoved);
+      socket.off("marker_moved", handleMarkerMoved);
+      socket.off("line_added", handleLineAdded);
+      socket.off("line_removed", handleLineRemoved);
+    };
+  }, [socket]);
+
   return (
     <canvas
       ref={canvasRef}
