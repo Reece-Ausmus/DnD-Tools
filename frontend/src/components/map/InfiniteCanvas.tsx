@@ -7,6 +7,7 @@ import {
   draw_selected_line_highlight,
   draw_vertex_highlight,
   draw_marker_selection_highlight,
+  preview_line_box,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -119,8 +120,27 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     ctx.restore();
 
     // Draw preview line
-    if (lineDrawingStart.current && highlightedVertex.current) {
+    if (
+      activeDrawButton === "draw-lines" &&
+      lineDrawingStart.current &&
+      highlightedVertex.current
+    ) {
       preview_line(
+        ctx,
+        lineDrawingStart.current,
+        highlightedVertex.current,
+        scale,
+        wallColor
+      );
+    }
+
+    // Draw preview lines (box)
+    if (
+      activeDrawButton === "draw-box" &&
+      lineDrawingStart.current &&
+      highlightedVertex.current
+    ) {
+      preview_line_box(
         ctx,
         lineDrawingStart.current,
         highlightedVertex.current,
@@ -268,10 +288,6 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       dragStart.current = { x: e.clientX, y: e.clientY };
       hasMovedMarker.current = false;
 
-      const isLineDrawingMode =
-        isShiftDown.current || activeDrawButton === "draw-lines";
-      const isMarkerPlaceMode = activeDrawButton === "place-marker";
-
       if (activeDrawButton === "erase") {
         isErasing.current = true; // set isErasing true when mouse down
         selectedObject.current = null; // deselect current when erasing
@@ -317,6 +333,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       const isLineDrawingMode =
         isShiftDown.current || activeDrawButton === "draw-lines";
       const isMarkerPlaceMode = activeDrawButton === "place-marker";
+      const isBoxDrawingMode = activeDrawButton === "draw-box";
 
       // erase at spot under moving mouse
       if (isErasing.current) {
@@ -327,8 +344,12 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         return;
       }
 
-      // hightlight nearest vertex if in line drawing mode
-      if (isLineDrawingMode && !s.isDragging && !draggingMarker.current) {
+      // hightlight nearest vertex if in line drawing mode or box drawing mode
+      if (
+        (isLineDrawingMode || isBoxDrawingMode) &&
+        !s.isDragging &&
+        !draggingMarker.current
+      ) {
         updateHighlight(e.clientX, e.clientY);
       } else if (highlightedVertex.current) {
         clearHighlight();
@@ -384,6 +405,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       const isLineDrawingMode =
         isShiftDown.current || activeDrawButton === "draw-lines";
       const isMarkerPlaceMode = activeDrawButton === "place-marker";
+      const isBoxDrawingMode = activeDrawButton === "draw-box";
 
       // set isErasing to false when mouse lifted
       if (isErasing.current) {
@@ -407,6 +429,28 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         hasMovedMarker.current = false;
       } else if (isLineDrawingMode && !moved && highlightedVertex.current) {
         if (lineDrawingStart.current) {
+          const newLine: Line = {
+            id:
+              lines.current.length > 0
+                ? lines.current[lines.current.length - 1].id + 1
+                : 1,
+            start: lineDrawingStart.current,
+            end: highlightedVertex.current,
+            color: wallColor,
+          };
+          lines.current.push(newLine);
+          addHistoryEntry({ type: "ADD_LINE", payload: { line: newLine } });
+          socket.emit("add_line", {
+            map_id: mapId,
+            line: newLine,
+          });
+          lineDrawingStart.current = null;
+        } else {
+          lineDrawingStart.current = highlightedVertex.current;
+        }
+      } else if (isBoxDrawingMode && !moved && highlightedVertex.current) {
+        if (lineDrawingStart.current) {
+          // MAKE 4 LINES
           const newLine: Line = {
             id:
               lines.current.length > 0

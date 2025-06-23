@@ -28,6 +28,51 @@ export const preview_line = (
 };
 
 //
+// Draw dotted preview line when user is creating a box.
+//
+export const preview_line_box = (
+  ctx: CanvasRenderingContext2D,
+  boxDrawingStart: Point,
+  highlightedVertex: Point,
+  scale: number,
+  wallColor: string
+) => {
+  ctx.save();
+  // horizontal line: (hv.x, hv.y) to (s.x, hv.y)
+  const hLinePoint1: Point = {
+    x: boxDrawingStart.x,
+    y: highlightedVertex.y,
+  };
+  preview_line(ctx, hLinePoint1, highlightedVertex, scale, wallColor);
+  // horizontal line 2: (s.x, s.y) to (hv.x, s.y)
+  const hLinePoint2: Point = {
+    x: highlightedVertex.x,
+    y: boxDrawingStart.y,
+  };
+  preview_line(ctx, hLinePoint2, boxDrawingStart, scale, wallColor);
+  // side line 1: (s.x, s.y) to (s.x, hv.y)
+  const sideLinePoint1: Point = {
+    x: boxDrawingStart.x,
+    y: highlightedVertex.y,
+  };
+  preview_line(ctx, sideLinePoint1, boxDrawingStart, scale, wallColor);
+  // side line 2: (hv.x, s.y) to (hv.x, hv.y)
+  const sideLinePoint2: Point = {
+    x: highlightedVertex.x,
+    y: boxDrawingStart.y,
+  };
+  preview_line(ctx, sideLinePoint2, highlightedVertex, scale, wallColor);
+  ctx.restore();
+};
+
+export const create_box_lines = (
+  lines: Line[],
+  start: Point,
+  end: Point,
+  wallColor: string
+) => {};
+
+//
 // if line is selected, draw with blue highlight
 //
 export const draw_selected_line_highlight = (
