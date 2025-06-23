@@ -529,6 +529,7 @@ const Map: React.FC = () => {
             markerColor={markerColor}
             wallColor={wallColor}
             socket={socket}
+            mapId={mapId ?? -1}
           />
         </Box>
 

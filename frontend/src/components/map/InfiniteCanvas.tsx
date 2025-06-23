@@ -32,6 +32,7 @@ type MapPageProps = {
   markerColor: string;
   wallColor: string;
   socket: Socket;
+  mapId: number;
 };
 
 // History types for the Undo feature
@@ -50,6 +51,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   markerColor,
   wallColor,
   socket,
+  mapId,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const state = useRef<CanvasState>({
@@ -201,6 +203,10 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           selectedObject.current = null;
         }
         draw();
+        socket.emit("remove_marker", {
+          map_id: mapId,
+          marker_id: deletedMarker.id,
+        });
         return;
       }
 
@@ -224,6 +230,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           selectedObject.current = null;
         }
         draw();
+        socket.emit("remove_line", { map_id: mapId, line_id: deletedLine.id });
       }
     };
 
@@ -352,6 +359,11 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           draggingMarker.current.pos = { x: gridX, y: gridY };
           hasMovedMarker.current = true;
           draw();
+          socket.emit("move_marker", {
+            map_id: mapId,
+            marker_id: draggingMarker.current.id,
+            new_position: draggingMarker.current.pos,
+          });
         }
         return;
       }
@@ -406,6 +418,10 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           };
           lines.current.push(newLine);
           addHistoryEntry({ type: "ADD_LINE", payload: { line: newLine } });
+          socket.emit("add_line", {
+            map_id: mapId,
+            line: newLine,
+          });
           lineDrawingStart.current = null;
         } else {
           lineDrawingStart.current = highlightedVertex.current;
@@ -474,6 +490,10 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
               addHistoryEntry({
                 type: "ADD_MARKER",
                 payload: { marker: newMarker },
+              });
+              socket.emit("add_marker", {
+                map_id: mapId,
+                marker: newMarker,
               });
             }
           }
@@ -551,6 +571,10 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
               type: "DELETE_MARKER",
               payload: { marker },
             });
+            socket.emit("remove_marker", {
+              map_id: mapId,
+              marker_id: marker.id,
+            });
           }
         } else if (selectedObject.current.type === "line") {
           const { index } = selectedObject.current;
@@ -560,6 +584,10 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
             addHistoryEntry({
               type: "DELETE_LINE",
               payload: { line: deletedLine },
+            });
+            socket.emit("remove_line", {
+              map_id: mapId,
+              line_id: deletedLine.id,
             });
           }
         }
