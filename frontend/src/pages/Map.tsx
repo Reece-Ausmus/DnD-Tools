@@ -187,7 +187,6 @@ const Map: React.FC = () => {
 
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
-      // this is where you would update the canvas to the connected map state
       updateCurrentCampaign(data.campaign_id);
       setMapConnected(true);
       setMapId(data.map_id);
@@ -422,7 +421,7 @@ const Map: React.FC = () => {
                 select
                 fullWidth
                 label="Select Campaign"
-                value={selectedCampaignId}
+                value={selectedCampaignId ?? ""}
                 onChange={(e) => {
                   const newId = Number(e.target.value);
                   setSelectedCampaignId(newId);
@@ -463,6 +462,7 @@ const Map: React.FC = () => {
               >
                 {currentCampaign?.characters.map((character) => (
                   <Box
+                    key={character.id}
                     sx={{
                       display: "grid",
                       gridTemplateColumns: "auto 1fr",

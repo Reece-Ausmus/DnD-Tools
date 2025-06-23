@@ -44,7 +44,6 @@ const Campaigns: React.FC = () => {
   }, []);
 
   const handleDelete = async (id: number) => {
-    console.log(id);
     await fetch(`/api/campaign/delete_campaign/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: {
