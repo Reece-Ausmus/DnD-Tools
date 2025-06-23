@@ -728,6 +728,40 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     };
   }, [socket]);
 
+  useEffect(() => {
+    const handleInitializeMapState = (data: {
+      map_id: number;
+      markers: Marker[];
+      lines: Line[];
+    }) => {
+      if (data.map_id !== mapId) return;
+      markers.current = data.markers;
+      lines.current = data.lines;
+      draw();
+    };
+
+    const handleRequestMapState = (data: {
+      map_id: number;
+      target_sid: string;
+    }) => {
+      if (mapId !== data.map_id) return;
+
+      socket.emit("send_map_state", {
+        target_sid: data.target_sid,
+        map_id: data.map_id,
+        markers: markers.current,
+        lines: lines.current,
+      });
+    };
+
+    socket.on("initialize_map_state", handleInitializeMapState);
+    socket.on("request_map_state", handleRequestMapState);
+    return () => {
+      socket.off("initialize_map_state", handleInitializeMapState);
+      socket.off("request_map_state", handleRequestMapState);
+    };
+  }, [socket, mapId]);
+
   return (
     <canvas
       ref={canvasRef}

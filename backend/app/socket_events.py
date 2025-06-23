@@ -1,3 +1,4 @@
+user_sockets = {}
 from flask_socketio import join_room, leave_room, emit
 from flask import session, request
 from . import socketio, db
@@ -6,10 +7,16 @@ from .models import User, Campaign, Map
 @socketio.on('connect')
 def on_connect():
     print(f'\033[92mClient {request.sid} connected\033[0m')
+    user_id = session.get('user_id')
+    if user_id:
+        user_sockets[user_id] = request.sid
 
 @socketio.on('disconnect')
 def on_disconnect(reason):
     print(f'\033[91mClient {request.sid} disconnected (reason: {reason})\033[0m')
+    user_id = session.get('user_id')
+    if user_id and user_id in user_sockets:
+        del user_sockets[user_id]
 
 @socketio.on_error_default
 def default_error_handler(e):
@@ -94,6 +101,10 @@ def handle_join_map_room(data):
     join_room(f'map_{map_id}')
     emit('map_connected', {'message': f'Connected to map {map.name}', 'campaign_id': campaign_id, 'map_id': map_id}, room=f'map_{map_id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map_id} (campaign id: {campaign_id})\033[0m')
+
+    if map.owner_id in user_sockets:
+        owner_sid = user_sockets[map.owner_id]
+        emit('request_map_state', {'map_id': map_id, 'target_sid': request.sid}, to=owner_sid)
 
 @socketio.on('leave_map_room')
 def handle_leave_map_room(data):
@@ -228,3 +239,25 @@ def handle_remove_line(data):
     emit('line_removed', {'line_id': line_id}, room=f'map_{map_id}', skip_sid=request.sid)
     print(f'\033[92mLine {line_id} removed from map {map.name} by user {user_id}\033[0m')
 
+
+@socketio.on('send_map_state')
+def handle_send_map_state(data):
+    user_id = session.get('user_id')
+    if not user_id:
+        emit('error', {'message': 'User not logged in'})
+        return
+
+    target_sid = data.get('target_sid')
+    map_id = data.get('map_id')
+    markers = data.get('markers', [])
+    lines = data.get('lines', [])
+
+    if not target_sid or not map_id:
+        emit('error', {'message': 'target_sid and map_id are required'})
+        return
+
+    emit('initialize_map_state', {
+        'map_id': map_id,
+        'markers': markers,
+        'lines': lines
+    }, to=target_sid)
