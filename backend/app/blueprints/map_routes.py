@@ -53,3 +53,28 @@ def get_player_maps():
     ]
 
     return jsonify({"maps": maps_data}), 200
+
+
+@map_bp.route('/save_state', methods=['POST'])
+def save_map_state():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    map_id = data.get('map_id')
+    markers = data.get('markers', [])
+    lines = data.get('lines', [])
+
+    if not map_id:
+        return jsonify({"error": "Map ID is required"}), 400
+
+    map = Map.query.get(map_id)
+    if not map or map.owner_id != user_id:
+        return jsonify({"error": "Map not found or unauthorized"}), 403
+
+    map.markers = markers
+    map.lines = lines
+    db.session.commit()
+
+    return jsonify({"message": "Map state saved successfully."}), 200

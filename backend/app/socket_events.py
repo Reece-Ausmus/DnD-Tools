@@ -102,7 +102,14 @@ def handle_join_map_room(data):
     emit('map_connected', {'message': f'Connected to map {map.name}', 'campaign_id': campaign_id, 'map_id': map_id}, room=f'map_{map_id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map_id} (campaign id: {campaign_id})\033[0m')
 
-    if map.owner_id in user_sockets:
+    # If the joining user is the map owner (DM), send the saved map state directly to them
+    if user_id == map.owner_id:
+        emit('initialize_map_state', {
+            'map_id': map_id,
+            'markers': map.markers or [],
+            'lines': map.lines or [],
+        }, to=request.sid)
+    elif map.owner_id in user_sockets:
         owner_sid = user_sockets[map.owner_id]
         emit('request_map_state', {'map_id': map_id, 'target_sid': request.sid}, to=owner_sid)
 
