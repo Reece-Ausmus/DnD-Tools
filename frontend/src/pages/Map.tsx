@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Box,
   Container,
@@ -16,7 +16,7 @@ import {
 import InfiniteCanvas from "@/components/map/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
 import CampaignContext from "@/context/CampaignContext";
-import { Campaign, Character } from "@/util/types";
+import { Campaign, Character, Marker, Line } from "@/util/types";
 import { io, Socket } from "socket.io-client";
 import { Map as MapType } from "@/util/types";
 
@@ -37,6 +37,29 @@ const Map: React.FC = () => {
       }),
     []
   );
+
+  // Ref to get map state from InfiniteCanvas
+  const getMapStateRef = useRef<() => { markers: Marker[]; lines: Line[] }>();
+  // Save map state to server
+  const handleSaveMap = async () => {
+    if (!mapId || !getMapStateRef.current) return;
+    const { markers, lines } = getMapStateRef.current();
+    try {
+      const response = await fetch("/api/map/save_state", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ map_id: mapId, markers, lines }),
+      });
+      if (!response.ok) throw new Error("Failed to save map.");
+      console.log("Map saved.");
+    } catch (err) {
+      console.error("Error saving map:", err);
+    }
+  };
+
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(
@@ -187,7 +210,6 @@ const Map: React.FC = () => {
 
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
-      // this is where you would update the canvas to the connected map state
       updateCurrentCampaign(data.campaign_id);
       setMapConnected(true);
       setMapId(data.map_id);
@@ -276,9 +298,14 @@ const Map: React.FC = () => {
       >
         <ButtonGroup variant="text" color="secondary">
           {mapConnected ? (
-            <Button color="primary" onClick={handleLeaveMapRoom}>
-              Disconnect from Map
-            </Button>
+            <>
+              <Button color="primary" onClick={handleLeaveMapRoom}>
+                Disconnect from Map
+              </Button>
+              <Button color="primary" onClick={handleSaveMap}>
+                Save Map
+              </Button>
+            </>
           ) : (
             <>
               <Button color="primary" onClick={handleClickNewMap}>
@@ -422,7 +449,7 @@ const Map: React.FC = () => {
                 select
                 fullWidth
                 label="Select Campaign"
-                value={selectedCampaignId}
+                value={selectedCampaignId ?? ""}
                 onChange={(e) => {
                   const newId = Number(e.target.value);
                   setSelectedCampaignId(newId);
@@ -463,6 +490,7 @@ const Map: React.FC = () => {
               >
                 {currentCampaign?.characters.map((character) => (
                   <Box
+                    key={character.id}
                     sx={{
                       display: "grid",
                       gridTemplateColumns: "auto 1fr",
@@ -530,6 +558,7 @@ const Map: React.FC = () => {
             wallColor={wallColor}
             socket={socket}
             mapId={mapId ?? -1}
+            getMapStateRef={getMapStateRef}
           />
         </Box>
 
