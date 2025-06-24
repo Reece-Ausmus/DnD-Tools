@@ -60,6 +60,18 @@ const Map: React.FC = () => {
     }
   };
 
+  const handleDeleteMap = async () => {
+    if (!mapId || !getMapStateRef.current) return;
+    if (!socket.connected) {
+      console.error("Socket is not connected.");
+      return;
+    }
+
+    socket.emit("delete_map", {
+      map_id: mapId,
+    });
+  };
+
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(
@@ -209,13 +221,21 @@ const Map: React.FC = () => {
       console.log("Map created:", data);
     });
 
+    socket.on("map_deleted", (data) => {
+      console.log("Map deleted:", data);
+      setMapConnected(false);
+      setMapId(null);
+      localStorage.removeItem("mapId");
+      setIsDM(false);
+    });
+
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
       const map = data.map;
       updateCurrentCampaign(map.campaign_id);
       setMapConnected(true);
       setMapId(map.id);
-      setIsDM(map.isDM);
+      setIsDM(data.isDM);
     });
 
     socket.on("map_disconnected", (data) => {
@@ -223,6 +243,7 @@ const Map: React.FC = () => {
       localStorage.removeItem("mapId");
       setMapConnected(false);
       setMapId(null);
+      setIsDM(false);
     });
 
     return () => {
@@ -305,9 +326,16 @@ const Map: React.FC = () => {
               <Button color="primary" onClick={handleLeaveMapRoom}>
                 Disconnect from Map
               </Button>
-              <Button color="primary" onClick={handleSaveMap}>
-                Save Map
-              </Button>
+              {isDM && (
+                <>
+                  <Button color="success" onClick={handleSaveMap}>
+                    Save Map
+                  </Button>
+                  <Button color="error" onClick={handleDeleteMap}>
+                    Delete Map
+                  </Button>
+                </>
+              )}
             </>
           ) : (
             <>

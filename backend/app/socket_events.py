@@ -69,6 +69,39 @@ def handle_create_map(data):
     emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': True if map.owner_id == user_id else False}, room=f'map_{map.id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map.id} (campaign id: {campaign_id})\033[0m')
 
+@socketio.on('delete_map')
+def handle_delete_map(data):
+    user_id = session.get('user_id')
+    if not user_id:
+        emit('error', {'message': 'User not logged in'})
+        return
+
+    map_id = data.get('map_id')
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
+        return
+
+    user = User.query.get(user_id)
+    if not user:
+        emit('error', {'message': 'User not found'})
+        return
+
+    map = Map.query.get(map_id)
+    if not map:
+        emit('error', {'message': 'Map not found'})
+        return
+
+    if map.owner_id != user_id:
+        emit('error', {'message': 'You are not the owner of this map'})
+        return
+
+    db.session.delete(map)
+    db.session.commit()
+
+    leave_room(f'map_{map.id}')
+    emit('map_deleted', {'message': f'Map {map.name} deleted successfully'}, room=f'map_{map.id}', to=request.sid)
+    print(f'\033[91mMap {map.name} deleted by user {user.username}\033[0m')
+
 @socketio.on('join_map_room')
 def handle_join_map_room(data):
     user_id = session.get('user_id')
