@@ -612,7 +612,7 @@ const Map: React.FC = () => {
               select
               fullWidth
               label="Select Campaign"
-              value={selectedCampaignId}
+              value={selectedCampaignId ?? ""}
               onChange={(e) => setSelectedCampaignId(Number(e.target.value))}
               variant="standard"
               margin="dense"
