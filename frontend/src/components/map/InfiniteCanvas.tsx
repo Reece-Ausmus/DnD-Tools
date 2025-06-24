@@ -836,7 +836,6 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       markers: Marker[];
       lines: Line[];
     }) => {
-      if (data.map_id !== mapId) return;
       markers.current = data.markers;
       lines.current = data.lines;
       draw();
