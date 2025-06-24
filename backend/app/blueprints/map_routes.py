@@ -78,3 +78,24 @@ def save_map_state():
     db.session.commit()
 
     return jsonify({"message": "Map state saved successfully."}), 200
+
+@map_bp.route('/delete_map', methods=['POST'])
+def delete_map():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Not logged in"}), 401
+
+    data = request.get_json()
+    map_id = data.get('map_id')
+
+    if not map_id:
+        return jsonify({"error": "Map ID is required"}), 400
+
+    map = Map.query.get(map_id)
+    if not map or map.owner_id != user_id:
+        return jsonify({"error": "Map not found or unauthorized"}), 403
+
+    db.session.delete(map)
+    db.session.commit()
+
+    return jsonify({"message": "Map deleted successfully."}), 200
