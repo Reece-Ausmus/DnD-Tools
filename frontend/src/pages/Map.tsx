@@ -317,7 +317,7 @@ const Map: React.FC = () => {
         Map Page
       </Typography>
 
-      {currentMap && mapConnected ? (
+      {currentMap && mapConnected && currentCampaign ? (
         <Tooltip title={currentMap.name} arrow>
           <Typography
             variant="h2"
@@ -331,7 +331,7 @@ const Map: React.FC = () => {
               margin: "20px",
             }}
           >
-            {currentMap.name}
+            {currentCampaign.name} | {currentMap.name}
           </Typography>
         </Tooltip>
       ) : (
@@ -499,39 +499,6 @@ const Map: React.FC = () => {
             ))}
             <div style={{ paddingLeft: "20px" }}>
               Current Mode: {activeDrawButton || "None"}
-            </div>
-            <div style={{ paddingLeft: "20px" }}>
-              {/* Select Campaign Drop Down */}
-              <TextField
-                select
-                fullWidth
-                label="Select Campaign"
-                value={selectedCampaignId ?? ""}
-                onChange={(e) => {
-                  const newId = Number(e.target.value);
-                  setSelectedCampaignId(newId);
-                  updateCurrentCampaign(newId);
-                }}
-                variant="standard"
-                margin="dense"
-              >
-                <MenuItem key={""} value={""}>
-                  {"None"}
-                </MenuItem>
-                {campaigns.map((campaign) => (
-                  <MenuItem key={campaign.id} value={campaign.id}>
-                    {campaign.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <div>
-                Current Campaign id: {String(selectedCampaignId) || "None"}
-              </div>
-              <div>Current DM id: {currentCampaign?.dm || "None"}</div>
-              <div>
-                Current campaign name: {currentCampaign?.name || "None"}
-              </div>
-              <div>Char count: {currentCampaign?.char_count || "None"}</div>
             </div>
             {/* player token area */}
             <div style={{ border: "1px solid gray", width: "100%" }}>
