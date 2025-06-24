@@ -466,21 +466,44 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         }
       } else if (isBoxDrawingMode && !moved && highlightedVertex.current) {
         if (lineDrawingStart.current) {
-          // MAKE 4 LINES
-          const newLine: Line = {
-            id:
-              lines.current.length > 0
-                ? lines.current[lines.current.length - 1].id + 1
-                : 1,
-            start: lineDrawingStart.current,
-            end: highlightedVertex.current,
-            color: wallColor,
+          let pointsForLines: [Point, Point][] = [];
+          const hLinePoint1: Point = {
+            x: lineDrawingStart.current.x,
+            y: highlightedVertex.current.y,
           };
-          lines.current.push(newLine);
-          addHistoryEntry({ type: "ADD_LINE", payload: { line: newLine } });
-          socket.emit("add_line", {
-            map_id: mapId,
-            line: newLine,
+          const hLinePoint2: Point = {
+            x: highlightedVertex.current.x,
+            y: lineDrawingStart.current.y,
+          };
+          const sideLinePoint1: Point = {
+            x: lineDrawingStart.current.x,
+            y: highlightedVertex.current.y,
+          };
+          const sideLinePoint2: Point = {
+            x: highlightedVertex.current.x,
+            y: lineDrawingStart.current.y,
+          };
+          pointsForLines.push([hLinePoint1, highlightedVertex.current]);
+          pointsForLines.push([hLinePoint2, lineDrawingStart.current]);
+          pointsForLines.push([sideLinePoint1, lineDrawingStart.current]);
+          pointsForLines.push([sideLinePoint2, highlightedVertex.current]);
+
+          pointsForLines.forEach(([startPoint, endPoint], index) => {
+            const newLine: Line = {
+              id:
+                lines.current.length > 0
+                  ? lines.current[lines.current.length - 1].id + 1
+                  : 1,
+              start: startPoint,
+              end: endPoint,
+              color: wallColor,
+            };
+            lines.current.push(newLine);
+            addHistoryEntry({ type: "ADD_LINE", payload: { line: newLine } });
+            socket.emit("add_line", {
+              map_id: mapId,
+              line: newLine,
+            });
           });
           lineDrawingStart.current = null;
         } else {
