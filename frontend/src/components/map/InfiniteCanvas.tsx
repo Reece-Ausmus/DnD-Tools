@@ -331,7 +331,8 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           ) * gridSize;
         // Find marker at this position
         const markerAt = markers.current.find(
-          (m) => m.pos.x === gridX && m.pos.y === gridY
+          (m) =>
+            m.pos.x === gridX && m.pos.y === gridY && typeof m.id === "number"
         );
         if (markerAt) {
           dragStartMarker.current = markerAt;
@@ -754,7 +755,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       window.removeEventListener("keyup", handleKeyUp);
       canvas.removeEventListener("mouseleave", onMouseLeave);
     };
-  }, [activeDrawButton, markerColor, wallColor]);
+  }, [activeDrawButton, markerColor, wallColor, mapId]);
 
   // --- SOCKET EVENTS SYNC ---
   useEffect(() => {
