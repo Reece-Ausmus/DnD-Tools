@@ -8,6 +8,7 @@ import {
   draw_vertex_highlight,
   draw_marker_selection_highlight,
   preview_line_box,
+  samePoint,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -448,7 +449,10 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         });
         hasMovedMarker.current = false;
       } else if (isLineDrawingMode && !moved && highlightedVertex.current) {
-        if (lineDrawingStart.current) {
+        if (
+          lineDrawingStart.current &&
+          !samePoint(lineDrawingStart.current, highlightedVertex.current)
+        ) {
           const newLine: Line = {
             id:
               lines.current.length > 0
@@ -469,7 +473,10 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           lineDrawingStart.current = highlightedVertex.current;
         }
       } else if (isBoxDrawingMode && !moved && highlightedVertex.current) {
-        if (lineDrawingStart.current) {
+        if (
+          lineDrawingStart.current &&
+          !samePoint(lineDrawingStart.current, highlightedVertex.current)
+        ) {
           let pointsForLines: [Point, Point][] = [];
           const hLinePoint1: Point = {
             x: lineDrawingStart.current.x,
