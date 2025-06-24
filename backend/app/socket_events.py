@@ -1,6 +1,6 @@
 user_sockets = {}
 from flask_socketio import join_room, leave_room, emit
-from flask import session, request
+from flask import jsonify, session, request
 from . import socketio, db
 from .models import User, Campaign, Map
 
@@ -61,18 +61,46 @@ def handle_create_map(data):
  
     emit('map_created', {
         'message': f'Map {map.name} created successfully!',
-        'map': {
-            'id': map.id,
-            'name': map.name,
-            'owner_id': map.owner_id,
-            'campaign_id': map.campaign_id,
-        }
+        'map': map.to_dict()
     }, to=request.sid)
     print(f'\033[92mMap {map.name} created by user {user.username}\033[0m')
 
     join_room(f'map_{map.id}')
-    emit('map_connected', {'message': f'Connected to map {map.name}', 'campaign_id': campaign_id, 'map_id': map.id}, room=f'map_{map.id}', to=request.sid)
+    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': True if map.owner_id == user_id else False}, room=f'map_{map.id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map.id} (campaign id: {campaign_id})\033[0m')
+
+@socketio.on('delete_map')
+def handle_delete_map(data):
+    user_id = session.get('user_id')
+    if not user_id:
+        emit('error', {'message': 'User not logged in'})
+        return
+
+    map_id = data.get('map_id')
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
+        return
+
+    user = User.query.get(user_id)
+    if not user:
+        emit('error', {'message': 'User not found'})
+        return
+
+    map = Map.query.get(map_id)
+    if not map:
+        emit('error', {'message': 'Map not found'})
+        return
+
+    if map.owner_id != user_id:
+        emit('error', {'message': 'You are not the owner of this map'})
+        return
+
+    db.session.delete(map)
+    db.session.commit()
+
+    leave_room(f'map_{map.id}')
+    emit('map_deleted', {'message': f'Map {map.name} deleted successfully'}, room=f'map_{map.id}', to=request.sid)
+    print(f'\033[91mMap {map.name} deleted by user {user.username}\033[0m')
 
 @socketio.on('join_map_room')
 def handle_join_map_room(data):
@@ -99,7 +127,7 @@ def handle_join_map_room(data):
     campaign_id = map.campaign_id
 
     join_room(f'map_{map_id}')
-    emit('map_connected', {'message': f'Connected to map {map.name}', 'campaign_id': campaign_id, 'map_id': map_id}, room=f'map_{map_id}', to=request.sid)
+    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': True if map.owner_id == user_id else False}, room=f'map_{map_id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map_id} (campaign id: {campaign_id})\033[0m')
 
     # If the joining user is the map owner (DM), send the saved map state directly to them

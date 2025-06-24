@@ -38,6 +38,7 @@ type MapPageProps = {
   getMapStateRef: React.MutableRefObject<
     (() => { markers: Marker[]; lines: Line[] }) | undefined
   >;
+  isDM: boolean;
 };
 
 // History types for the Undo feature
@@ -58,6 +59,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   socket,
   mapId,
   getMapStateRef,
+  isDM,
 }) => {
   // Provide access to current map state via ref
   useEffect(() => {
@@ -803,6 +805,13 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       draw();
     };
 
+    const handleMapDeleted = () => {
+      markers.current = [];
+      lines.current = [];
+      draw();
+    };
+
+    socket.on("map_deleted", handleMapDeleted);
     socket.on("map_disconnected", handleMapDisconnected);
     socket.on("marker_added", handleMarkerAdded);
     socket.on("marker_removed", handleMarkerRemoved);
@@ -811,6 +820,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     socket.on("line_removed", handleLineRemoved);
 
     return () => {
+      socket.off("map_deleted", handleMapDeleted);
       socket.off("map_disconnected", handleMapDisconnected);
       socket.off("marker_added", handleMarkerAdded);
       socket.off("marker_removed", handleMarkerRemoved);

@@ -61,6 +61,18 @@ const Map: React.FC = () => {
     }
   };
 
+  const handleDeleteMap = async () => {
+    if (!mapId || !getMapStateRef.current) return;
+    if (!socket.connected) {
+      console.error("Socket is not connected.");
+      return;
+    }
+
+    socket.emit("delete_map", {
+      map_id: mapId,
+    });
+  };
+
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(
@@ -90,6 +102,7 @@ const Map: React.FC = () => {
   const [selectedMap, setSelectedMap] = useState<number | null>(null);
   const [mapConnected, setMapConnected] = useState(false);
   const [mapId, setMapId] = useState<number | null>(null);
+  const [isDM, setIsDM] = useState(false);
 
   const handleClickOpenMap = async () => {
     try {
@@ -154,7 +167,7 @@ const Map: React.FC = () => {
 
     setNewMapName("");
     setNewMapOpen(false);
-    setSelectedCampaignId(-1);
+    setSelectedCampaignId(null);
   };
 
   // Join a map room
@@ -209,12 +222,22 @@ const Map: React.FC = () => {
       console.log("Map created:", data);
     });
 
+    socket.on("map_deleted", (data) => {
+      console.log("Map deleted:", data);
+      setMapConnected(false);
+      setMapId(null);
+      localStorage.removeItem("mapId");
+      setIsDM(false);
+    });
+
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
+      const map = data.map;
       setSelectedCampaignId(data.campaign_id);
-      updateCurrentCampaign(data.campaign_id);
+      updateCurrentCampaign(map.campaign_id);
       setMapConnected(true);
-      setMapId(data.map_id);
+      setMapId(map.id);
+      setIsDM(data.isDM);
     });
 
     socket.on("map_disconnected", (data) => {
@@ -222,6 +245,7 @@ const Map: React.FC = () => {
       localStorage.removeItem("mapId");
       setMapConnected(false);
       setMapId(null);
+      setIsDM(false);
     });
 
     return () => {
@@ -304,9 +328,16 @@ const Map: React.FC = () => {
               <Button color="primary" onClick={handleLeaveMapRoom}>
                 Disconnect from Map
               </Button>
-              <Button color="primary" onClick={handleSaveMap}>
-                Save Map
-              </Button>
+              {isDM && (
+                <>
+                  <Button color="success" onClick={handleSaveMap}>
+                    Save Map
+                  </Button>
+                  <Button color="error" onClick={handleDeleteMap}>
+                    Delete Map
+                  </Button>
+                </>
+              )}
             </>
           ) : (
             <>
@@ -561,6 +592,7 @@ const Map: React.FC = () => {
             socket={socket}
             mapId={mapId ?? -1}
             getMapStateRef={getMapStateRef}
+            isDM={isDM}
           />
         </Box>
 
@@ -582,7 +614,7 @@ const Map: React.FC = () => {
               select
               fullWidth
               label="Select Campaign"
-              value={selectedCampaignId}
+              value={selectedCampaignId ?? ""}
               onChange={(e) => setSelectedCampaignId(Number(e.target.value))}
               variant="standard"
               margin="dense"
