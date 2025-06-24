@@ -102,6 +102,7 @@ const Map: React.FC = () => {
   const [selectedMap, setSelectedMap] = useState<number | null>(null);
   const [mapConnected, setMapConnected] = useState(false);
   const [mapId, setMapId] = useState<number | null>(null);
+  const [currentMap, setCurrentMap] = useState<MapType | null>(null);
   const [isDM, setIsDM] = useState(false);
 
   const handleClickOpenMap = async () => {
@@ -236,6 +237,7 @@ const Map: React.FC = () => {
       setSelectedCampaignId(data.campaign_id);
       updateCurrentCampaign(map.campaign_id);
       setMapConnected(true);
+      setCurrentMap(map);
       setMapId(map.id);
       setIsDM(data.isDM);
     });
@@ -313,6 +315,9 @@ const Map: React.FC = () => {
     <Container sx={{ border: "1px solid gray" }}>
       <Typography variant="h1" align="center" sx={{ margin: "20px" }}>
         Map Page
+      </Typography>
+      <Typography variant="h2" align="center" sx={{ margin: "20px" }}>
+        {currentMap && mapConnected ? <>{currentMap.name}</> : <></>}
       </Typography>
       <Box
         sx={{
