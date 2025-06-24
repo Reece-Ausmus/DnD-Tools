@@ -37,6 +37,7 @@ type MapPageProps = {
   getMapStateRef: React.MutableRefObject<
     (() => { markers: Marker[]; lines: Line[] }) | undefined
   >;
+  isDM: boolean;
 };
 
 // History types for the Undo feature
@@ -57,6 +58,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   socket,
   mapId,
   getMapStateRef,
+  isDM,
 }) => {
   // Provide access to current map state via ref
   useEffect(() => {

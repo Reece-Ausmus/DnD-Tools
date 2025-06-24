@@ -151,5 +151,15 @@ class Map(db.Model):
         self.name = name
         self.campaign_id = campaign_id
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'owner_id': self.owner_id,
+            'campaign_id': self.campaign_id,
+            'markers': self.markers or [],
+            'lines': self.lines or [],
+        }
+
     def __repr__(self):
         return f'<Map: {self.name}>'

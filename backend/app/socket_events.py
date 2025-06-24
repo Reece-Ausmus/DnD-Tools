@@ -1,6 +1,6 @@
 user_sockets = {}
 from flask_socketio import join_room, leave_room, emit
-from flask import session, request
+from flask import jsonify, session, request
 from . import socketio, db
 from .models import User, Campaign, Map
 
@@ -61,17 +61,12 @@ def handle_create_map(data):
  
     emit('map_created', {
         'message': f'Map {map.name} created successfully!',
-        'map': {
-            'id': map.id,
-            'name': map.name,
-            'owner_id': map.owner_id,
-            'campaign_id': map.campaign_id,
-        }
+        'map': map.to_dict()
     }, to=request.sid)
     print(f'\033[92mMap {map.name} created by user {user.username}\033[0m')
 
     join_room(f'map_{map.id}')
-    emit('map_connected', {'message': f'Connected to map {map.name}', 'campaign_id': campaign_id, 'map_id': map.id}, room=f'map_{map.id}', to=request.sid)
+    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': True if map.owner_id == user_id else False}, room=f'map_{map.id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map.id} (campaign id: {campaign_id})\033[0m')
 
 @socketio.on('join_map_room')
@@ -99,7 +94,7 @@ def handle_join_map_room(data):
     campaign_id = map.campaign_id
 
     join_room(f'map_{map_id}')
-    emit('map_connected', {'message': f'Connected to map {map.name}', 'campaign_id': campaign_id, 'map_id': map_id}, room=f'map_{map_id}', to=request.sid)
+    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': True if map.owner_id == user_id else False}, room=f'map_{map_id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map_id} (campaign id: {campaign_id})\033[0m')
 
     # If the joining user is the map owner (DM), send the saved map state directly to them

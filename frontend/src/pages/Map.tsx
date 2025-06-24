@@ -89,6 +89,7 @@ const Map: React.FC = () => {
   const [selectedMap, setSelectedMap] = useState<number | null>(null);
   const [mapConnected, setMapConnected] = useState(false);
   const [mapId, setMapId] = useState<number | null>(null);
+  const [isDM, setIsDM] = useState(false);
 
   const handleClickOpenMap = async () => {
     try {
@@ -210,9 +211,11 @@ const Map: React.FC = () => {
 
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
-      updateCurrentCampaign(data.campaign_id);
+      const map = data.map;
+      updateCurrentCampaign(map.campaign_id);
       setMapConnected(true);
-      setMapId(data.map_id);
+      setMapId(map.id);
+      setIsDM(map.isDM);
     });
 
     socket.on("map_disconnected", (data) => {
@@ -559,6 +562,7 @@ const Map: React.FC = () => {
             socket={socket}
             mapId={mapId ?? -1}
             getMapStateRef={getMapStateRef}
+            isDM={isDM}
           />
         </Box>
 
