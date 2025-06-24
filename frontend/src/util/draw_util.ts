@@ -190,6 +190,8 @@ export const isPointOnLine = (
 };
 
 //
-// returns true if proposed line is at least one unit long
+// returns true if two points have the same x and y values
 //
-export const isProperLine = () => {};
+export const samePoint = (point1: Point, point2: Point): boolean => {
+  return point1.x == point2.x && point1.y == point2.y;
+};
