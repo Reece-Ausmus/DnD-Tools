@@ -23,7 +23,8 @@ import { Map as MapType } from "@/util/types";
 const drawButtonOptions = [
   { id: "place-marker", label: "Place Marker" },
   { id: "draw-lines", label: "Draw Line" },
-  { id: "draw-box", label: "Draw box" },
+  { id: "draw-box", label: "Draw Box" },
+  { id: "draw-circle", label: "Draw Circle" },
   { id: "dance-time", label: "Do a little dance" },
   { id: "erase", label: "Erase" },
 ] as const;
@@ -210,6 +211,7 @@ const Map: React.FC = () => {
 
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
+      setSelectedCampaignId(data.campaign_id);
       updateCurrentCampaign(data.campaign_id);
       setMapConnected(true);
       setMapId(data.map_id);

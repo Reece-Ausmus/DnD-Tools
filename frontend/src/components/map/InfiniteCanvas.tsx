@@ -27,6 +27,7 @@ type MapPageProps = {
     | "place-marker"
     | "draw-lines"
     | "draw-box"
+    | "draw-circle"
     | "dance-time"
     | "erase"
     | null;
@@ -195,7 +196,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   // |__\|____|/____|___\/ \|
 
   useEffect(() => {
-    const MIN_SCALE = 0.5;
+    const MIN_SCALE = 0.25;
     const MAX_SCALE = 5;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -348,6 +349,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         isShiftDown.current || activeDrawButton === "draw-lines";
       const isMarkerPlaceMode = activeDrawButton === "place-marker";
       const isBoxDrawingMode = activeDrawButton === "draw-box";
+      const isCircleDrawingMode = activeDrawButton === "draw-circle";
 
       // erase at spot under moving mouse
       if (isErasing.current) {
@@ -360,7 +362,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
 
       // hightlight nearest vertex if in line drawing mode or box drawing mode
       if (
-        (isLineDrawingMode || isBoxDrawingMode) &&
+        (isLineDrawingMode || isBoxDrawingMode || isCircleDrawingMode) &&
         !s.isDragging &&
         !draggingMarker.current
       ) {
@@ -420,6 +422,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         isShiftDown.current || activeDrawButton === "draw-lines";
       const isMarkerPlaceMode = activeDrawButton === "place-marker";
       const isBoxDrawingMode = activeDrawButton === "draw-box";
+      const isCircleDrawingMode = activeDrawButton === "draw-circle";
 
       // set isErasing to false when mouse lifted
       if (isErasing.current) {

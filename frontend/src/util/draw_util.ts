@@ -65,12 +65,30 @@ export const preview_line_box = (
   ctx.restore();
 };
 
-export const create_box_lines = (
-  lines: Line[],
-  start: Point,
-  end: Point,
+export const draw_circle_highlight_full = (
+  ctx: CanvasRenderingContext2D,
+  lineDrawingStart: Point,
+  highlightedVertex: Point,
+  scale: number,
   wallColor: string
-) => {};
+) => {
+  ctx.save();
+  ctx.strokeStyle = wallColor;
+  ctx.setLineDash([8 / scale, 4 / scale]);
+  ctx.lineWidth = 3 / scale;
+
+  // calculate radius
+  const dx = highlightedVertex.x - lineDrawingStart.x;
+  const dy = highlightedVertex.y - lineDrawingStart.y;
+  const radius = Math.sqrt(dx * dx + dy * dy);
+
+  // draw circle
+  ctx.beginPath();
+  ctx.arc(lineDrawingStart.x, lineDrawingStart.y, radius, 0, 2 * Math.PI);
+  ctx.stroke();
+
+  ctx.restore();
+};
 
 //
 // if line is selected, draw with blue highlight
@@ -170,3 +188,8 @@ export const isPointOnLine = (
   const distSq = (point.x - closestX) ** 2 + (point.y - closestY) ** 2;
   return Math.sqrt(distSq) < threshold;
 };
+
+//
+// returns true if proposed line is at least one unit long
+//
+export const isProperLine = () => {};
