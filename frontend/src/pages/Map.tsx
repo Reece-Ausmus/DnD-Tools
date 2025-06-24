@@ -166,7 +166,7 @@ const Map: React.FC = () => {
 
     setNewMapName("");
     setNewMapOpen(false);
-    setSelectedCampaignId(-1);
+    setSelectedCampaignId(null);
   };
 
   // Join a map room
