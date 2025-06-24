@@ -316,26 +316,28 @@ const Map: React.FC = () => {
       <Typography variant="h1" align="center" sx={{ margin: "20px" }}>
         Map Page
       </Typography>
-      <Typography variant="h2" align="center" sx={{ margin: "20px" }}>
-        {currentMap && mapConnected ? (
-          <Tooltip title={currentMap.name} arrow>
-            <Typography
-              variant="h2"
-              noWrap
-              sx={{
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                cursor: "default",
-                paddingRight: "10px",
-              }}
-            >
-              {currentMap.name}
-            </Typography>
-          </Tooltip>
-        ) : (
-          <></>
-        )}
-      </Typography>
+
+      {currentMap && mapConnected ? (
+        <Tooltip title={currentMap.name} arrow>
+          <Typography
+            variant="h2"
+            align="center"
+            noWrap
+            sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              cursor: "default",
+              paddingRight: "10px",
+              margin: "20px",
+            }}
+          >
+            {currentMap.name}
+          </Typography>
+        </Tooltip>
+      ) : (
+        <></>
+      )}
+
       <Box
         sx={{
           width: "100%",
