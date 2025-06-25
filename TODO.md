@@ -7,17 +7,10 @@
 
 MAP SECTION:
 
-- lift map state to Map.tsx
-- create a way for dm to create the map
-  - this should create a socket
-  - campaign players need to be able to connect to the map
-- store permission of player and what actions they are allowed to take on map
 - dance time spinning sphere
 - dm placing markers for players and enemies
 - define marker to player connection
 - player can change their marker appearance
-- ability to save map
-- ability to load map
 - ability to import/export map
 - change ids of database objects to big random ids instead of increasing
 - select size of marker to place based on character size or enemy size selection
@@ -31,3 +24,9 @@ MAP SECTION:
   - only one instance of a token on map at time
   - button greys out when token on board
   - dialog when clicking greyed out player token - (recall token: deletes it from board, go to token: center canvas view on token)
+
+# Reece
+
+- update fetchCampaigns and campaign type in frontend to store maps
+- use campaigns, fetchCampaigns in MapExplorer
+- comments and reorganize Map.tsx
