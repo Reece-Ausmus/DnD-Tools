@@ -563,24 +563,37 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           pointsForLines.push([sideLinePoint1, lineDrawingStart.current]);
           pointsForLines.push([sideLinePoint2, highlightedVertex.current]);
 
+          let noZeroLines = true;
+          // check all lines greater than zero length
           pointsForLines.forEach(([startPoint, endPoint], index) => {
-            const newLine: Line = {
-              id:
-                lines.current.length > 0
-                  ? lines.current[lines.current.length - 1].id + 1
-                  : 1,
-              start: startPoint,
-              end: endPoint,
-              color: wallColor,
-            };
-            lines.current.push(newLine);
-            addHistoryEntry({ type: "ADD_LINE", payload: { line: newLine } });
-            socket.emit("add_line", {
-              map_id: mapId,
-              line: newLine,
-            });
+            if (
+              startPoint.x - endPoint.x == 0 &&
+              startPoint.y - endPoint.y == 0
+            ) {
+              noZeroLines = false;
+            }
           });
-          lineDrawingStart.current = null;
+
+          if (noZeroLines) {
+            pointsForLines.forEach(([startPoint, endPoint], index) => {
+              const newLine: Line = {
+                id:
+                  lines.current.length > 0
+                    ? lines.current[lines.current.length - 1].id + 1
+                    : 1,
+                start: startPoint,
+                end: endPoint,
+                color: wallColor,
+              };
+              lines.current.push(newLine);
+              addHistoryEntry({ type: "ADD_LINE", payload: { line: newLine } });
+              socket.emit("add_line", {
+                map_id: mapId,
+                line: newLine,
+              });
+            });
+            lineDrawingStart.current = null;
+          }
         } else {
           lineDrawingStart.current = highlightedVertex.current;
         }
