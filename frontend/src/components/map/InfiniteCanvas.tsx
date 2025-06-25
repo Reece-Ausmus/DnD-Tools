@@ -122,11 +122,48 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
 
     // Draw grid lines
     if (isGridOn) {
+      ctx.save();
+      const gridColor = "#404040";
+      const axisColor = "#6E6E6E";
+      const normalLineWidth = 1.5 / scale;
+      const axisLineWidth = 2.5 / scale;
+
+      // draw non-axis grid lines
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = normalLineWidth;
+      ctx.beginPath();
+
+      // Draw vertical lines
       for (let x = startX; x < endX; x += gridSize) {
-        for (let y = startY; y < endY; y += gridSize) {
-          ctx.strokeRect(x, y, gridSize, gridSize);
-        }
+        if (x === 0) continue;
+        ctx.moveTo(x, startY);
+        ctx.lineTo(x, endY);
       }
+      // Draw horizontal lines
+      for (let y = startY; y < endY; y += gridSize) {
+        if (y === 0) continue;
+        ctx.moveTo(startX, y);
+        ctx.lineTo(endX, y);
+      }
+      ctx.stroke();
+
+      // draw x and y axis
+      ctx.strokeStyle = axisColor;
+      ctx.lineWidth = axisLineWidth;
+      ctx.beginPath();
+
+      // draw y axis if in current view
+      if (0 >= startX && 0 < endX) {
+        ctx.moveTo(0, startY);
+        ctx.lineTo(0, endY);
+      }
+      // draw x axis if in current view
+      if (0 >= startY && 0 < endY) {
+        ctx.moveTo(startX, 0);
+        ctx.lineTo(endX, 0);
+      }
+      ctx.stroke();
+      ctx.restore();
     }
 
     // Draw lines with selection highlight
