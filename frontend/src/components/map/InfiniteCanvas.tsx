@@ -261,6 +261,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     resize();
 
     const eraseAtPoint = (worldX: number, worldY: number) => {
+      if (!isDM) return;
       // Check for markers first
       const markerIndex = markers.current.findIndex((marker) => {
         const markerCenterX = marker.pos.x + gridSize / 2;
@@ -379,7 +380,15 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           (m) =>
             m.pos.x === gridX && m.pos.y === gridY && typeof m.id === "number"
         );
+        // Updated logic: allow player to always drag canvas, but only interact with own marker
         if (markerAt) {
+          if (!isDM && markerAt.characterId !== characterId) {
+            // Not allowed to interact with this marker; drag canvas instead
+            s.isDragging = true;
+            s.lastX = e.clientX;
+            s.lastY = e.clientY;
+            return;
+          }
           dragStartMarker.current = markerAt;
           dragStartMarkerPos.current = { ...markerAt.pos };
         } else {
@@ -410,6 +419,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
 
       // hightlight nearest vertex if in line drawing mode or box drawing mode
       if (
+        isDM &&
         (isLineDrawingMode || isBoxDrawingMode || isCircleDrawingMode) &&
         !s.isDragging &&
         !draggingMarker.current
@@ -492,7 +502,12 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           },
         });
         hasMovedMarker.current = false;
-      } else if (isLineDrawingMode && !moved && highlightedVertex.current) {
+      } else if (
+        isDM &&
+        isLineDrawingMode &&
+        !moved &&
+        highlightedVertex.current
+      ) {
         if (
           lineDrawingStart.current &&
           !samePoint(lineDrawingStart.current, highlightedVertex.current)
@@ -516,7 +531,12 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         } else {
           lineDrawingStart.current = highlightedVertex.current;
         }
-      } else if (isBoxDrawingMode && !moved && highlightedVertex.current) {
+      } else if (
+        isDM &&
+        isBoxDrawingMode &&
+        !moved &&
+        highlightedVertex.current
+      ) {
         if (
           lineDrawingStart.current &&
           !samePoint(lineDrawingStart.current, highlightedVertex.current)
@@ -576,7 +596,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         const markerAt = markers.current.find(
           (m) => m.pos.x === gridX && m.pos.y === gridY
         );
-        if (markerAt) {
+        if (isDM && markerAt) {
           const markerCenterX = gridX + gridSize / 2;
           const markerCenterY = gridY + gridSize / 2;
           const markerRadius = gridSize / 4;
@@ -590,7 +610,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
           }
         }
 
-        if (!didSelectSomething) {
+        if (isDM && !didSelectSomething) {
           const clickThreshold = 5 / s.scale;
           for (let i = lines.current.length - 1; i >= 0; i--) {
             if (
@@ -606,7 +626,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
             }
           }
         }
-        if (!didSelectSomething && isMarkerPlaceMode) {
+        if (isDM && !didSelectSomething && isMarkerPlaceMode) {
           if (selectedObject.current) {
             selectedObject.current = null;
           } else {
@@ -664,6 +684,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     };
 
     const handleUndo = () => {
+      if (!isDM) return;
       const lastAction = history.current.pop();
       if (!lastAction) return;
 
@@ -696,7 +717,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
-        (e.key === "Delete" || e.key === "Backspace") &&
+        ((isDM && e.key === "Delete") || e.key === "Backspace") &&
         selectedObject.current
       ) {
         e.preventDefault();
@@ -749,7 +770,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         draw();
       }
 
-      if (e.key === "Shift" && !isShiftDown.current) {
+      if (isDM && e.key === "Shift" && !isShiftDown.current) {
         isShiftDown.current = true;
         if (lastMousePos.current) {
           updateHighlight(lastMousePos.current.x, lastMousePos.current.y);
