@@ -40,6 +40,7 @@ type MapPageProps = {
     (() => { markers: Marker[]; lines: Line[] }) | undefined
   >;
   isDM: boolean;
+  isGridOn: boolean;
 };
 
 // History types for the Undo feature
@@ -61,6 +62,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   mapId,
   getMapStateRef,
   isDM,
+  isGridOn,
 }) => {
   // Provide access to current map state via ref
   useEffect(() => {
@@ -118,9 +120,12 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     const startY = Math.floor(-offsetY / scale / gridSize) * gridSize;
     const endY = startY + height / scale + gridSize;
 
-    for (let x = startX; x < endX; x += gridSize) {
-      for (let y = startY; y < endY; y += gridSize) {
-        ctx.strokeRect(x, y, gridSize, gridSize);
+    // Draw grid lines
+    if (isGridOn) {
+      for (let x = startX; x < endX; x += gridSize) {
+        for (let y = startY; y < endY; y += gridSize) {
+          ctx.strokeRect(x, y, gridSize, gridSize);
+        }
       }
     }
 
@@ -139,7 +144,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
 
     // Draw preview line
     if (
-      activeDrawButton === "draw-lines" &&
+      (activeDrawButton === "draw-lines" || isShiftDown) &&
       lineDrawingStart.current &&
       highlightedVertex.current
     ) {
@@ -762,7 +767,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       window.removeEventListener("keyup", handleKeyUp);
       canvas.removeEventListener("mouseleave", onMouseLeave);
     };
-  }, [activeDrawButton, markerColor, wallColor, mapId]);
+  }, [activeDrawButton, markerColor, wallColor, mapId, isGridOn]);
 
   // --- SOCKET EVENTS SYNC ---
   useEffect(() => {

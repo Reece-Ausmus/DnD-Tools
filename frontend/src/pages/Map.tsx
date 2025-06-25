@@ -12,7 +12,10 @@ import {
   MenuItem,
   ButtonGroup,
   Tooltip,
+  Stack,
+  useTheme,
 } from "@mui/material";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InfiniteCanvas from "@/components/map/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
 import CampaignContext from "@/context/CampaignContext";
@@ -80,6 +83,9 @@ const Map: React.FC = () => {
   );
   const [markerColor, setMarkerColor] = useState<string>("#E57373");
   const [wallColor, setWallColor] = useState<string>("#E57373");
+  const [isGridOn, setGridOn] = useState<boolean>(true);
+  const [isPanelOpen, setPanelOpen] = useState(false);
+  const theme = useTheme(); // theme for sliding animation
 
   const { campaigns, fetchCampaigns, campaignsLoading } = useCampaigns();
   const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null);
@@ -94,6 +100,10 @@ const Map: React.FC = () => {
   };
 
   const handlePlayerTokenClick = (character: Character) => {};
+
+  const handleGridOnPress = () => {
+    isGridOn ? setGridOn(false) : setGridOn(true);
+  };
 
   const [connectOpen, setConnectOpen] = useState(false);
   const [dmMaps, setDmMaps] = useState<MapType[]>([]);
@@ -316,7 +326,6 @@ const Map: React.FC = () => {
       <Typography variant="h1" align="center" sx={{ margin: "20px" }}>
         Map Page
       </Typography>
-
       {currentMap && mapConnected && currentCampaign ? (
         <Tooltip title={currentMap.name} arrow>
           <Typography
@@ -574,6 +583,7 @@ const Map: React.FC = () => {
             overflow: "hidden",
             margin: "auto",
             marginTop: "20px",
+            position: "relative",
           }}
         >
           <InfiniteCanvas
@@ -584,7 +594,78 @@ const Map: React.FC = () => {
             mapId={mapId ?? -1}
             getMapStateRef={getMapStateRef}
             isDM={isDM}
+            isGridOn={isGridOn}
           />
+          {/* on-top-of-canvas sliding button tray */}
+          <Stack
+            spacing={1}
+            sx={{
+              position: "absolute",
+              top: "16px",
+              right: 0,
+              border: "2px solid gray",
+              borderRadius: "5px",
+              padding: "3px",
+              zIndex: 2,
+              // ANIMATION - Slide in from the left
+              transform: isPanelOpen ? "translateX(-16%)" : "translateX(100%)",
+              transition: theme.transitions.create("transform", {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.leavingScreen,
+              }),
+            }}
+          >
+            {/* Slider container buttons */}
+            <Button
+              variant="contained"
+              color={isGridOn === true ? "primary" : "inherit"}
+              onClick={() => handleGridOnPress()}
+              sx={{
+                minWidth: 0,
+                width: "35px",
+                height: "35px",
+              }}
+            >
+              grid
+            </Button>
+          </Stack>
+
+          {/* toggle button for tray slide out */}
+          <Button
+            onClick={() => setPanelOpen(!isPanelOpen)}
+            style={{
+              position: "absolute",
+              top: "22px",
+              border: "2px solid gray",
+              backgroundColor: "black",
+              borderRadius: "5px",
+              height: "28px",
+              right: 0,
+              zIndex: 1,
+              minWidth: 0,
+              width: "auto",
+              padding: "0px 0px 0px 0px", // Reduce horizontal padding (vertical is 0)
+              color: isPanelOpen ? "primary" : "inherit",
+              // ANIMATION -- slide button with button tray
+              transform: isPanelOpen ? "translateX(-180%)" : "translateX(25%)",
+              transition: theme.transitions.create("transform", {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.leavingScreen,
+              }),
+            }}
+          >
+            <ChevronRightIcon
+              sx={{
+                color: isPanelOpen ? "orange" : "gray",
+                fontSize: "30px",
+                // ANIMATION - rotate arrow
+                transform: isPanelOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: theme.transitions.create("transform", {
+                  duration: theme.transitions.duration.shortest,
+                }),
+              }}
+            />
+          </Button>
         </Box>
 
         {/* New Map Button Dialogue Box */}
