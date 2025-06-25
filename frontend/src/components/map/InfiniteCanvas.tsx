@@ -822,7 +822,9 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       canvas.style.cursor = "grabbing";
     } else if (
       activeDrawButton === "place-marker" ||
-      activeDrawButton === "draw-lines"
+      activeDrawButton === "draw-lines" ||
+      activeDrawButton === "draw-box" ||
+      activeDrawButton === "draw-circle"
     ) {
       canvas.style.cursor = "crosshair";
     } else {
