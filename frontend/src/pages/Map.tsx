@@ -114,6 +114,7 @@ const Map: React.FC = () => {
   const [mapId, setMapId] = useState<number | null>(null);
   const [currentMap, setCurrentMap] = useState<MapType | null>(null);
   const [isDM, setIsDM] = useState(false);
+  const [characterId, setCharacterId] = useState<number | null>(null);
 
   const handleClickOpenMap = async () => {
     try {
@@ -250,6 +251,9 @@ const Map: React.FC = () => {
       setCurrentMap(map);
       setMapId(map.id);
       setIsDM(data.isDM);
+      if (data.character_id) {
+        setCharacterId(data.character_id);
+      }
     });
 
     socket.on("map_disconnected", (data) => {
@@ -595,6 +599,7 @@ const Map: React.FC = () => {
             getMapStateRef={getMapStateRef}
             isDM={isDM}
             isGridOn={isGridOn}
+            characterId={characterId ?? -1}
           />
           {/* on-top-of-canvas sliding button tray */}
           <Stack

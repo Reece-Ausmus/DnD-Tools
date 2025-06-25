@@ -2,7 +2,7 @@ user_sockets = {}
 from flask_socketio import join_room, leave_room, emit
 from flask import jsonify, session, request
 from . import socketio, db
-from .models import User, Campaign, Map
+from .models import User, Campaign, Map, campaign_users
 
 @socketio.on('connect')
 def on_connect():
@@ -66,7 +66,7 @@ def handle_create_map(data):
     print(f'\033[92mMap {map.name} created by user {user.username}\033[0m')
 
     join_room(f'map_{map.id}')
-    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': True if map.owner_id == user_id else False}, room=f'map_{map.id}', to=request.sid)
+    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': True}, room=f'map_{map.id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map.id} (campaign id: {campaign_id})\033[0m')
 
 @socketio.on('delete_map')
@@ -126,12 +126,24 @@ def handle_join_map_room(data):
     
     campaign_id = map.campaign_id
 
+    isDM = user_id == map.owner_id
+
+    if not isDM:
+        character_id = db.session.query(
+            campaign_users.c.character_id
+        ).filter_by(
+            user_id=user_id,
+            campaign_id=campaign_id
+        ).scalar()
+    else:
+        character_id = None
+
     join_room(f'map_{map_id}')
-    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': True if map.owner_id == user_id else False}, room=f'map_{map_id}', to=request.sid)
+    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': isDM, 'character_id': character_id}, room=f'map_{map_id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map_id} (campaign id: {campaign_id})\033[0m')
 
     # If the joining user is the map owner (DM), send the saved map state directly to them
-    if user_id == map.owner_id:
+    if isDM:
         emit('initialize_map_state', {
             'map_id': map_id,
             'markers': map.markers or [],

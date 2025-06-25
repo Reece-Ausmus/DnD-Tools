@@ -41,6 +41,7 @@ type MapPageProps = {
   >;
   isDM: boolean;
   isGridOn: boolean;
+  characterId: number;
 };
 
 // History types for the Undo feature
@@ -63,6 +64,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   getMapStateRef,
   isDM,
   isGridOn,
+  characterId,
 }) => {
   // Provide access to current map state via ref
   useEffect(() => {
