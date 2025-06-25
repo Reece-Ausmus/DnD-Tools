@@ -346,7 +346,6 @@ const Map: React.FC = () => {
       ) : (
         <></>
       )}
-
       <Box
         sx={{
           width: "100%",
