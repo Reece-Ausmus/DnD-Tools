@@ -245,8 +245,8 @@ const Map: React.FC = () => {
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
       const map = data.map;
-      setSelectedCampaignId(data.campaign_id);
       updateCurrentCampaign(map.campaign_id);
+      setSelectedCampaignId(data.campaign_id);
       setMapConnected(true);
       setCurrentMap(map);
       setMapId(map.id);
@@ -273,7 +273,7 @@ const Map: React.FC = () => {
 
       socket.disconnect();
     };
-  }, [socket]);
+  }, [socket, campaigns]);
 
   const handleClickNewMap = () => {
     setNewMapOpen(true);
@@ -330,7 +330,12 @@ const Map: React.FC = () => {
       <Typography variant="h1" align="center" sx={{ margin: "20px" }}>
         Map Page
       </Typography>
-      {currentMap && mapConnected && currentCampaign ? (
+      <div style={{ paddingLeft: "20px" }}>
+        map: {currentMap ? currentMap.name : "None"} | campaign:{" "}
+        {currentCampaign ? currentCampaign.name : "None"} | mapConnected:{" "}
+        {mapConnected ? "CONNECTED" : "NOT"}
+      </div>
+      {currentMap && mapConnected ? (
         <Tooltip title={currentMap.name} arrow>
           <Typography
             variant="h2"
@@ -344,7 +349,8 @@ const Map: React.FC = () => {
               margin: "20px",
             }}
           >
-            {currentCampaign.name} | {currentMap.name}
+            {currentCampaign ? currentCampaign.name : "None"} |{" "}
+            {currentMap ? currentMap.name : "unnamed"}
           </Typography>
         </Tooltip>
       ) : (
