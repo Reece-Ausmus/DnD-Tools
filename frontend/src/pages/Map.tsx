@@ -14,6 +14,8 @@ import {
   Tooltip,
   Stack,
   useTheme,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InfiniteCanvas from "@/components/map/InfiniteCanvas";
@@ -33,6 +35,7 @@ const drawButtonOptions = [
 ] as const;
 
 const Map: React.FC = () => {
+  // Initialize socket connection
   const socket: Socket = useMemo(
     () =>
       io("http://localhost:5001", {
@@ -41,6 +44,9 @@ const Map: React.FC = () => {
       }),
     []
   );
+
+  // MapExplorer props
+  const [role, setRole] = useState<"dm" | "player">("player");
 
   // Ref to get map state from InfiniteCanvas
   const getMapStateRef = useRef<() => { markers: Marker[]; lines: Line[] }>();
@@ -330,6 +336,37 @@ const Map: React.FC = () => {
       <Typography variant="h1" align="center" sx={{ margin: "20px" }}>
         Map Page
       </Typography>
+
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <Typography variant="h2" align="center" sx={{ margin: "20px" }}>
+          Role Selection:
+        </Typography>
+        <ToggleButtonGroup
+          value={role}
+          exclusive
+          onChange={(event, newRole) => {
+            if (newRole !== null) {
+              setRole(newRole);
+            }
+          }}
+          sx={{ marginBottom: "20px" }}
+        >
+          <ToggleButton value="DM" sx={{ width: "100px" }}>
+            DM
+          </ToggleButton>
+          <ToggleButton value="Player" sx={{ width: "100px" }}>
+            Player
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Box>
+
       {currentMap && mapConnected && currentCampaign ? (
         <Tooltip title={currentMap.name} arrow>
           <Typography
