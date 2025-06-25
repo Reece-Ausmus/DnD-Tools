@@ -330,11 +330,6 @@ const Map: React.FC = () => {
       <Typography variant="h1" align="center" sx={{ margin: "20px" }}>
         Map Page
       </Typography>
-      <div style={{ paddingLeft: "20px" }}>
-        map: {currentMap ? currentMap.name : "None"} | campaign:{" "}
-        {currentCampaign ? currentCampaign.name : "None"} | mapConnected:{" "}
-        {mapConnected ? "CONNECTED" : "NOT"}
-      </div>
       {currentMap && mapConnected ? (
         <Tooltip title={currentMap.name} arrow>
           <Typography
