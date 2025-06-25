@@ -42,6 +42,7 @@ type MapPageProps = {
   isDM: boolean;
   isGridOn: boolean;
   characterId: number;
+  isAxesOn: boolean;
 };
 
 // History types for the Undo feature
@@ -65,6 +66,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   isDM,
   isGridOn,
   characterId,
+  isAxesOn,
 }) => {
   // Provide access to current map state via ref
   useEffect(() => {
@@ -122,14 +124,14 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     const startY = Math.floor(-offsetY / scale / gridSize) * gridSize;
     const endY = startY + height / scale + gridSize;
 
-    // Draw grid lines
-    if (isGridOn) {
-      ctx.save();
-      const gridColor = "#404040";
-      const axisColor = "#6E6E6E";
-      const normalLineWidth = 1.5 / scale;
-      const axisLineWidth = 2.5 / scale;
+    const gridColor = "#404040";
+    const axisColor = "#6E6E6E";
+    const normalLineWidth = 1.5 / scale;
+    const axisLineWidth = 2.5 / scale;
 
+    // Draw grid lines
+    ctx.save();
+    if (isGridOn) {
       // draw non-axis grid lines
       ctx.strokeStyle = gridColor;
       ctx.lineWidth = normalLineWidth;
@@ -137,19 +139,23 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
 
       // Draw vertical lines
       for (let x = startX; x < endX; x += gridSize) {
-        if (x === 0) continue;
+        //if (x === 0) continue;
         ctx.moveTo(x, startY);
         ctx.lineTo(x, endY);
       }
       // Draw horizontal lines
       for (let y = startY; y < endY; y += gridSize) {
-        if (y === 0) continue;
+        //if (y === 0) continue;
         ctx.moveTo(startX, y);
         ctx.lineTo(endX, y);
       }
       ctx.stroke();
+    }
+    ctx.restore();
 
-      // draw x and y axis
+    // draw x and y axis
+    ctx.save();
+    if (isAxesOn) {
       ctx.strokeStyle = axisColor;
       ctx.lineWidth = axisLineWidth;
       ctx.beginPath();
@@ -165,8 +171,8 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
         ctx.lineTo(endX, 0);
       }
       ctx.stroke();
-      ctx.restore();
     }
+    ctx.restore();
 
     // Draw lines with selection highlight
     ctx.save();
@@ -841,7 +847,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       window.removeEventListener("keyup", handleKeyUp);
       canvas.removeEventListener("mouseleave", onMouseLeave);
     };
-  }, [activeDrawButton, markerColor, wallColor, mapId, isGridOn]);
+  }, [activeDrawButton, markerColor, wallColor, mapId, isGridOn, isAxesOn]);
 
   // --- SOCKET EVENTS SYNC ---
   useEffect(() => {

@@ -84,6 +84,7 @@ const Map: React.FC = () => {
   const [markerColor, setMarkerColor] = useState<string>("#E57373");
   const [wallColor, setWallColor] = useState<string>("#E57373");
   const [isGridOn, setGridOn] = useState<boolean>(true);
+  const [isAxesOn, setAxesOn] = useState<boolean>(true);
   const [isPanelOpen, setPanelOpen] = useState(false);
   const theme = useTheme(); // theme for sliding animation
 
@@ -103,6 +104,10 @@ const Map: React.FC = () => {
 
   const handleGridOnPress = () => {
     isGridOn ? setGridOn(false) : setGridOn(true);
+  };
+
+  const handleAxesOnPress = () => {
+    isAxesOn ? setAxesOn(false) : setAxesOn(true);
   };
 
   const [connectOpen, setConnectOpen] = useState(false);
@@ -600,6 +605,7 @@ const Map: React.FC = () => {
             isDM={isDM}
             isGridOn={isGridOn}
             characterId={characterId ?? -1}
+            isAxesOn={isAxesOn}
           />
           {/* on-top-of-canvas sliding button tray */}
           <Stack
@@ -632,6 +638,18 @@ const Map: React.FC = () => {
               }}
             >
               grid
+            </Button>
+            <Button
+              variant="contained"
+              color={isAxesOn === true ? "primary" : "inherit"}
+              onClick={() => handleAxesOnPress()}
+              sx={{
+                minWidth: 0,
+                width: "35px",
+                height: "35px",
+              }}
+            >
+              axes
             </Button>
           </Stack>
 
