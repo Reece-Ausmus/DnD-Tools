@@ -199,6 +199,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     // Draw preview lines (box)
     if (
       activeDrawButton === "draw-box" &&
+      !isShiftDown.current &&
       lineDrawingStart.current &&
       highlightedVertex.current
     ) {
