@@ -27,6 +27,5 @@ MAP SECTION:
 
 # Reece
 
-- update fetchCampaigns and campaign type in frontend to store maps
 - use campaigns, fetchCampaigns in MapExplorer
 - comments and reorganize Map.tsx

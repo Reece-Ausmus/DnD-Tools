@@ -20,6 +20,7 @@ export interface Campaign {
   char_count: number;
   dm: string;
   characters: Character[];
+  maps: Map[];
 }
 
 export interface Invite {
@@ -37,6 +38,7 @@ export interface Invite {
 export interface Map {
   id: number;
   name: string;
+  owner_id: number;
   campaign_id: number;
 }
 
