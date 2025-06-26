@@ -1,4 +1,4 @@
-import { Point, Marker, Line, Selection } from "@/util/types";
+import { Point, Marker, Line, Selection, Character } from "@/util/types";
 import { Mark } from "@mui/material/Slider/useSlider.types";
 import { colord } from "colord";
 
@@ -194,4 +194,15 @@ export const isPointOnLine = (
 //
 export const samePoint = (point1: Point, point2: Point): boolean => {
   return point1.x == point2.x && point1.y == point2.y;
+};
+
+// returns true if playertoken not in markers array
+export const uniqueMarker = (playerToken: Character, markers: Marker[]) => {
+  for (const marker of markers) {
+    if (marker.characterId === playerToken.id) {
+      return false;
+    }
+  }
+
+  return true;
 };

@@ -96,9 +96,8 @@ const Map: React.FC = () => {
 
   const { campaigns, fetchCampaigns, campaignsLoading } = useCampaigns();
   const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null);
-  const [playerTokenSelected, setPlayerTokenSelected] = useState<boolean[]>([
-    false,
-  ]);
+  const [playerTokenSelected, setPlayerTokenSelected] =
+    useState<Character | null>(null);
 
   const updateCurrentCampaign = (campaign_id: number) => {
     // find campaign by id
@@ -110,7 +109,13 @@ const Map: React.FC = () => {
   };
 
   const handlePlayerTokenClick = (character: Character) => {
-    console.log("Player: ", character.name, " pressed");
+    if (playerTokenSelected && character.id === playerTokenSelected.id) {
+      setPlayerTokenSelected(null);
+    } else {
+      setPlayerTokenSelected(character);
+    }
+
+    setActiveDrawButtonIndex(null);
   };
 
   const handleGridOnPress = () => {
@@ -309,6 +314,7 @@ const Map: React.FC = () => {
     setActiveDrawButtonIndex((prevIndex) =>
       prevIndex === indexToActivate ? null : indexToActivate
     );
+    setPlayerTokenSelected(null);
   };
 
   useEffect(() => {
@@ -565,6 +571,10 @@ const Map: React.FC = () => {
               <Typography variant="h2" align="left" sx={{ margin: "20px" }}>
                 Player tokens:
               </Typography>
+              <div>
+                Selected:{" "}
+                {playerTokenSelected ? playerTokenSelected.name : "None"}
+              </div>
               <Box
                 sx={{
                   border: "1px solid gray",
@@ -605,8 +615,17 @@ const Map: React.FC = () => {
                         cursor: "pointer",
                         backgroundColor: "blueviolet",
                         "&:hover": {
-                          border: "2px solid gray",
+                          border:
+                            playerTokenSelected &&
+                            character.id === playerTokenSelected.id
+                              ? "2px solid orange"
+                              : "2px solid gray",
                         },
+                        border:
+                          playerTokenSelected &&
+                          character.id === playerTokenSelected.id
+                            ? "2px solid orange"
+                            : "none",
                       }}
                       onClick={(e) => handlePlayerTokenClick(character)}
                     />
@@ -639,6 +658,7 @@ const Map: React.FC = () => {
             isGridOn={isGridOn}
             characterId={characterId ?? -1}
             isAxesOn={isAxesOn}
+            playerTokenSelected={playerTokenSelected}
           />
           {/* on-top-of-canvas sliding button tray */}
           <Stack

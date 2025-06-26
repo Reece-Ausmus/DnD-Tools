@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 
-import { Point, Marker, Line, Selection } from "@/util/types";
+import { Point, Marker, Line, Selection, Character } from "@/util/types";
 import {
   preview_line,
   isPointOnLine,
@@ -9,6 +9,7 @@ import {
   draw_marker_selection_highlight,
   preview_line_box,
   samePoint,
+  uniqueMarker,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -43,6 +44,7 @@ type MapPageProps = {
   isGridOn: boolean;
   characterId: number;
   isAxesOn: boolean;
+  playerTokenSelected: Character | null;
 };
 
 // History types for the Undo feature
@@ -67,6 +69,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   isGridOn,
   characterId,
   isAxesOn,
+  playerTokenSelected,
 }) => {
   // Provide access to current map state via ref
   useEffect(() => {
@@ -485,7 +488,8 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
 
       const isLineDrawingMode =
         isShiftDown.current || activeDrawButton === "draw-lines";
-      const isMarkerPlaceMode = activeDrawButton === "place-marker";
+      const isMarkerPlaceMode =
+        activeDrawButton === "place-marker" || playerTokenSelected;
       const isBoxDrawingMode = activeDrawButton === "draw-box";
       const isCircleDrawingMode = activeDrawButton === "draw-circle";
 
@@ -656,23 +660,36 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
                 (m) => m.pos.x === gridX && m.pos.y === gridY
               )
             ) {
-              const newMarker: Marker = {
-                id:
-                  markers.current.length > 0
-                    ? markers.current[markers.current.length - 1].id + 1
-                    : 1,
-                pos: { x: gridX, y: gridY },
-                color: markerColor,
-              };
-              markers.current.push(newMarker);
-              addHistoryEntry({
-                type: "ADD_MARKER",
-                payload: { marker: newMarker },
-              });
-              socket.emit("add_marker", {
-                map_id: mapId,
-                marker: newMarker,
-              });
+              // dont place marker if a player marker already on the board
+              if (
+                !playerTokenSelected ||
+                (playerTokenSelected &&
+                  uniqueMarker(playerTokenSelected, markers.current))
+              ) {
+                const newMarker: Marker = {
+                  id:
+                    markers.current.length > 0
+                      ? markers.current[markers.current.length - 1].id + 1
+                      : 1,
+                  pos: { x: gridX, y: gridY },
+                  color: markerColor,
+                };
+                if (playerTokenSelected) {
+                  newMarker.characterId = playerTokenSelected.id;
+                }
+                markers.current.push(newMarker);
+                console.log(markers);
+                addHistoryEntry({
+                  type: "ADD_MARKER",
+                  payload: { marker: newMarker },
+                });
+                socket.emit("add_marker", {
+                  map_id: mapId,
+                  marker: newMarker,
+                });
+              } else {
+                console.log("marker already on board");
+              }
             }
           }
         }
@@ -849,7 +866,15 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       window.removeEventListener("keyup", handleKeyUp);
       canvas.removeEventListener("mouseleave", onMouseLeave);
     };
-  }, [activeDrawButton, markerColor, wallColor, mapId, isGridOn, isAxesOn]);
+  }, [
+    activeDrawButton,
+    markerColor,
+    wallColor,
+    mapId,
+    isGridOn,
+    isAxesOn,
+    playerTokenSelected,
+  ]);
 
   // --- SOCKET EVENTS SYNC ---
   useEffect(() => {
