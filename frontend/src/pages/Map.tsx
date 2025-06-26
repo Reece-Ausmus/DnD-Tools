@@ -110,7 +110,15 @@ const Map: React.FC = () => {
     setCurrentCampaign(foundCampaign || null);
   };
 
-  const handlePlayerTokenClick = (character: Character) => {};
+  const handlePlayerTokenClick = (character: Character) => {
+    if (playerTokenSelected && character.id === playerTokenSelected.id) {
+      setPlayerTokenSelected(null);
+    } else {
+      setPlayerTokenSelected(character);
+    }
+
+    setActiveDrawButtonIndex(null);
+  };
 
   const handleGridOnPress = () => {
     isGridOn ? setGridOn(false) : setGridOn(true);
@@ -315,6 +323,7 @@ const Map: React.FC = () => {
       if (event.key === "Escape") {
         // Unselect drawing button on escape press
         setActiveDrawButtonIndex(null);
+        setPlayerTokenSelected(null);
       }
     };
 
@@ -636,19 +645,19 @@ const Map: React.FC = () => {
                             cursor: "pointer",
                             backgroundColor: "blueviolet",
                             "&:hover": {
-                              border: "2px solid gray",
+                              border:
+                                playerTokenSelected &&
+                                character.id === playerTokenSelected.id
+                                  ? "2px solid orange"
+                                  : "2px solid gray",
                             },
+                            border:
+                              playerTokenSelected &&
+                              character.id === playerTokenSelected.id
+                                ? "2px solid orange"
+                                : "none",
                           }}
-                        />
-                        <input
-                          onChange={(e) => handlePlayerTokenClick(character)}
-                          style={{
-                            // Hide the default input but keep it functional
-                            visibility: "hidden",
-                            width: 0,
-                            height: 0,
-                            position: "absolute",
-                          }}
+                          onClick={(e) => handlePlayerTokenClick(character)}
                         />
                       </Box>
                     ))}
