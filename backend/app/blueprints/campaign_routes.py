@@ -286,6 +286,18 @@ def get_campaigns():
             "username": username
         })
 
+    
+    campaign_maps = {
+        c.id: [
+            {
+                "id": m.id,
+                "name": m.name,
+                "owner_id": m.owner_id,
+                "campaign_id": m.campaign_id
+            } for m in c.maps
+        ] for c in campaigns
+    }
+
     return jsonify({
         "campaigns": [
             {
@@ -299,7 +311,8 @@ def get_campaigns():
                 "end_date": str(campaign.end_date) if campaign.end_date else None,
                 "meeting_time": campaign.meeting_time.strftime('%H:%M'),
                 "meeting_day": campaign.meeting_day,
-                "meeting_frequency": campaign.meeting_frequency
+                "meeting_frequency": campaign.meeting_frequency,
+                "maps": campaign_maps.get(campaign.id, [])
             } for campaign in campaigns
         ]
     }), 200
