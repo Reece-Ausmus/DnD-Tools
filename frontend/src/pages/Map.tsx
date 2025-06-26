@@ -16,6 +16,7 @@ import {
   useTheme,
   ToggleButtonGroup,
   ToggleButton,
+  Paper,
 } from "@mui/material";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InfiniteCanvas from "@/components/map/InfiniteCanvas";
@@ -24,6 +25,7 @@ import CampaignContext from "@/context/CampaignContext";
 import { Campaign, Character, Marker, Line } from "@/util/types";
 import { io, Socket } from "socket.io-client";
 import { Map as MapType } from "@/util/types";
+import MapExplorer from "@/components/map/MapExplorer";
 
 const drawButtonOptions = [
   { id: "place-marker", label: "Place Marker" },
@@ -46,7 +48,7 @@ const Map: React.FC = () => {
   );
 
   // MapExplorer props
-  const [role, setRole] = useState<"dm" | "player">("player");
+  const [role, setRole] = useState<"dm" | "player" | "">("");
 
   // Ref to get map state from InfiniteCanvas
   const getMapStateRef = useRef<() => { markers: Marker[]; lines: Line[] }>();
@@ -108,15 +110,7 @@ const Map: React.FC = () => {
     setCurrentCampaign(foundCampaign || null);
   };
 
-  const handlePlayerTokenClick = (character: Character) => {
-    if (playerTokenSelected && character.id === playerTokenSelected.id) {
-      setPlayerTokenSelected(null);
-    } else {
-      setPlayerTokenSelected(character);
-    }
-
-    setActiveDrawButtonIndex(null);
-  };
+  const handlePlayerTokenClick = (character: Character) => {};
 
   const handleGridOnPress = () => {
     isGridOn ? setGridOn(false) : setGridOn(true);
@@ -213,13 +207,10 @@ const Map: React.FC = () => {
       console.error("Invalid map ID.");
       return;
     }
-    if (selectedMap !== null) {
-      socket.emit("join_map_room", { map_id: mapId });
-      setConnectOpen(false);
-      setDmOpen(false);
-    } else {
-      console.error("No map selected to join.");
-    }
+
+    socket.emit("join_map_room", { map_id: mapId });
+    setConnectOpen(false);
+    setDmOpen(false);
   };
 
   const handleLeaveMapRoom = () => {
@@ -353,512 +344,550 @@ const Map: React.FC = () => {
         Map Page
       </Typography>
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <Typography variant="h2" align="center" sx={{ margin: "20px" }}>
-          Role Selection:
-        </Typography>
-        <ToggleButtonGroup
-          value={role}
-          exclusive
-          onChange={(event, newRole) => {
-            if (newRole !== null) {
-              setRole(newRole);
-            }
-          }}
-          sx={{ marginBottom: "20px" }}
-        >
-          <ToggleButton value="DM" sx={{ width: "100px" }}>
-            DM
-          </ToggleButton>
-          <ToggleButton value="Player" sx={{ width: "100px" }}>
-            Player
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
+      {/* If there is no map selected, show Map Explorer. Else, show map */}
 
-      {currentMap && mapConnected ? (
-        <Tooltip title={currentMap.name} arrow>
-          <Typography
-            variant="h2"
-            align="center"
-            noWrap
-            sx={{
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              cursor: "default",
-              paddingRight: "10px",
-              margin: "20px",
-            }}
-          >
-            {currentCampaign ? currentCampaign.name : "None"} |{" "}
-            {currentMap ? currentMap.name : "unnamed"}
-          </Typography>
-        </Tooltip>
-      ) : (
-        <></>
-      )}
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          border: "1px solid gray",
-        }}
-      >
-        <ButtonGroup variant="text" color="secondary">
-          {mapConnected ? (
-            <>
-              <Button color="primary" onClick={handleLeaveMapRoom}>
-                Disconnect from Map
-              </Button>
-              {isDM && (
-                <>
-                  <Button color="success" onClick={handleSaveMap}>
-                    Save Map
-                  </Button>
-                  <Button color="error" onClick={handleDeleteMap}>
-                    Delete Map
-                  </Button>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <Button color="primary" onClick={handleClickNewMap}>
-                New Map
-              </Button>
-              <Button color="primary" onClick={handleClickOpenMap}>
-                Open Map (DM)
-              </Button>
-              <Button color="primary" onClick={handleClickConnectMap}>
-                Connect to Map (Player)
-              </Button>
-            </>
-          )}
-        </ButtonGroup>
-      </Box>
-      <Container sx={{ display: "grid", gridTemplateColumns: "auto 1fr" }}>
-        {/* Left column */}
-        <Box
-          sx={{
-            border: "1px solid gray",
-            marginTop: "20px",
-          }}
-        >
+      {!mapConnected ? (
+        <>
           <Box
             sx={{
               display: "flex",
-              flexDirection: "column", // Stacks buttons vertically
-              alignItems: "flex-start",
-              gap: 2, // Adds space between buttons
-              paddingTop: "20px",
-              width: "300px",
+              flexDirection: "column",
+              alignItems: "center",
+              marginBottom: "20px",
+            }}
+          >
+            <Typography variant="h2" align="center" sx={{ margin: "20px" }}>
+              Role Selection:
+            </Typography>
+            <ToggleButtonGroup
+              value={role}
+              exclusive
+              onChange={(event, newRole) => {
+                if (newRole !== null) {
+                  setRole(newRole);
+                }
+              }}
+              sx={{ marginBottom: "20px" }}
+            >
+              <ToggleButton value="dm" sx={{ width: "100px" }}>
+                DM
+              </ToggleButton>
+              <ToggleButton value="player" sx={{ width: "100px" }}>
+                Player
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+          <Box sx={{ display: "flex", width: "100%" }}>
+            <Paper
+              sx={{
+                width: "50%",
+                padding: 2,
+                height: "600px",
+                overflow: "auto",
+                marginRight: 2,
+              }}
+            >
+              <MapExplorer
+                role={role}
+                campaigns={campaigns}
+                onMapClick={handleJoinMapRoom}
+              />
+            </Paper>
+            <Paper
+              sx={{
+                width: "50%",
+                height: "600px",
+                border: "1px dashed gray",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography variant="h4" color="textSecondary">
+                (Future content area)
+              </Typography>
+            </Paper>
+          </Box>
+        </>
+      ) : (
+        <>
+          <Tooltip title={currentMap?.name || "Unnamed Map"} arrow>
+            <Typography
+              variant="h2"
+              align="center"
+              noWrap
+              sx={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                cursor: "default",
+                paddingRight: "10px",
+                margin: "20px",
+              }}
+            >
+              {currentCampaign ? currentCampaign.name : "None"} |{" "}
+              {currentMap ? currentMap.name : "unnamed"}
+            </Typography>
+          </Tooltip>
+
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "space-between",
               border: "1px solid gray",
             }}
           >
-            {/* Map over the `drawButtonOptions` data array */}
-            {drawButtonOptions.map((option, index) => (
-              <Container
-                key={option.id}
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "auto 1fr",
-                  alignItems: "center",
-                }}
-              >
-                {/* First Column: button */}
-                <Button
-                  variant="contained"
-                  color={
-                    activeDrawButtonIndex === index ? "primary" : "inherit"
-                  }
-                  onClick={() => handleDrawButtonClick(index)}
-                >
-                  {option.label}
-                </Button>
-                {/* Second Column: marker color circle */}
-                {option.id === "place-marker" && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "left",
-                      marginLeft: "20px",
-                    }}
-                  >
-                    <Box
-                      component="label"
-                      htmlFor="marker-color-picker"
-                      sx={{
-                        width: "35px",
-                        height: "35px",
-                        borderRadius: "35px",
-                        cursor: "pointer",
-                        backgroundColor: markerColor,
-                        "&:hover": {
-                          border: "2px solid gray",
-                        },
-                      }}
-                    />
-                    <input
-                      type="color"
-                      id="marker-color-picker"
-                      value={markerColor}
-                      onChange={(e) => setMarkerColor(e.target.value)}
-                      style={{
-                        // Hide the default input but keep it functional
-                        visibility: "hidden",
-                        width: 0,
-                        height: 0,
-                        position: "absolute",
-                      }}
-                    />
-                  </Box>
-                )}
-                {/* Second Column: wall color circle */}
-                {option.id === "draw-lines" && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "left",
-                      marginLeft: "20px",
-                    }}
-                  >
-                    <Box
-                      component="label"
-                      htmlFor="wall-color-picker"
-                      sx={{
-                        width: "35px",
-                        height: "35px",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        backgroundColor: wallColor,
-                        "&:hover": {
-                          border: "2px solid gray",
-                        },
-                      }}
-                    />
-                    <input
-                      type="color"
-                      id="wall-color-picker"
-                      value={wallColor}
-                      onChange={(e) => setWallColor(e.target.value)}
-                      style={{
-                        // Hide the default input but keep it functional
-                        visibility: "hidden",
-                        width: 0,
-                        height: 0,
-                        position: "absolute",
-                      }}
-                    />
-                  </Box>
-                )}
-              </Container>
-            ))}
-            <div style={{ paddingLeft: "20px" }}>
-              Current Mode: {activeDrawButton || "None"}
-            </div>
-            {/* player token area */}
-            <div style={{ border: "1px solid gray", width: "100%" }}>
-              <Typography variant="h2" align="left" sx={{ margin: "20px" }}>
-                Player tokens:
-              </Typography>
-              <div>
-                Selected:{" "}
-                {playerTokenSelected ? playerTokenSelected.name : "None"}
-              </div>
+            <ButtonGroup variant="text" color="secondary">
+              {mapConnected ? (
+                <>
+                  <Button color="primary" onClick={handleLeaveMapRoom}>
+                    Disconnect from Map
+                  </Button>
+                  {isDM && (
+                    <>
+                      <Button color="success" onClick={handleSaveMap}>
+                        Save Map
+                      </Button>
+                      <Button color="error" onClick={handleDeleteMap}>
+                        Delete Map
+                      </Button>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Button color="primary" onClick={handleClickNewMap}>
+                    New Map
+                  </Button>
+                  <Button color="primary" onClick={handleClickOpenMap}>
+                    Open Map (DM)
+                  </Button>
+                  <Button color="primary" onClick={handleClickConnectMap}>
+                    Connect to Map (Player)
+                  </Button>
+                </>
+              )}
+            </ButtonGroup>
+          </Box>
+          <Container sx={{ display: "grid", gridTemplateColumns: "auto 1fr" }}>
+            {/* Left column */}
+            <Box
+              sx={{
+                border: "1px solid gray",
+                marginTop: "20px",
+              }}
+            >
               <Box
                 sx={{
+                  display: "flex",
+                  flexDirection: "column", // Stacks buttons vertically
+                  alignItems: "flex-start",
+                  gap: 2, // Adds space between buttons
+                  paddingTop: "20px",
+                  width: "300px",
                   border: "1px solid gray",
-                  margin: "20px",
-                  padding: "10px",
                 }}
               >
-                {currentCampaign?.characters.map((character) => (
-                  <Box
-                    key={character.id}
+                {/* Map over the `drawButtonOptions` data array */}
+                {drawButtonOptions.map((option, index) => (
+                  <Container
+                    key={option.id}
                     sx={{
                       display: "grid",
                       gridTemplateColumns: "auto 1fr",
-                      flexDirection: "column",
                       alignItems: "center",
-                      margin: "5px",
                     }}
                   >
-                    <Tooltip title={character.name} arrow>
-                      <Typography
-                        noWrap
+                    {/* First Column: button */}
+                    <Button
+                      variant="contained"
+                      color={
+                        activeDrawButtonIndex === index ? "primary" : "inherit"
+                      }
+                      onClick={() => handleDrawButtonClick(index)}
+                    >
+                      {option.label}
+                    </Button>
+                    {/* Second Column: marker color circle */}
+                    {option.id === "place-marker" && (
+                      <Box
                         sx={{
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          cursor: "default",
-                          paddingRight: "10px",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "left",
+                          marginLeft: "20px",
                         }}
                       >
-                        {character.name}:
-                      </Typography>
-                    </Tooltip>
-                    <Box
-                      component="label"
-                      sx={{
-                        width: "35px",
-                        height: "35px",
-                        borderRadius: "35px",
-                        cursor: "pointer",
-                        backgroundColor: "blueviolet",
-                        "&:hover": {
-                          border:
-                            playerTokenSelected &&
-                            character.id === playerTokenSelected.id
-                              ? "2px solid orange"
-                              : "2px solid gray",
-                        },
-                        border:
-                          playerTokenSelected &&
-                          character.id === playerTokenSelected.id
-                            ? "2px solid orange"
-                            : "none",
-                      }}
-                      onClick={(e) => handlePlayerTokenClick(character)}
-                    />
+                        <Box
+                          component="label"
+                          htmlFor="marker-color-picker"
+                          sx={{
+                            width: "35px",
+                            height: "35px",
+                            borderRadius: "35px",
+                            cursor: "pointer",
+                            backgroundColor: markerColor,
+                            "&:hover": {
+                              border: "2px solid gray",
+                            },
+                          }}
+                        />
+                        <input
+                          type="color"
+                          id="marker-color-picker"
+                          value={markerColor}
+                          onChange={(e) => setMarkerColor(e.target.value)}
+                          style={{
+                            // Hide the default input but keep it functional
+                            visibility: "hidden",
+                            width: 0,
+                            height: 0,
+                            position: "absolute",
+                          }}
+                        />
+                      </Box>
+                    )}
+                    {/* Second Column: wall color circle */}
+                    {option.id === "draw-lines" && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "left",
+                          marginLeft: "20px",
+                        }}
+                      >
+                        <Box
+                          component="label"
+                          htmlFor="wall-color-picker"
+                          sx={{
+                            width: "35px",
+                            height: "35px",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            backgroundColor: wallColor,
+                            "&:hover": {
+                              border: "2px solid gray",
+                            },
+                          }}
+                        />
+                        <input
+                          type="color"
+                          id="wall-color-picker"
+                          value={wallColor}
+                          onChange={(e) => setWallColor(e.target.value)}
+                          style={{
+                            // Hide the default input but keep it functional
+                            visibility: "hidden",
+                            width: 0,
+                            height: 0,
+                            position: "absolute",
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Container>
+                ))}
+                <div style={{ paddingLeft: "20px" }}>
+                  Current Mode: {activeDrawButton || "None"}
+                </div>
+                {/* player token area */}
+                <div style={{ border: "1px solid gray", width: "100%" }}>
+                  <Typography variant="h2" align="left" sx={{ margin: "20px" }}>
+                    Player tokens:
+                  </Typography>
+                  <Box
+                    sx={{
+                      border: "1px solid gray",
+                      margin: "20px",
+                      padding: "10px",
+                    }}
+                  >
+                    {currentCampaign?.characters.map((character) => (
+                      <Box
+                        key={character.id}
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: "auto 1fr",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          margin: "5px",
+                        }}
+                      >
+                        <Tooltip title={character.name} arrow>
+                          <Typography
+                            noWrap
+                            sx={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              cursor: "default",
+                              paddingRight: "10px",
+                            }}
+                          >
+                            {character.name}:
+                          </Typography>
+                        </Tooltip>
+                        <Box
+                          component="label"
+                          sx={{
+                            width: "35px",
+                            height: "35px",
+                            borderRadius: "35px",
+                            cursor: "pointer",
+                            backgroundColor: "blueviolet",
+                            "&:hover": {
+                              border: "2px solid gray",
+                            },
+                          }}
+                        />
+                        <input
+                          onChange={(e) => handlePlayerTokenClick(character)}
+                          style={{
+                            // Hide the default input but keep it functional
+                            visibility: "hidden",
+                            width: 0,
+                            height: 0,
+                            position: "absolute",
+                          }}
+                        />
+                      </Box>
+                    ))}
                   </Box>
-                ))}
+                </div>
               </Box>
-            </div>
-          </Box>
-        </Box>
-        {/* Right column */}
-        <Box
-          sx={{
-            width: "800px",
-            height: "800px",
-            border: "1px solid gray",
-            overflow: "hidden",
-            margin: "auto",
-            marginTop: "20px",
-            position: "relative",
-          }}
-        >
-          <InfiniteCanvas
-            activeDrawButton={activeDrawButton}
-            markerColor={markerColor}
-            wallColor={wallColor}
-            socket={socket}
-            mapId={mapId ?? -1}
-            getMapStateRef={getMapStateRef}
-            isDM={isDM}
-            isGridOn={isGridOn}
-            characterId={characterId ?? -1}
-            isAxesOn={isAxesOn}
-            playerTokenSelected={playerTokenSelected}
-          />
-          {/* on-top-of-canvas sliding button tray */}
-          <Stack
-            spacing={1}
-            sx={{
-              position: "absolute",
-              top: "16px",
-              right: 0,
-              border: "2px solid gray",
-              borderRadius: "5px",
-              padding: "3px",
-              zIndex: 2,
-              // ANIMATION - Slide in from the left
-              transform: isPanelOpen ? "translateX(-16%)" : "translateX(100%)",
-              transition: theme.transitions.create("transform", {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen,
-              }),
-            }}
-          >
-            {/* Slider container buttons */}
-            <Button
-              variant="contained"
-              color={isGridOn === true ? "primary" : "inherit"}
-              onClick={() => handleGridOnPress()}
+            </Box>
+            {/* Right column */}
+            <Box
               sx={{
-                minWidth: 0,
-                width: "35px",
-                height: "35px",
+                width: "800px",
+                height: "800px",
+                border: "1px solid gray",
+                overflow: "hidden",
+                margin: "auto",
+                marginTop: "20px",
+                position: "relative",
               }}
             >
-              grid
-            </Button>
-            <Button
-              variant="contained"
-              color={isAxesOn === true ? "primary" : "inherit"}
-              onClick={() => handleAxesOnPress()}
-              sx={{
-                minWidth: 0,
-                width: "35px",
-                height: "35px",
-              }}
-            >
-              axes
-            </Button>
-          </Stack>
-
-          {/* toggle button for tray slide out */}
-          <Button
-            onClick={() => setPanelOpen(!isPanelOpen)}
-            style={{
-              position: "absolute",
-              top: "22px",
-              border: "2px solid gray",
-              backgroundColor: "black",
-              borderRadius: "5px",
-              height: "28px",
-              right: 0,
-              zIndex: 1,
-              minWidth: 0,
-              width: "auto",
-              padding: "0px 0px 0px 0px", // Reduce horizontal padding (vertical is 0)
-              color: isPanelOpen ? "primary" : "inherit",
-              // ANIMATION -- slide button with button tray
-              transform: isPanelOpen ? "translateX(-180%)" : "translateX(25%)",
-              transition: theme.transitions.create("transform", {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.leavingScreen,
-              }),
-            }}
-          >
-            <ChevronRightIcon
-              sx={{
-                color: isPanelOpen ? "orange" : "gray",
-                fontSize: "30px",
-                // ANIMATION - rotate arrow
-                transform: isPanelOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: theme.transitions.create("transform", {
-                  duration: theme.transitions.duration.shortest,
-                }),
-              }}
-            />
-          </Button>
-        </Box>
-
-        {/* New Map Button Dialogue Box */}
-        <Dialog open={newMapOpen} onClose={handleNewMapClose}>
-          <DialogTitle>New Map</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="New Map Name"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={newMapName}
-              onChange={(e) => setNewMapName(e.target.value)}
-            />
-            <TextField
-              select
-              fullWidth
-              label="Select Campaign"
-              value={selectedCampaignId ?? ""}
-              onChange={(e) => setSelectedCampaignId(Number(e.target.value))}
-              variant="standard"
-              margin="dense"
-            >
-              {campaigns.map((campaign) => (
-                <MenuItem key={campaign.id} value={campaign.id}>
-                  {campaign.name}
-                </MenuItem>
-              ))}
-            </TextField>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleNewMapClose}>Cancel</Button>
-            <Button variant="contained" onClick={handleCreateMap}>
-              Create
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* DM Map Selection Dialogue Box */}
-        <Dialog open={dmOpen} onClose={() => setDmOpen(false)}>
-          <DialogTitle>Select a Map</DialogTitle>
-          <DialogContent>
-            {dmMaps.length === 0 ? (
-              <Typography variant="body1">
-                No maps available. Create a new map first.
-              </Typography>
-            ) : (
-              <TextField
-                select
-                fullWidth
-                label="Select Map"
-                value={selectedMap || ""}
-                onChange={(e) => setSelectedMap(Number(e.target.value))}
-                variant="standard"
-                margin="dense"
+              <InfiniteCanvas
+                activeDrawButton={activeDrawButton}
+                markerColor={markerColor}
+                wallColor={wallColor}
+                socket={socket}
+                mapId={mapId ?? -1}
+                getMapStateRef={getMapStateRef}
+                isDM={isDM}
+                isGridOn={isGridOn}
+                characterId={characterId ?? -1}
+                isAxesOn={isAxesOn}
+                playerTokenSelected={playerTokenSelected}
+              />
+              {/* on-top-of-canvas sliding button tray */}
+              <Stack
+                spacing={1}
+                sx={{
+                  position: "absolute",
+                  top: "16px",
+                  right: 0,
+                  border: "2px solid gray",
+                  borderRadius: "5px",
+                  padding: "3px",
+                  zIndex: 2,
+                  // ANIMATION - Slide in from the left
+                  transform: isPanelOpen
+                    ? "translateX(-16%)"
+                    : "translateX(100%)",
+                  transition: theme.transitions.create("transform", {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.leavingScreen,
+                  }),
+                }}
               >
-                {dmMaps.map((map) => (
-                  <MenuItem key={map.id} value={map.id}>
-                    {map.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDmOpen(false)}>Close</Button>
-            {dmMaps.length > 0 && (
+                {/* Slider container buttons */}
+                <Button
+                  variant="contained"
+                  color={isGridOn === true ? "primary" : "inherit"}
+                  onClick={() => handleGridOnPress()}
+                  sx={{
+                    minWidth: 0,
+                    width: "35px",
+                    height: "35px",
+                  }}
+                >
+                  grid
+                </Button>
+                <Button
+                  variant="contained"
+                  color={isAxesOn === true ? "primary" : "inherit"}
+                  onClick={() => handleAxesOnPress()}
+                  sx={{
+                    minWidth: 0,
+                    width: "35px",
+                    height: "35px",
+                  }}
+                >
+                  axes
+                </Button>
+              </Stack>
+
+              {/* toggle button for tray slide out */}
               <Button
-                variant="contained"
-                onClick={() => handleJoinMapRoom(selectedMap || -1)}
+                onClick={() => setPanelOpen(!isPanelOpen)}
+                style={{
+                  position: "absolute",
+                  top: "22px",
+                  border: "2px solid gray",
+                  backgroundColor: "black",
+                  borderRadius: "5px",
+                  height: "28px",
+                  right: 0,
+                  zIndex: 1,
+                  minWidth: 0,
+                  width: "auto",
+                  padding: "0px 0px 0px 0px", // Reduce horizontal padding (vertical is 0)
+                  color: isPanelOpen ? "primary" : "inherit",
+                  // ANIMATION -- slide button with button tray
+                  transform: isPanelOpen
+                    ? "translateX(-180%)"
+                    : "translateX(25%)",
+                  transition: theme.transitions.create("transform", {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.leavingScreen,
+                  }),
+                }}
               >
-                Connect
+                <ChevronRightIcon
+                  sx={{
+                    color: isPanelOpen ? "orange" : "gray",
+                    fontSize: "30px",
+                    // ANIMATION - rotate arrow
+                    transform: isPanelOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: theme.transitions.create("transform", {
+                      duration: theme.transitions.duration.shortest,
+                    }),
+                  }}
+                />
               </Button>
-            )}
-          </DialogActions>
-        </Dialog>
+            </Box>
 
-        <Dialog open={connectOpen} onClose={() => setConnectOpen(false)}>
-          <DialogTitle>Connect to Map</DialogTitle>
-          <DialogContent>
-            {playerMaps.length === 0 ? (
-              <Typography variant="body1">
-                No available maps to connect to.
-              </Typography>
-            ) : (
-              <TextField
-                select
-                fullWidth
-                label="Select Map"
-                value={selectedMap || ""}
-                onChange={(e) => setSelectedMap(Number(e.target.value))}
-                variant="standard"
-                margin="dense"
-              >
-                {playerMaps.map((map) => (
-                  <MenuItem key={map.id} value={map.id}>
-                    {map.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setConnectOpen(false)}>Close</Button>
-            {playerMaps.length > 0 && (
-              <Button
-                variant="contained"
-                onClick={() => handleJoinMapRoom(selectedMap || -1)}
-              >
-                Connect
-              </Button>
-            )}
-          </DialogActions>
-        </Dialog>
-      </Container>
+            {/* New Map Button Dialogue Box */}
+            <Dialog open={newMapOpen} onClose={handleNewMapClose}>
+              <DialogTitle>New Map</DialogTitle>
+              <DialogContent>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="New Map Name"
+                  type="text"
+                  fullWidth
+                  variant="standard"
+                  value={newMapName}
+                  onChange={(e) => setNewMapName(e.target.value)}
+                />
+                <TextField
+                  select
+                  fullWidth
+                  label="Select Campaign"
+                  value={selectedCampaignId ?? ""}
+                  onChange={(e) =>
+                    setSelectedCampaignId(Number(e.target.value))
+                  }
+                  variant="standard"
+                  margin="dense"
+                >
+                  {campaigns.map((campaign) => (
+                    <MenuItem key={campaign.id} value={campaign.id}>
+                      {campaign.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleNewMapClose}>Cancel</Button>
+                <Button variant="contained" onClick={handleCreateMap}>
+                  Create
+                </Button>
+              </DialogActions>
+            </Dialog>
+
+            {/* DM Map Selection Dialogue Box */}
+            <Dialog open={dmOpen} onClose={() => setDmOpen(false)}>
+              <DialogTitle>Select a Map</DialogTitle>
+              <DialogContent>
+                {dmMaps.length === 0 ? (
+                  <Typography variant="body1">
+                    No maps available. Create a new map first.
+                  </Typography>
+                ) : (
+                  <TextField
+                    select
+                    fullWidth
+                    label="Select Map"
+                    value={selectedMap || ""}
+                    onChange={(e) => setSelectedMap(Number(e.target.value))}
+                    variant="standard"
+                    margin="dense"
+                  >
+                    {dmMaps.map((map) => (
+                      <MenuItem key={map.id} value={map.id}>
+                        {map.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setDmOpen(false)}>Close</Button>
+                {dmMaps.length > 0 && (
+                  <Button
+                    variant="contained"
+                    onClick={() => handleJoinMapRoom(selectedMap || -1)}
+                  >
+                    Connect
+                  </Button>
+                )}
+              </DialogActions>
+            </Dialog>
+
+            <Dialog open={connectOpen} onClose={() => setConnectOpen(false)}>
+              <DialogTitle>Connect to Map</DialogTitle>
+              <DialogContent>
+                {playerMaps.length === 0 ? (
+                  <Typography variant="body1">
+                    No available maps to connect to.
+                  </Typography>
+                ) : (
+                  <TextField
+                    select
+                    fullWidth
+                    label="Select Map"
+                    value={selectedMap || ""}
+                    onChange={(e) => setSelectedMap(Number(e.target.value))}
+                    variant="standard"
+                    margin="dense"
+                  >
+                    {playerMaps.map((map) => (
+                      <MenuItem key={map.id} value={map.id}>
+                        {map.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setConnectOpen(false)}>Close</Button>
+                {playerMaps.length > 0 && (
+                  <Button
+                    variant="contained"
+                    onClick={() => handleJoinMapRoom(selectedMap || -1)}
+                  >
+                    Connect
+                  </Button>
+                )}
+              </DialogActions>
+            </Dialog>
+          </Container>
+        </>
+      )}
     </Container>
   );
 };
