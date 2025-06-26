@@ -96,6 +96,9 @@ const Map: React.FC = () => {
 
   const { campaigns, fetchCampaigns, campaignsLoading } = useCampaigns();
   const [currentCampaign, setCurrentCampaign] = useState<Campaign | null>(null);
+  const [playerTokenSelected, setPlayerTokenSelected] = useState<boolean[]>([
+    false,
+  ]);
 
   const updateCurrentCampaign = (campaign_id: number) => {
     // find campaign by id
@@ -106,7 +109,9 @@ const Map: React.FC = () => {
     setCurrentCampaign(foundCampaign || null);
   };
 
-  const handlePlayerTokenClick = (character: Character) => {};
+  const handlePlayerTokenClick = (character: Character) => {
+    console.log("Player: ", character.name, " pressed");
+  };
 
   const handleGridOnPress = () => {
     isGridOn ? setGridOn(false) : setGridOn(true);
@@ -603,16 +608,7 @@ const Map: React.FC = () => {
                           border: "2px solid gray",
                         },
                       }}
-                    />
-                    <input
-                      onChange={(e) => handlePlayerTokenClick(character)}
-                      style={{
-                        // Hide the default input but keep it functional
-                        visibility: "hidden",
-                        width: 0,
-                        height: 0,
-                        position: "absolute",
-                      }}
+                      onClick={(e) => handlePlayerTokenClick(character)}
                     />
                   </Box>
                 ))}
