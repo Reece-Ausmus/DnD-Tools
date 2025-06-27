@@ -107,7 +107,6 @@ const Map: React.FC = () => {
   };
 
   const handleDoubleClick = (character: Character) => {
-    console.log(`DOUBLE-CLICK on ${character.name}! (Opening details)`);
     infiniteCanvasRef.current?.centerGridOnPoint(character.id);
   };
 
