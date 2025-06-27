@@ -4,12 +4,11 @@
 - request to join campaign
 - sort results in report table
 - add initialization script and update readme instructions
+- show message when login fails
 
 MAP SECTION:
 
 - dance time spinning sphere
-- dm placing markers for players and enemies
-- define marker to player connection
 - player can change their marker appearance
 - ability to import/export map
 - change ids of database objects to big random ids instead of increasing
@@ -24,8 +23,3 @@ MAP SECTION:
   - only one instance of a token on map at time
   - button greys out when token on board
   - dialog when clicking greyed out player token - (recall token: deletes it from board, go to token: center canvas view on token)
-
-# Reece
-
-- use campaigns, fetchCampaigns in MapExplorer
-- comments and reorganize Map.tsx
