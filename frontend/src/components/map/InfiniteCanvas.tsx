@@ -689,7 +689,9 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
                   marker: newMarker,
                 });
               } else {
-                showSnackbar("player marker already on board.", "info");
+                let message =
+                  playerTokenSelected.name + "'s token already on board.";
+                showSnackbar(message, "info");
               }
             }
           }

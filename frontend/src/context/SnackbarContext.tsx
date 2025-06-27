@@ -48,8 +48,8 @@ export const SnackbarProvider: React.FC<{ children: ReactNode }> = ({
         // This positions the snackbar at the top-center of the screen
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         open={open}
-        // The snackbar will auto-hide after 5 seconds (5000ms)
-        autoHideDuration={5000}
+        // The snackbar will auto-hide after 4 seconds (4000ms)
+        autoHideDuration={4000}
         onClose={handleClose}
       >
         {/* The Alert component provides the color and icon */}
