@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { SnackbarProvider } from "../context/SnackbarContext";
 import {
   Box,
   Container,
@@ -677,19 +678,21 @@ const Map: React.FC = () => {
                 position: "relative",
               }}
             >
-              <InfiniteCanvas
-                activeDrawButton={activeDrawButton}
-                markerColor={markerColor}
-                wallColor={wallColor}
-                socket={socket}
-                mapId={mapId ?? -1}
-                getMapStateRef={getMapStateRef}
-                isDM={isDM}
-                isGridOn={isGridOn}
-                characterId={characterId ?? -1}
-                isAxesOn={isAxesOn}
-                playerTokenSelected={playerTokenSelected}
-              />
+              <SnackbarProvider>
+                <InfiniteCanvas
+                  activeDrawButton={activeDrawButton}
+                  markerColor={markerColor}
+                  wallColor={wallColor}
+                  socket={socket}
+                  mapId={mapId ?? -1}
+                  getMapStateRef={getMapStateRef}
+                  isDM={isDM}
+                  isGridOn={isGridOn}
+                  characterId={characterId ?? -1}
+                  isAxesOn={isAxesOn}
+                  playerTokenSelected={playerTokenSelected}
+                />
+              </SnackbarProvider>
               {/* on-top-of-canvas sliding button tray */}
               <Stack
                 spacing={1}

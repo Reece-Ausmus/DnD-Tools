@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from "react";
+import { useSnackbar } from "@/context/SnackbarContext";
 
 import { Point, Marker, Line, Selection, Character } from "@/util/types";
 import {
@@ -104,6 +105,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
   const dragStartMarkerPos = useRef<Point | null>(null);
   const hasMovedMarker = useRef<boolean>(false);
   const isErasing = useRef<boolean>(false);
+  const { showSnackbar } = useSnackbar();
 
   const selectedObject = useRef<Selection | null>(null);
 
@@ -678,7 +680,6 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
                   newMarker.characterId = playerTokenSelected.id;
                 }
                 markers.current.push(newMarker);
-                console.log(markers);
                 addHistoryEntry({
                   type: "ADD_MARKER",
                   payload: { marker: newMarker },
@@ -688,7 +689,7 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
                   marker: newMarker,
                 });
               } else {
-                console.log("marker already on board");
+                showSnackbar("player marker already on board.", "info");
               }
             }
           }
