@@ -289,6 +289,7 @@ const Map: React.FC = () => {
       // Cleanup: disconnect the socket when the component unmounts
       socket.off("error");
       socket.off("map_created");
+      socket.off("map_deleted");
       socket.off("map_connected");
       socket.off("map_disconnected");
 
