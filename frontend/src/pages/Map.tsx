@@ -5,24 +5,15 @@ import {
   Container,
   Typography,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  MenuItem,
   ButtonGroup,
   Tooltip,
   Stack,
   useTheme,
-  ToggleButtonGroup,
-  ToggleButton,
   Paper,
 } from "@mui/material";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InfiniteCanvas from "@/components/map/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
-import CampaignContext from "@/context/CampaignContext";
 import { Campaign, Character, Marker, Line } from "@/util/types";
 import { io, Socket } from "socket.io-client";
 import { Map as MapType } from "@/util/types";
@@ -82,11 +73,6 @@ const Map: React.FC = () => {
     });
   };
 
-  const [newMapOpen, setNewMapOpen] = useState(false);
-  const [newMapName, setNewMapName] = useState("");
-  const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(
-    null
-  );
   const [markerColor, setMarkerColor] = useState<string>("#E57373");
   const [wallColor, setWallColor] = useState<string>("#E57373");
   const [isGridOn, setGridOn] = useState<boolean>(true);
@@ -126,81 +112,31 @@ const Map: React.FC = () => {
     isAxesOn ? setAxesOn(false) : setAxesOn(true);
   };
 
-  const [connectOpen, setConnectOpen] = useState(false);
-  const [dmMaps, setDmMaps] = useState<MapType[]>([]);
-  const [dmOpen, setDmOpen] = useState(false);
-  const [playerMaps, setPlayerMaps] = useState<MapType[]>([]);
-  const [selectedMap, setSelectedMap] = useState<number | null>(null);
   const [mapConnected, setMapConnected] = useState(false);
   const [mapId, setMapId] = useState<number | null>(null);
   const [currentMap, setCurrentMap] = useState<MapType | null>(null);
   const [isDM, setIsDM] = useState(false);
   const [characterId, setCharacterId] = useState<number | null>(null);
 
-  const handleClickOpenMap = async () => {
-    try {
-      const response = await fetch("api/map/get_dm_maps", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch DM maps.");
-      }
-      setDmMaps(data.maps || []);
-      setDmOpen(true);
-    } catch (error) {
-      console.error("Error fetching DM maps:", error);
-    }
-  };
-
-  // Get available maps from the server
-  const handleClickConnectMap = async () => {
-    try {
-      const response = await fetch("api/map/get_player_maps", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch available maps.");
-      }
-      setPlayerMaps(data.maps || []);
-      setConnectOpen(true);
-    } catch (error) {
-      console.error("Error fetching available maps:", error);
-    }
-  };
-
   // Create a map and emit to server
-  const handleCreateMap = async () => {
+  const handleCreateMap = async (campaignId: number, mapName: string) => {
     if (!socket.connected) {
       console.error("Socket is not connected.");
       return;
     }
-    if (!newMapName.trim()) {
+    if (!mapName.trim()) {
       console.error("Map name cannot be empty.");
       return;
     }
-    if (selectedCampaignId === null || selectedCampaignId < 0) {
+    if (campaignId === null || campaignId < 0) {
       console.error("Please select a valid campaign.");
       return;
     }
 
     socket.emit("create_map", {
-      name: newMapName,
-      campaign_id: selectedCampaignId,
+      name: mapName,
+      campaign_id: campaignId,
     });
-
-    setNewMapName("");
-    setNewMapOpen(false);
-    setSelectedCampaignId(null);
   };
 
   // Join a map room
@@ -215,8 +151,6 @@ const Map: React.FC = () => {
     }
 
     socket.emit("join_map_room", { map_id: mapId });
-    setConnectOpen(false);
-    setDmOpen(false);
   };
 
   const handleLeaveMapRoom = () => {
@@ -264,7 +198,6 @@ const Map: React.FC = () => {
       console.log("Connected to map:", data);
       const map = data.map;
       updateCurrentCampaign(map.campaign_id);
-      setSelectedCampaignId(data.campaign_id);
       setMapConnected(true);
       setCurrentMap(map);
       setMapId(map.id);
@@ -293,14 +226,6 @@ const Map: React.FC = () => {
       socket.disconnect();
     };
   }, [socket, campaigns]);
-
-  const handleClickNewMap = () => {
-    setNewMapOpen(true);
-  };
-
-  const handleNewMapClose = () => {
-    setNewMapOpen(false);
-  };
 
   // ActiveIndex holds the index of currently selecting drawing button
   const [activeDrawButtonIndex, setActiveDrawButtonIndex] = useState<
@@ -369,6 +294,7 @@ const Map: React.FC = () => {
               <MapExplorer
                 campaigns={campaigns}
                 onMapClick={handleJoinMapRoom}
+                onCreateMap={handleCreateMap}
               />
             </Paper>
             <Paper
@@ -416,34 +342,22 @@ const Map: React.FC = () => {
             }}
           >
             <ButtonGroup variant="text" color="secondary">
-              {mapConnected ? (
+              {isDM ? (
                 <>
                   <Button color="primary" onClick={handleLeaveMapRoom}>
                     Disconnect from Map
                   </Button>
-                  {isDM && (
-                    <>
-                      <Button color="success" onClick={handleSaveMap}>
-                        Save Map
-                      </Button>
-                      <Button color="error" onClick={handleDeleteMap}>
-                        Delete Map
-                      </Button>
-                    </>
-                  )}
+                  <Button color="success" onClick={handleSaveMap}>
+                    Save Map
+                  </Button>
+                  <Button color="error" onClick={handleDeleteMap}>
+                    Delete Map
+                  </Button>
                 </>
               ) : (
-                <>
-                  <Button color="primary" onClick={handleClickNewMap}>
-                    New Map
-                  </Button>
-                  <Button color="primary" onClick={handleClickOpenMap}>
-                    Open Map (DM)
-                  </Button>
-                  <Button color="primary" onClick={handleClickConnectMap}>
-                    Connect to Map (Player)
-                  </Button>
-                </>
+                <Button color="primary" onClick={handleLeaveMapRoom}>
+                  Disconnect from Map
+                </Button>
               )}
             </ButtonGroup>
           </Box>
@@ -748,46 +662,6 @@ const Map: React.FC = () => {
                 />
               </Button>
             </Box>
-
-            {/* New Map Button Dialogue Box */}
-            <Dialog open={newMapOpen} onClose={handleNewMapClose}>
-              <DialogTitle>New Map</DialogTitle>
-              <DialogContent>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label="New Map Name"
-                  type="text"
-                  fullWidth
-                  variant="standard"
-                  value={newMapName}
-                  onChange={(e) => setNewMapName(e.target.value)}
-                />
-                <TextField
-                  select
-                  fullWidth
-                  label="Select Campaign"
-                  value={selectedCampaignId ?? ""}
-                  onChange={(e) =>
-                    setSelectedCampaignId(Number(e.target.value))
-                  }
-                  variant="standard"
-                  margin="dense"
-                >
-                  {campaigns.map((campaign) => (
-                    <MenuItem key={campaign.id} value={campaign.id}>
-                      {campaign.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleNewMapClose}>Cancel</Button>
-                <Button variant="contained" onClick={handleCreateMap}>
-                  Create
-                </Button>
-              </DialogActions>
-            </Dialog>
           </Container>
         </>
       )}
