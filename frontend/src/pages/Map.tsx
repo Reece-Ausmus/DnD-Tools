@@ -12,7 +12,7 @@ import {
   Paper,
 } from "@mui/material";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import InfiniteCanvas from "@/components/map/InfiniteCanvas";
+import InfiniteCanvas, { ChildHandle } from "@/components/map/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
 import { Campaign, Character, Marker, Line } from "@/util/types";
 import { io, Socket } from "socket.io-client";
@@ -29,7 +29,7 @@ const drawButtonOptions = [
 ] as const;
 
 const Map: React.FC = () => {
-  //const infiniteCanvasRef = useRef<ChildHandle>(null);
+  const infiniteCanvasRef = useRef<ChildHandle>(null);
 
   // Initialize socket connection
   const socket: Socket = useMemo(
@@ -108,7 +108,7 @@ const Map: React.FC = () => {
 
   const handleDoubleClick = (character: Character) => {
     console.log(`DOUBLE-CLICK on ${character.name}! (Opening details)`);
-    //infiniteCanvasRef.current?.centerGridOnPoint(character.id);
+    infiniteCanvasRef.current?.centerGridOnPoint(character.id);
   };
 
   const clickTimeoutRef = useRef<number | null>(null);
@@ -598,6 +598,7 @@ const Map: React.FC = () => {
                   characterId={characterId ?? -1}
                   isAxesOn={isAxesOn}
                   playerTokenSelected={playerTokenSelected}
+                  ref={infiniteCanvasRef}
                 />
               </SnackbarProvider>
               {/* on-top-of-canvas sliding button tray */}

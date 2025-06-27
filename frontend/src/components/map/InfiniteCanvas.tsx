@@ -16,6 +16,7 @@ import {
   preview_line_box,
   samePoint,
   uniqueMarker,
+  markerFromCharId,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -29,6 +30,11 @@ interface CanvasState {
 }
 
 import type { Socket } from "socket.io-client";
+
+// The API handle we will expose to the parent
+export interface ChildHandle {
+  centerGridOnPoint: (id: number) => void;
+}
 
 type MapPageProps = {
   activeDrawButton:
@@ -64,19 +70,22 @@ type HistoryEntry =
       payload: { oldPos: Point; newPos: Point; marker: Marker };
     };
 
-const InfiniteCanvas: React.FC<MapPageProps> = ({
-  activeDrawButton,
-  markerColor,
-  wallColor,
-  socket,
-  mapId,
-  getMapStateRef,
-  isDM,
-  isGridOn,
-  characterId,
-  isAxesOn,
-  playerTokenSelected,
-}) => {
+const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
+  // 2. DESTRUCTURE PROPS INSIDE THE COMPONENT
+  const {
+    activeDrawButton,
+    markerColor,
+    wallColor,
+    socket,
+    mapId,
+    getMapStateRef,
+    isDM,
+    isGridOn,
+    characterId,
+    isAxesOn,
+    playerTokenSelected,
+  } = props;
+
   // Provide access to current map state via ref
   useEffect(() => {
     getMapStateRef.current = () => ({
@@ -248,6 +257,51 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
     });
     ctx.restore();
   };
+
+  const centerGridOnPoint = (id: number, duration: number = 500) => {
+    // find marker position from character id
+    const marker = markerFromCharId(id, markers.current);
+    if (!marker) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const { width, height } = canvas;
+    const { scale } = state.current;
+
+    const point = marker.pos;
+
+    const targetX = width / 2 - point.x * scale - (50 * scale) / 2;
+    const targetY = height / 2 - point.y * scale - (50 * scale) / 2;
+
+    const startX = state.current.offsetX;
+    const startY = state.current.offsetY;
+
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1); // Clamp at 1
+
+      // Ease-out function for a smoother stop
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+      state.current.offsetX = startX + (targetX - startX) * easedProgress;
+      state.current.offsetY = startY + (targetY - startY) * easedProgress;
+
+      draw();
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  };
+
+  useImperativeHandle(ref, () => ({
+    centerGridOnPoint: centerGridOnPoint,
+  }));
 
   //   ____________________
   //  /                    \
@@ -1003,6 +1057,6 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       }}
     />
   );
-};
+});
 
 export default InfiniteCanvas;
