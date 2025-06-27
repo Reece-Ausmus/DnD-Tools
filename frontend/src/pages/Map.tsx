@@ -94,7 +94,7 @@ const Map: React.FC = () => {
     setCurrentCampaign(foundCampaign || null);
   };
 
-  const handlePlayerTokenClick = (character: Character) => {
+  const handlePlayerTokenSingleClick = (character: Character) => {
     if (playerTokenSelected && character.id === playerTokenSelected.id) {
       setPlayerTokenSelected(null);
     } else {
@@ -102,6 +102,28 @@ const Map: React.FC = () => {
     }
 
     setActiveDrawButtonIndex(null);
+  };
+
+  const handleDoubleClick = (character: Character) => {
+    console.log(`DOUBLE-CLICK on ${character.name}! (Opening details)`);
+  };
+
+  const clickTimeoutRef = useRef<number | null>(null);
+
+  const handlePlayerTokenClicking = (character: Character) => {
+    if (clickTimeoutRef.current) {
+      // second click within 200ms, do double click action
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+      handleDoubleClick(character);
+    } else {
+      // first click, start timer
+      // if no other click within 200ms, then do single click action
+      clickTimeoutRef.current = window.setTimeout(() => {
+        handlePlayerTokenSingleClick(character);
+        clickTimeoutRef.current = null;
+      }, 200); // 200ms delay
+    }
   };
 
   const handleGridOnPress = () => {
@@ -540,7 +562,7 @@ const Map: React.FC = () => {
                                 ? "2px solid orange"
                                 : "none",
                           }}
-                          onClick={(e) => handlePlayerTokenClick(character)}
+                          onClick={(e) => handlePlayerTokenClicking(character)}
                         />
                       </Box>
                     ))}
