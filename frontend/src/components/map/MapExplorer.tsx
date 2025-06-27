@@ -1,7 +1,14 @@
 import React from "react";
 import { Campaign } from "@/util/types";
 import useUser from "@/hooks/useUser";
-import { List, ListItemButton, ListItemText, Box } from "@mui/material";
+import {
+  List,
+  ListItemButton,
+  ListItemText,
+  Box,
+  Button,
+  Typography,
+} from "@mui/material";
 
 interface MapExplorerProps {
   role: "dm" | "player" | "";
@@ -61,9 +68,9 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
       </Box>
     </Box>
   ) : (
-    <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+    <Typography sx={{ display: "flex", alignItems: "flex-start" }}>
       No maps available
-    </Box>
+    </Typography>
   );
 };
 
