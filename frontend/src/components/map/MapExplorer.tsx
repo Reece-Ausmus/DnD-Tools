@@ -16,8 +16,10 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
 }) => {
   const { username } = useUser();
 
-  const filteredCampaigns = campaigns.filter((campaign) =>
-    role === "dm" ? campaign.dm === username : campaign.dm !== username
+  const filteredCampaigns = campaigns.filter(
+    (campaign) =>
+      campaign.maps.length > 0 &&
+      (role === "dm" ? campaign.dm === username : campaign.dm !== username)
   );
 
   const [openCampaigns, setOpenCampaigns] = React.useState<{
@@ -27,7 +29,7 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
     setOpenCampaigns((prev) => ({ ...prev, [campaignId]: !prev[campaignId] }));
   };
 
-  return (
+  return filteredCampaigns.length > 0 ? (
     <Box sx={{ display: "flex", alignItems: "flex-start" }}>
       <List sx={{ minWidth: "200px", borderRight: "1px solid #ccc" }}>
         {filteredCampaigns.map((campaign) => (
@@ -57,6 +59,10 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
             )
         )}
       </Box>
+    </Box>
+  ) : (
+    <Box sx={{ display: "flex", alignItems: "flex-start" }}>
+      No maps available
     </Box>
   );
 };
