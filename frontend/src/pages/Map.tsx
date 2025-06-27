@@ -48,9 +48,6 @@ const Map: React.FC = () => {
     []
   );
 
-  // MapExplorer props
-  const [role, setRole] = useState<"dm" | "player" | "">("");
-
   // Ref to get map state from InfiniteCanvas
   const getMapStateRef = useRef<() => { markers: Marker[]; lines: Line[] }>();
   // Save map state to server
@@ -359,35 +356,6 @@ const Map: React.FC = () => {
 
       {!mapConnected ? (
         <>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
-          >
-            <Typography variant="h2" align="center" sx={{ margin: "20px" }}>
-              Role Selection:
-            </Typography>
-            <ToggleButtonGroup
-              value={role}
-              exclusive
-              onChange={(event, newRole) => {
-                if (newRole !== null) {
-                  setRole(newRole);
-                }
-              }}
-              sx={{ marginBottom: "20px" }}
-            >
-              <ToggleButton value="dm" sx={{ width: "100px" }}>
-                DM
-              </ToggleButton>
-              <ToggleButton value="player" sx={{ width: "100px" }}>
-                Player
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
           <Box sx={{ display: "flex", width: "100%" }}>
             <Paper
               sx={{
@@ -399,7 +367,6 @@ const Map: React.FC = () => {
               }}
             >
               <MapExplorer
-                role={role}
                 campaigns={campaigns}
                 onMapClick={handleJoinMapRoom}
               />
