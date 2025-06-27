@@ -29,6 +29,8 @@ const drawButtonOptions = [
 ] as const;
 
 const Map: React.FC = () => {
+  //const infiniteCanvasRef = useRef<ChildHandle>(null);
+
   // Initialize socket connection
   const socket: Socket = useMemo(
     () =>
@@ -106,6 +108,7 @@ const Map: React.FC = () => {
 
   const handleDoubleClick = (character: Character) => {
     console.log(`DOUBLE-CLICK on ${character.name}! (Opening details)`);
+    //infiniteCanvasRef.current?.centerGridOnPoint(character.id);
   };
 
   const clickTimeoutRef = useRef<number | null>(null);

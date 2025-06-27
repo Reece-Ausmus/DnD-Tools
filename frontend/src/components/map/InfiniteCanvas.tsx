@@ -1,4 +1,9 @@
-import React, { useRef, useEffect } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 import { useSnackbar } from "@/context/SnackbarContext";
 
 import { Point, Marker, Line, Selection, Character } from "@/util/types";
