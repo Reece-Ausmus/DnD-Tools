@@ -844,7 +844,8 @@ const InfiniteCanvas: React.FC<MapPageProps> = ({
       activeDrawButton === "place-marker" ||
       activeDrawButton === "draw-lines" ||
       activeDrawButton === "draw-box" ||
-      activeDrawButton === "draw-circle"
+      activeDrawButton === "draw-circle" ||
+      playerTokenSelected
     ) {
       canvas.style.cursor = "crosshair";
     } else {
