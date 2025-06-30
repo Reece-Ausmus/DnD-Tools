@@ -33,11 +33,22 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
   const { username } = useUser();
   const [role, setRole] = useState<"dm" | "player" | "">("dm");
 
-  const filteredCampaigns = campaigns.filter(
-    (campaign) =>
-      campaign.maps.length > 0 &&
-      (role === "dm" ? campaign.dm === username : campaign.dm !== username)
-  );
+  const filteredCampaigns = campaigns
+    .map((campaign) => {
+      const maps =
+        role === "dm"
+          ? campaign.maps
+          : campaign.maps.filter((map) => map.is_open);
+      return {
+        ...campaign,
+        maps,
+      };
+    })
+    .filter(
+      (campaign) =>
+        campaign.maps.length > 0 &&
+        (role === "dm" ? campaign.dm === username : campaign.dm !== username)
+    );
   const [openCampaigns, setOpenCampaigns] = useState<{
     [key: number]: boolean;
   }>({});
