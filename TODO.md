@@ -24,6 +24,4 @@ MAP SECTION:
   - button greys out when token on board
   - dialog when clicking greyed out player token - (recall token: deletes it from board, go to token: center canvas view on token)
 
-- remove draw options from player view
-
 - BIG MARKER
