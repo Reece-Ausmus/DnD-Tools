@@ -17,6 +17,8 @@ MAP SECTION:
 - make circles
   - triple click technology (first click: center, second click: radius and start of arc, third click: define end of arc)
 - make player tokens placeable
-  - only one instance of a token on map at time
+
   - button greys out when token on board
   - dialog when clicking greyed out player token - (recall token: deletes it from board, go to token: center canvas view on token)
+
+- BIG MARKER
