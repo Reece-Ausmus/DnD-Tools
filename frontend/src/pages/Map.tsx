@@ -405,108 +405,106 @@ const Map: React.FC = () => {
                 }}
               >
                 {/* Map over the `drawButtonOptions` data array */}
-                {drawButtonOptions.map((option, index) => (
-                  <Container
-                    key={option.id}
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: "auto 1fr",
-                      alignItems: "center",
-                    }}
-                  >
-                    {/* First Column: button */}
-                    <Button
-                      variant="contained"
-                      color={
-                        activeDrawButtonIndex === index ? "primary" : "inherit"
-                      }
-                      onClick={() => handleDrawButtonClick(index)}
+                {isDM &&
+                  drawButtonOptions.map((option, index) => (
+                    <Container
+                      key={option.id}
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "auto 1fr",
+                        alignItems: "center",
+                      }}
                     >
-                      {option.label}
-                    </Button>
-                    {/* Second Column: marker color circle */}
-                    {option.id === "place-marker" && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "left",
-                          marginLeft: "20px",
-                        }}
+                      {/* First Column: button */}
+                      <Button
+                        variant="contained"
+                        color={
+                          activeDrawButtonIndex === index
+                            ? "primary"
+                            : "inherit"
+                        }
+                        onClick={() => handleDrawButtonClick(index)}
                       >
+                        {option.label}
+                      </Button>
+                      {/* Second Column: marker color circle */}
+                      {option.id === "place-marker" && (
                         <Box
-                          component="label"
-                          htmlFor="marker-color-picker"
                           sx={{
-                            width: "35px",
-                            height: "35px",
-                            borderRadius: "35px",
-                            cursor: "pointer",
-                            backgroundColor: markerColor,
-                            "&:hover": {
-                              border: "2px solid gray",
-                            },
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "left",
+                            marginLeft: "20px",
                           }}
-                        />
-                        <input
-                          type="color"
-                          id="marker-color-picker"
-                          value={markerColor}
-                          onChange={(e) => setMarkerColor(e.target.value)}
-                          style={{
-                            // Hide the default input but keep it functional
-                            visibility: "hidden",
-                            width: 0,
-                            height: 0,
-                            position: "absolute",
-                          }}
-                        />
-                      </Box>
-                    )}
-                    {/* Second Column: wall color circle */}
-                    {option.id === "draw-lines" && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "left",
-                          marginLeft: "20px",
-                        }}
-                      >
+                        >
+                          <Box
+                            component="label"
+                            htmlFor="marker-color-picker"
+                            sx={{
+                              width: "35px",
+                              height: "35px",
+                              borderRadius: "35px",
+                              cursor: "pointer",
+                              backgroundColor: markerColor,
+                              "&:hover": {
+                                border: "2px solid gray",
+                              },
+                            }}
+                          />
+                          <input
+                            type="color"
+                            id="marker-color-picker"
+                            value={markerColor}
+                            onChange={(e) => setMarkerColor(e.target.value)}
+                            style={{
+                              visibility: "hidden",
+                              width: 0,
+                              height: 0,
+                              position: "absolute",
+                            }}
+                          />
+                        </Box>
+                      )}
+                      {/* Second Column: wall color circle */}
+                      {option.id === "draw-lines" && (
                         <Box
-                          component="label"
-                          htmlFor="wall-color-picker"
                           sx={{
-                            width: "35px",
-                            height: "35px",
-                            borderRadius: "8px",
-                            cursor: "pointer",
-                            backgroundColor: wallColor,
-                            "&:hover": {
-                              border: "2px solid gray",
-                            },
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "left",
+                            marginLeft: "20px",
                           }}
-                        />
-                        <input
-                          type="color"
-                          id="wall-color-picker"
-                          value={wallColor}
-                          onChange={(e) => setWallColor(e.target.value)}
-                          style={{
-                            // Hide the default input but keep it functional
-                            visibility: "hidden",
-                            width: 0,
-                            height: 0,
-                            position: "absolute",
-                          }}
-                        />
-                      </Box>
-                    )}
-                  </Container>
-                ))}
-                <div style={{ paddingLeft: "20px" }}>
-                  Current Mode: {activeDrawButton || "None"}
-                </div>
+                        >
+                          <Box
+                            component="label"
+                            htmlFor="wall-color-picker"
+                            sx={{
+                              width: "35px",
+                              height: "35px",
+                              borderRadius: "8px",
+                              cursor: "pointer",
+                              backgroundColor: wallColor,
+                              "&:hover": {
+                                border: "2px solid gray",
+                              },
+                            }}
+                          />
+                          <input
+                            type="color"
+                            id="wall-color-picker"
+                            value={wallColor}
+                            onChange={(e) => setWallColor(e.target.value)}
+                            style={{
+                              visibility: "hidden",
+                              width: 0,
+                              height: 0,
+                              position: "absolute",
+                            }}
+                          />
+                        </Box>
+                      )}
+                    </Container>
+                  ))}
                 {/* player token area */}
                 <div style={{ border: "1px solid gray", width: "100%" }}>
                   <Typography variant="h2" align="left" sx={{ margin: "20px" }}>
