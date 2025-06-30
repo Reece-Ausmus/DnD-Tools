@@ -148,6 +148,7 @@ class Map(db.Model):
     campaign_id = db.Column(db.Integer, db.ForeignKey("campaign.id"), nullable=False)
     markers = db.Column(db.JSON, nullable=True, default=[])
     lines = db.Column(db.JSON, nullable=True, default=[])
+    is_open = db.Column(db.Boolean, default=False)
 
     campaign = db.relationship("Campaign", back_populates="maps")
     owner = db.relationship("User", back_populates="maps")
@@ -165,6 +166,7 @@ class Map(db.Model):
             'campaign_id': self.campaign_id,
             'markers': self.markers or [],
             'lines': self.lines or [],
+            'is_open': self.is_open
         }
 
     def __repr__(self):

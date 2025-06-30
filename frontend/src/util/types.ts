@@ -6,6 +6,9 @@ export interface Character {
   classType: string;
   level: number;
   username: string;
+  speed: number;
+  size: string;
+  marker_color: string;
 }
 
 export interface Campaign {
@@ -40,6 +43,7 @@ export interface Map {
   name: string;
   owner_id: number;
   campaign_id: number;
+  is_open: boolean;
 }
 
 //

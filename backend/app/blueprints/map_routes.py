@@ -78,3 +78,36 @@ def save_map_state():
     db.session.commit()
 
     return jsonify({"message": "Map state saved successfully."}), 200
+
+@map_bp.route('set_visibility/<int:map_id>', methods=['POST'])
+def set_visibility(map_id):
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "User not logged in"}), 401
+
+    map = Map.query.get(map_id)
+    if not map:
+        return jsonify({"error": "Map not found"}), 404
+
+    if map.owner_id != user_id:
+        return jsonify({"error": "You are not the owner of this map"}), 403
+    
+    data = request.get_json()
+
+    visible = data.get('map_visibility')
+    if visible is None:
+        return jsonify({"error": "is_open parameter is required"}), 400
+
+    map.is_open = visible
+    db.session.commit()
+
+    return jsonify({
+        "message": f"Map {map.name} is now {'open' if visible else 'closed'}.",
+        "map": {
+            "id": map.id,
+            "name": map.name,
+            "markers": map.markers,
+            "lines": map.lines
+        }
+        }), 200
+

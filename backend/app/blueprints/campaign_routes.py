@@ -293,7 +293,8 @@ def get_campaigns():
                 "id": m.id,
                 "name": m.name,
                 "owner_id": m.owner_id,
-                "campaign_id": m.campaign_id
+                "campaign_id": m.campaign_id,
+                "isOpen": m.is_open
             } for m in c.maps
         ] for c in campaigns
     }

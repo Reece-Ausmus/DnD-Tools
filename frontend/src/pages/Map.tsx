@@ -10,6 +10,7 @@ import {
   Stack,
   useTheme,
   Paper,
+  Switch,
 } from "@mui/material";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InfiniteCanvas, { ChildHandle } from "@/components/map/InfiniteCanvas";
@@ -141,6 +142,30 @@ const Map: React.FC = () => {
   const [currentMap, setCurrentMap] = useState<MapType | null>(null);
   const [isDM, setIsDM] = useState(false);
   const [characterId, setCharacterId] = useState<number | null>(null);
+  const [mapVisibility, setMapVisibility] = useState<boolean>(true);
+
+  const handleToggleMapVisibility = async () => {
+    const newVisibility = !mapVisibility;
+    try {
+      const response = await fetch("/api/map/set_visibility/" + mapId, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ map_id: mapId, map_visibility: newVisibility }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update visibility.");
+      console.log("Map visibility updated.");
+      setMapVisibility(newVisibility);
+      if (currentMap) {
+        setCurrentMap({ ...currentMap, is_open: newVisibility });
+      }
+    } catch (err) {
+      console.error("Error updating visibility:", err);
+    }
+  };
 
   // Create a map and emit to server
   const handleCreateMap = async (campaignId: number, mapName: string) => {
@@ -377,6 +402,22 @@ const Map: React.FC = () => {
                   <Button color="error" onClick={handleDeleteMap}>
                     Delete Map
                   </Button>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      marginLeft: 2,
+                    }}
+                  >
+                    <Typography variant="body1" sx={{ marginRight: 1 }}>
+                      Map Visible?
+                    </Typography>
+                    <Switch
+                      color="primary"
+                      onChange={handleToggleMapVisibility}
+                      checked={mapVisibility}
+                    />
+                  </Box>
                 </>
               ) : (
                 <Button color="primary" onClick={handleLeaveMapRoom}>
