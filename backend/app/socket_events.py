@@ -170,6 +170,17 @@ def handle_leave_map_room(data):
         emit('error', {'message': 'User not found'})
         return
 
+    map = Map.query.get(map_id)
+    if not map:
+        emit('error', {'message': 'Map not found'})
+        return
+
+    # If user is the DM, set map visibility to false and notify others
+    if map.owner_id == user_id:
+        map.is_open = False
+        db.session.commit()
+        emit('map_force_closed', {'message': 'The DM has closed the map.'}, room=f'map_{map_id}', skip_sid=request.sid)
+
     leave_room(f'map_{map_id}')
     emit('map_disconnected', {'message': f'Disconnected from map {map_id}'}, room=f'map_{map_id}', to=request.sid)
     print(f'\033[94mUser {user.username} left map room {map_id}\033[0m')

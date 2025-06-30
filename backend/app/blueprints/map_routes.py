@@ -1,3 +1,4 @@
+from ..socket_events import socketio
 from flask import Blueprint, jsonify, request, session
 from ..models import Map, User
 from .. import db
@@ -100,6 +101,14 @@ def set_visibility(map_id):
 
     map.is_open = visible
     db.session.commit()
+
+    # If visibility is being turned off, notify all connected players
+    if not visible:
+        socketio.emit(
+            'map_force_closed',
+            {'message': 'The DM has closed the map.'},
+            room=f'map_{map.id}'
+        )
 
     return jsonify({
         "message": f"Map {map.name} is now {'open' if visible else 'closed'}.",

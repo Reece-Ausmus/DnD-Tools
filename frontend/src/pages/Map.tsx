@@ -243,6 +243,14 @@ const Map: React.FC = () => {
       setIsDM(false);
     });
 
+    socket.on("map_force_closed", (data) => {
+      console.log("Map force closed by DM:", data);
+      localStorage.removeItem("mapId");
+      setMapConnected(false);
+      setMapId(null);
+      setIsDM(false);
+    });
+
     socket.on("map_connected", (data) => {
       console.log("Connected to map:", data);
       const map = data.map;
@@ -274,6 +282,7 @@ const Map: React.FC = () => {
       socket.off("map_deleted");
       socket.off("map_connected");
       socket.off("map_disconnected");
+      socket.off("map_force_closed");
 
       socket.disconnect();
     };
