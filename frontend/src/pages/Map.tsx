@@ -344,7 +344,6 @@ const Map: React.FC = () => {
               }}
             >
               <MapExplorer
-                campaigns={campaigns}
                 onMapClick={handleJoinMapRoom}
                 onCreateMap={handleCreateMap}
               />

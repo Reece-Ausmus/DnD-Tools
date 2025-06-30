@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Campaign } from "@/util/types";
 import useUser from "@/hooks/useUser";
 import {
@@ -16,22 +16,28 @@ import {
   DialogTitle,
   MenuItem,
   TextField,
+  IconButton,
 } from "@mui/material";
-import { on } from "events";
+import useCampaigns from "@/hooks/useCampaigns";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 interface MapExplorerProps {
-  campaigns: Campaign[];
   onMapClick: (mapId: number) => void;
   onCreateMap?: (campaignId: number, mapName: string) => void;
 }
 
 const MapExplorer: React.FC<MapExplorerProps> = ({
-  campaigns,
   onMapClick,
   onCreateMap,
 }) => {
   const { username } = useUser();
   const [role, setRole] = useState<"dm" | "player" | "">("dm");
+
+  const { campaigns, fetchCampaigns } = useCampaigns();
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
 
   const filteredCampaigns = campaigns
     .map((campaign) => {
@@ -89,7 +95,7 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
             Player
           </ToggleButton>
         </ToggleButtonGroup>
-        {role === "dm" && (
+        {role === "dm" ? (
           <Button
             variant="contained"
             onClick={() => setNewMapOpen(true)}
@@ -101,6 +107,15 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
           >
             New Map
           </Button>
+        ) : (
+          <IconButton
+            onClick={() => fetchCampaigns()}
+            sx={{
+              marginBottom: "10px",
+            }}
+          >
+            <RefreshIcon sx={{ color: "#ffa726" }} />
+          </IconButton>
         )}
       </Box>
       {filteredCampaigns.length > 0 ? (
