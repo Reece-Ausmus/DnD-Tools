@@ -19,6 +19,9 @@ def create_character():
     race_id = data.get('race')
     class_id = data.get('classType')
     level = data.get('level', 1)
+    speed = data.get('speed', 30)
+    size = data.get('size', 'medium')
+    marker_color = data.get('markerColor', '#ff9800')
 
     user = User.query.get(user_id)
     if not user:
@@ -38,7 +41,10 @@ def create_character():
         race_id=race.id,
         class_id=class_type.id,
         level=level,
-        user_id=user.id
+        user_id=user.id,
+        speed=speed,
+        size=size,
+        marker_color=marker_color
     )
 
     db.session.add(new_character)
@@ -53,7 +59,10 @@ def create_character():
             "race": new_character.race.name,
             "class_type": new_character.class_type.name,
             "level": new_character.level,
-            "user_id": new_character.user_id
+            "user_id": new_character.user_id,
+            "speed": new_character.speed,
+            "size": new_character.size,
+            "marker_color": new_character.marker_color
         }
     }), 201
 
@@ -80,7 +89,10 @@ def get_characters():
                 "class_id": character.class_id,
                 "classType": character.class_type.name,
                 "level": character.level,
-                "user_id": character.user_id
+                "user_id": character.user_id,
+                "speed": character.speed,
+                "size": character.size,
+                "marker_color": character.marker_color
             } for character in characters
         ]
     }), 200
@@ -107,12 +119,15 @@ def get_character(character_id):
             "id": character.id,
             "name": character.name,
             "gender": character.gender,
-                "race_id": character.race_id,
-                "race": character.race.name,
-                "class_id": character.class_id,
-                "classType": character.class_type.name,
-                "level": character.level,
-                "user_id": character.user_id
+            "race_id": character.race_id,
+            "race": character.race.name,
+            "class_id": character.class_id,
+            "classType": character.class_type.name,
+            "level": character.level,
+            "user_id": character.user_id,
+            "speed": character.speed,
+            "size": character.size,
+            "marker_color": character.marker_color
         }
     }), 200
 
@@ -140,6 +155,9 @@ def update_character(character_id):
     race_id = data.get('race')
     class_id = data.get('classType')
     level = data.get('level')
+    speed = data.get('speed', character.speed)
+    size = data.get('size', character.size)
+    marker_color = data.get('markerColor', character.marker_color)
 
     class_type = ClassType.query.filter_by(id=class_id).first()
     if not class_type:
@@ -154,6 +172,9 @@ def update_character(character_id):
     character.race_id = race.id
     character.class_id = class_type.id
     character.level = level
+    character.speed = speed
+    character.size = size
+    character.marker_color = marker_color
 
     db.session.commit()
 

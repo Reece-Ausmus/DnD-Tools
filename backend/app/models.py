@@ -117,14 +117,20 @@ class Character(db.Model):
     level = db.Column(db.Integer, default=1)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     user = db.relationship("User", back_populates="characters")
+    speed = db.Column(db.Integer, default=30)
+    size = db.Column(db.String(50), default='medium')
+    marker_color = db.Column(db.String(7), default='#ff9800')  
 
-    def __init__(self, name, gender, race_id, class_id, level, user_id):
+    def __init__(self, name, gender, race_id, class_id, level, user_id, speed, size, marker_color):
         self.name = name
         self.gender = gender
         self.race_id = race_id
         self.class_id = class_id
         self.level = level
         self.user_id = user_id
+        self.speed = speed
+        self.size = size
+        self.marker_color = marker_color
 
     def __repr__(self):
         return f'<Character: {self.name} (Level {self.level} {self.race} {self.class_type})>'

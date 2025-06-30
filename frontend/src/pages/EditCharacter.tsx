@@ -26,6 +26,9 @@ const EditCharacter: React.FC = () => {
   const [race, setRace] = useState("");
   const [classType, setClassType] = useState("");
   const [level, setLevel] = useState<number>(1);
+  const [speed, setSpeed] = useState<number>(30);
+  const [size, setSize] = useState<string>("medium");
+  const [markerColor, setMarkerColor] = useState<string>("#ff9800");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -66,6 +69,9 @@ const EditCharacter: React.FC = () => {
       setRace(data.character.race_id);
       setClassType(data.character.class_id);
       setLevel(data.character.level);
+      setSpeed(data.character.speed);
+      setSize(data.character.size);
+      setMarkerColor(data.character.marker_color);
     } catch (error: any) {
       setErrorMessage(
         error.data?.error || "An error occurred while fetching the character."
@@ -93,7 +99,16 @@ const EditCharacter: React.FC = () => {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ name, gender, race, classType, level }),
+          body: JSON.stringify({
+            name,
+            gender,
+            race,
+            classType,
+            level,
+            speed,
+            size,
+            markerColor,
+          }),
         }
       );
 
@@ -109,6 +124,9 @@ const EditCharacter: React.FC = () => {
       setRace("");
       setClassType("");
       setLevel(1);
+      setSpeed(30);
+      setSize("medium");
+      setMarkerColor("#ff9800");
 
       navigate("/dashboard");
     } catch (error: any) {
@@ -199,6 +217,48 @@ const EditCharacter: React.FC = () => {
             slotProps={{
               htmlInput: { min: 1 },
             }}
+          />
+
+          <TextField
+            label="Speed"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={speed}
+            onChange={(e) => setSpeed(Number(e.target.value))}
+            required
+            margin="normal"
+            slotProps={{
+              htmlInput: { min: 0 },
+            }}
+          />
+
+          <FormControl fullWidth variant="outlined" required margin="normal">
+            <InputLabel>Size</InputLabel>
+            <Select
+              value={size}
+              onChange={(e) => setSize(e.target.value.toLowerCase())}
+              label="Size"
+              required
+            >
+              <MenuItem value="tiny">Tiny</MenuItem>
+              <MenuItem value="small">Small</MenuItem>
+              <MenuItem value="medium">Medium</MenuItem>
+              <MenuItem value="large">Large</MenuItem>
+              <MenuItem value="huge">Huge</MenuItem>
+              <MenuItem value="gargantuan">Gargantuan</MenuItem>
+            </Select>
+          </FormControl>
+
+          <TextField
+            label="Marker Color"
+            type="color"
+            fullWidth
+            variant="outlined"
+            value={markerColor}
+            onChange={(e) => setMarkerColor(e.target.value)}
+            required
+            margin="normal"
           />
 
           <Button
