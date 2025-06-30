@@ -142,7 +142,7 @@ const Map: React.FC = () => {
   const [currentMap, setCurrentMap] = useState<MapType | null>(null);
   const [isDM, setIsDM] = useState(false);
   const [characterId, setCharacterId] = useState<number | null>(null);
-  const [mapVisibility, setMapVisibility] = useState<boolean>(true);
+  const [mapVisibility, setMapVisibility] = useState<boolean>(false);
 
   const handleToggleMapVisibility = async () => {
     const newVisibility = !mapVisibility;
@@ -251,6 +251,9 @@ const Map: React.FC = () => {
       setCurrentMap(map);
       setMapId(map.id);
       setIsDM(data.isDM);
+      if (data.isDM) {
+        setMapVisibility(map.is_open);
+      }
       if (data.character_id) {
         setCharacterId(data.character_id);
       }
