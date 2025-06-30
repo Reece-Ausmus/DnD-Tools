@@ -13,9 +13,6 @@ MAP SECTION:
 - ability to import/export map
 - change ids of database objects to big random ids instead of increasing
 - select size of marker to place based on character size or enemy size selection
-- store size and speed in character table
-
-  - update the create and edit character pages
 
 - make circles
   - triple click technology (first click: center, second click: radius and start of arc, third click: define end of arc)
