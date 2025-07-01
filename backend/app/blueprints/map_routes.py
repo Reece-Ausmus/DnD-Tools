@@ -1,4 +1,4 @@
-from ..socket_events import socketio
+from ..socket_events import socketio, user_sockets
 from flask import Blueprint, jsonify, request, session
 from ..models import Map, User
 from .. import db
@@ -107,7 +107,8 @@ def set_visibility(map_id):
         socketio.emit(
             'map_force_closed',
             {'message': 'The DM has closed the map.'},
-            room=f'map_{map.id}'
+            room=f'map_{map.id}',
+            skip_sid=user_sockets.get(user_id, []),
         )
 
     return jsonify({

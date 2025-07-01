@@ -22,5 +22,3 @@ MAP SECTION:
   - dialog when clicking greyed out player token - (recall token: deletes it from board, go to token: center canvas view on token)
 
 - BIG MARKER
-
-- If dm changes visibility don't kick them out of map room
