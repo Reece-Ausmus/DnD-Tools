@@ -128,6 +128,10 @@ def handle_join_map_room(data):
 
     isDM = user_id == map.owner_id
 
+    if not isDM and not map.is_open:
+        emit('refresh_maps', {'message': 'This map is currently closed by the DM'}, to=request.sid)
+        return
+
     if not isDM:
         character_id = db.session.query(
             campaign_users.c.character_id

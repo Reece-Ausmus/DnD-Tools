@@ -275,6 +275,11 @@ const Map: React.FC = () => {
       setIsDM(false);
     });
 
+    socket.on("refresh_maps", (data) => {
+      console.log("Refreshing maps:", data);
+      fetchCampaigns();
+    });
+
     return () => {
       // Cleanup: disconnect the socket when the component unmounts
       socket.off("error");
@@ -283,6 +288,7 @@ const Map: React.FC = () => {
       socket.off("map_connected");
       socket.off("map_disconnected");
       socket.off("map_force_closed");
+      socket.off("refresh_maps");
 
       socket.disconnect();
     };
