@@ -21,3 +21,7 @@ MAP SECTION:
   - dialog when clicking greyed out player token - (recall token: deletes it from board, go to token: center canvas view on token)
 
 - BIG MARKER
+
+# BUGS TO FIX:
+
+- ctrl z event doesnt emit change to socket
