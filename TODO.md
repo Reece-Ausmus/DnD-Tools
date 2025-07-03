@@ -11,7 +11,6 @@ MAP SECTION:
 - dance time spinning sphere
 - player can change their marker appearance
 - ability to import/export map
-- change ids of database objects to big random ids instead of increasing
 - select size of marker to place based on character size or enemy size selection
 
 - make circles
