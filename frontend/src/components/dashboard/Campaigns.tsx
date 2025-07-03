@@ -32,7 +32,7 @@ const Campaigns: React.FC = () => {
   const navigate = useNavigate();
   const { username } = useUser();
   const { campaigns, fetchCampaigns, campaignsLoading } = useCampaigns();
-  const [campaign, setCampaign] = React.useState<number>(-1);
+  const [campaign, setCampaign] = React.useState<string>("");
   const [isInviting, setIsInviting] = React.useState<boolean>(false);
   const [inviteUsername, setInviteUsername] = React.useState<string>("");
   const [inviteError, setInviteError] = React.useState<string | null>(null);
@@ -43,7 +43,7 @@ const Campaigns: React.FC = () => {
     fetchCampaigns();
   }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     await fetch(`/api/campaign/delete_campaign/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: {
@@ -54,10 +54,10 @@ const Campaigns: React.FC = () => {
     });
 
     fetchCampaigns();
-    setCampaign(-1);
+    setCampaign("");
   };
 
-  const handleLeave = async (id: number) => {
+  const handleLeave = async (id: string) => {
     await fetch(`/api/campaign/leave_campaign/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: {
@@ -67,11 +67,11 @@ const Campaigns: React.FC = () => {
       body: JSON.stringify({ id: id }),
     });
     fetchCampaigns();
-    setCampaign(-1);
+    setCampaign("");
   };
 
   const handleRemoveCharacter =
-    (campgainId: number, characterId: number) => async () => {
+    (campgainId: string, characterId: string) => async () => {
       await fetch(
         `/api/campaign/remove_character/${encodeURIComponent(
           campgainId
@@ -160,12 +160,12 @@ const Campaigns: React.FC = () => {
             <Select
               labelId="campaign-label"
               id="campaign-select"
-              value={campaign.toString()}
+              value={campaign}
               label="campaign"
               defaultValue="All"
-              onChange={(e) => setCampaign(Number(e.target.value))}
+              onChange={(e) => setCampaign(e.target.value)}
             >
-              <MenuItem value={-1}>All</MenuItem>
+              <MenuItem value="">All</MenuItem>
               {campaigns.map((campaign) => (
                 <MenuItem key={campaign.id} value={campaign.id}>
                   {campaign.name}
@@ -181,7 +181,7 @@ const Campaigns: React.FC = () => {
 
       {campaignsLoading ? (
         <Skeleton variant="rounded" />
-      ) : campaign == -1 ? (
+      ) : campaign === "" ? (
         <Container maxWidth="lg">
           {/* Display all campaigns */}
           <TableContainer component={Paper}>

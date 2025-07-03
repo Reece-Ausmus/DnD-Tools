@@ -22,8 +22,8 @@ import useCampaigns from "@/hooks/useCampaigns";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
 interface MapExplorerProps {
-  onMapClick: (mapId: number) => void;
-  onCreateMap?: (campaignId: number, mapName: string) => void;
+  onMapClick: (mapId: string) => void;
+  onCreateMap?: (campaignId: string, mapName: string) => void;
 }
 
 const MapExplorer: React.FC<MapExplorerProps> = ({
@@ -56,16 +56,16 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
         (role === "dm" ? campaign.dm === username : campaign.dm !== username)
     );
   const [openCampaigns, setOpenCampaigns] = useState<{
-    [key: number]: boolean;
+    [key: string]: boolean;
   }>({});
 
-  const handleToggleCampaign = (campaignId: number) => {
+  const handleToggleCampaign = (campaignId: string) => {
     setOpenCampaigns((prev) => ({ ...prev, [campaignId]: !prev[campaignId] }));
   };
 
   const [newMapOpen, setNewMapOpen] = useState(false);
   const [newMapName, setNewMapName] = useState("");
-  const [newMapCampaignId, setNewMapCampaignId] = useState<number | null>(null);
+  const [newMapCampaignId, setNewMapCampaignId] = useState<string | null>(null);
   const dmCampaigns = campaigns.filter((campaign) => campaign.dm === username);
 
   return (
@@ -123,9 +123,9 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
           <List sx={{ minWidth: "200px", borderRight: "1px solid #ccc" }}>
             {filteredCampaigns.map((campaign) => (
               <ListItemButton
-                key={campaign.id}
-                onClick={() => handleToggleCampaign(campaign.id)}
-                selected={openCampaigns[campaign.id]}
+                key={campaign.id.toString()}
+                onClick={() => handleToggleCampaign(campaign.id.toString())}
+                selected={openCampaigns[campaign.id.toString()]}
               >
                 <ListItemText primary={campaign.name} />
               </ListItemButton>
@@ -134,12 +134,12 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
           <Box sx={{ paddingLeft: 2 }}>
             {filteredCampaigns.map(
               (campaign) =>
-                openCampaigns[campaign.id] && (
-                  <List key={campaign.id} component="div">
+                openCampaigns[campaign.id.toString()] && (
+                  <List key={campaign.id.toString()} component="div">
                     {campaign.maps.map((map) => (
                       <ListItemButton
-                        key={map.id}
-                        onClick={() => onMapClick(map.id)}
+                        key={map.id.toString()}
+                        onClick={() => onMapClick(map.id.toString())}
                       >
                         <ListItemText primary={map.name} />
                       </ListItemButton>
@@ -174,12 +174,15 @@ const MapExplorer: React.FC<MapExplorerProps> = ({
             fullWidth
             label="Select Campaign"
             value={newMapCampaignId ?? ""}
-            onChange={(e) => setNewMapCampaignId(Number(e.target.value))}
+            onChange={(e) => setNewMapCampaignId(e.target.value)}
             variant="standard"
             margin="dense"
           >
             {dmCampaigns.map((campaign) => (
-              <MenuItem key={campaign.id} value={campaign.id}>
+              <MenuItem
+                key={campaign.id.toString()}
+                value={campaign.id.toString()}
+              >
                 {campaign.name}
               </MenuItem>
             ))}

@@ -3,18 +3,19 @@ from flask_socketio import join_room, leave_room, emit
 from flask import jsonify, session, request
 from . import socketio, db
 from .models import User, Campaign, Map, campaign_users
+from uuid import UUID
 
 @socketio.on('connect')
 def on_connect():
     print(f'\033[92mClient {request.sid} connected\033[0m')
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if user_id:
         user_sockets[user_id] = request.sid
 
 @socketio.on('disconnect')
 def on_disconnect(reason):
     print(f'\033[91mClient {request.sid} disconnected (reason: {reason})\033[0m')
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if user_id and user_id in user_sockets:
         del user_sockets[user_id]
 
@@ -24,23 +25,22 @@ def default_error_handler(e):
 
 @socketio.on('create_map')
 def handle_create_map(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
         return
-
-    name = data.get('name')
-    campaign_id = data.get('campaign_id')
-
+    
     user = User.query.get(user_id)
     if not user:
         emit('error', {'message': 'User not found'})
         return
 
+    name = data.get('name')
     if not name:
         emit('error', {'message': 'Name is required'})
         return
-
+    
+    campaign_id = UUID(data.get('campaign_id'))
     if not campaign_id:
         emit('error', {'message': 'Campaign ID is required'})
         return
@@ -71,19 +71,19 @@ def handle_create_map(data):
 
 @socketio.on('delete_map')
 def handle_delete_map(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
         return
-
-    map_id = data.get('map_id')
-    if not map_id:
-        emit('error', {'message': 'Map ID is required'})
-        return
-
+    
     user = User.query.get(user_id)
     if not user:
         emit('error', {'message': 'User not found'})
+        return
+    
+    map_id = UUID(data.get('map_id'))
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
         return
 
     map = Map.query.get(map_id)
@@ -104,19 +104,19 @@ def handle_delete_map(data):
 
 @socketio.on('join_map_room')
 def handle_join_map_room(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
-        return
-
-    map_id = data.get('map_id')
-    if not map_id:
-        emit('error', {'message': 'Map ID is required'})
         return
 
     user = User.query.get(user_id)
     if not user:
         emit('error', {'message': 'User not found'})
+        return
+    
+    map_id = UUID(data.get('map_id'))
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
         return
 
     map = Map.query.get(map_id)
@@ -143,35 +143,35 @@ def handle_join_map_room(data):
         character_id = None
 
     join_room(f'map_{map_id}')
-    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': isDM, 'character_id': character_id}, room=f'map_{map_id}', to=request.sid)
+    emit('map_connected', {'message': f'Connected to map {map.name}', 'map': map.to_dict(), 'isDM': isDM, 'character_id': str(character_id)}, room=f'map_{map_id}', to=request.sid)
     print(f'\033[94mUser {user.username} joined map room {map_id} (campaign id: {campaign_id})\033[0m')
 
     # If the joining user is the map owner (DM), send the saved map state directly to them
     if isDM:
         emit('initialize_map_state', {
-            'map_id': map_id,
+            'map_id': str(map_id),
             'markers': map.markers or [],
             'lines': map.lines or [],
         }, to=request.sid)
     elif map.owner_id in user_sockets:
         owner_sid = user_sockets[map.owner_id]
-        emit('request_map_state', {'map_id': map_id, 'target_sid': request.sid}, to=owner_sid)
+        emit('request_map_state', {'map_id': str(map_id), 'target_sid': request.sid}, to=owner_sid)
 
 @socketio.on('leave_map_room')
 def handle_leave_map_room(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
-        return
-
-    map_id = data.get('map_id')
-    if not map_id:
-        emit('error', {'message': 'Map ID is required'})
         return
 
     user = User.query.get(user_id)
     if not user:
         emit('error', {'message': 'User not found'})
+        return
+    
+    map_id = UUID(data.get('map_id'))
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
         return
 
     map = Map.query.get(map_id)
@@ -191,16 +191,24 @@ def handle_leave_map_room(data):
 
 @socketio.on('add_marker')
 def handle_add_marker(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
         return
+    
+    user = User.query.get(user_id)
+    if not user:
+        emit('error', {'message': 'User not found'})
+        return
 
-    map_id = data.get('map_id')
+    map_id = UUID(data.get('map_id'))
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
+        return
+
     marker = data.get('marker')
-
-    if not map_id or not marker:
-        emit('error', {'message': 'Map ID and marker data are required'})
+    if not marker:
+        emit('error', {'message': 'Marker data is required'})
         return
 
     map = Map.query.get(map_id)
@@ -208,22 +216,29 @@ def handle_add_marker(data):
         emit('error', {'message': 'Map not found'})
         return
 
-
     emit('marker_added', {'marker': marker}, room=f'map_{map_id}', skip_sid=request.sid)
     print(f'\033[92mMarker added to map {map.name} by user {user_id}\033[0m')
 
 @socketio.on('remove_marker')
 def handle_remove_marker(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
         return
-
-    map_id = data.get('map_id')
-    marker_id = data.get('marker_id')
-
-    if not map_id or not marker_id:
-        emit('error', {'message': 'Map ID and marker ID are required'})
+    
+    user = User.query.get(user_id)
+    if not user:
+        emit('error', {'message': 'User not found'})
+        return
+    
+    map_id = UUID(data.get('map_id'))
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
+        return
+    
+    marker_id = UUID(data.get('marker_id'))
+    if not marker_id:
+        emit('error', {'message': 'Marker ID is required'})
         return
     
     map = Map.query.get(map_id)
@@ -231,22 +246,34 @@ def handle_remove_marker(data):
         emit('error', {'message': 'Map not found'})
         return
 
-    emit('marker_removed', {'marker_id': marker_id}, room=f'map_{map_id}', skip_sid=request.sid)
+    emit('marker_removed', {'marker_id': str(marker_id)}, room=f'map_{map_id}', skip_sid=request.sid)
     print(f'\033[92mMarker {marker_id} removed from map {map.name} by user {user_id}\033[0m')
 
 @socketio.on('move_marker')
 def handle_move_marker(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
         return
+    
+    user = User.query.get(user_id)
+    if not user:
+        emit('error', {'message': 'User not found'})
+        return
+    
+    map_id = UUID(data.get('map_id'))
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
+        return
+    
+    marker_id = UUID(data.get('marker_id'))
+    if not marker_id:
+        emit('error', {'message': 'Marker ID is required'})
+        return
 
-    map_id = data.get('map_id')
-    marker_id = data.get('marker_id')
     new_position = data.get('new_position')
-
-    if not map_id or not marker_id or not new_position:
-        emit('error', {'message': 'Map ID, marker ID, and new position are required'})
+    if not new_position:
+        emit('error', {'message': 'New position is required'})
         return
 
     map = Map.query.get(map_id)
@@ -254,21 +281,29 @@ def handle_move_marker(data):
         emit('error', {'message': 'Map not found'})
         return
 
-    emit('marker_moved', {'marker_id': marker_id, 'new_position': new_position}, room=f'map_{map_id}', skip_sid=request.sid)
+    emit('marker_moved', {'marker_id': str(marker_id), 'new_position': new_position}, room=f'map_{map_id}', skip_sid=request.sid)
     print(f'\033[92mMarker {marker_id} moved to {new_position} on map {map.name} by user {user_id}\033[0m')
 
 @socketio.on('add_line')
 def handle_add_line(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
         return
+    
+    user = User.query.get(user_id)
+    if not user:
+        emit('error', {'message': 'User not found'})
+        return
+    
+    map_id = UUID(data.get('map_id'))
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
+        return
 
-    map_id = data.get('map_id')
     line = data.get('line')
-
-    if not map_id or not line:
-        emit('error', {'message': 'Map ID and line data are required'})
+    if not line:
+        emit('error', {'message': 'Line data is required'})
         return
 
     map = Map.query.get(map_id)
@@ -281,16 +316,24 @@ def handle_add_line(data):
 
 @socketio.on('remove_line')
 def handle_remove_line(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
         return
-
-    map_id = data.get('map_id')
-    line_id = data.get('line_id')
-
-    if not map_id or not line_id:
-        emit('error', {'message': 'Map ID and line ID are required'})
+    
+    user = User.query.get(user_id)
+    if not user:
+        emit('error', {'message': 'User not found'})
+        return
+    
+    map_id = UUID(data.get('map_id'))
+    if not map_id:
+        emit('error', {'message': 'Map ID is required'})
+        return
+    
+    line_id = UUID(data.get('line_id'))
+    if not line_id:
+        emit('error', {'message': 'Line ID is required'})
         return
 
     map = Map.query.get(map_id)
@@ -298,28 +341,43 @@ def handle_remove_line(data):
         emit('error', {'message': 'Map not found'})
         return
 
-    emit('line_removed', {'line_id': line_id}, room=f'map_{map_id}', skip_sid=request.sid)
+    emit('line_removed', {'line_id': str(line_id)}, room=f'map_{map_id}', skip_sid=request.sid)
     print(f'\033[92mLine {line_id} removed from map {map.name} by user {user_id}\033[0m')
-
 
 @socketio.on('send_map_state')
 def handle_send_map_state(data):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         emit('error', {'message': 'User not logged in'})
         return
-
+    
+    user = User.query.get(user_id)
+    if not user:
+        emit('error', {'message': 'User not found'})
+        return
+    
     target_sid = data.get('target_sid')
-    map_id = data.get('map_id')
-    markers = data.get('markers', [])
-    lines = data.get('lines', [])
+    if not target_sid:
+        emit('error', {'message': 'target_sid is required'})
+        return
+    
+    map_id = UUID(data.get('map_id'))
+    if not map_id:
+        emit('error', {'message': 'map_id is required'})
+        return
 
-    if not target_sid or not map_id:
-        emit('error', {'message': 'target_sid and map_id are required'})
+    markers = data.get('markers', [])
+    if not markers:
+        emit('error', {'message': 'markers data is required'})
+        return
+    
+    lines = data.get('lines', [])
+    if not lines:
+        emit('error', {'message': 'lines data is required'})
         return
 
     emit('initialize_map_state', {
-        'map_id': map_id,
+        'map_id': str(map_id),
         'markers': markers,
         'lines': lines
     }, to=target_sid)

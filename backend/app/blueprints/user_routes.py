@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, session
 from ..models import User
 from .. import db
 import bcrypt
+from uuid import UUID
 
 ## User routes
 
@@ -56,7 +57,7 @@ def auth_status():
     if 'user_id' not in session:
             return jsonify({'isLoggedIn': False}), 201
 
-    user = User.query.get(session['user_id'])
+    user = User.query.get(UUID(session['user_id']))
     if not user:
         return jsonify({'isLoggedIn': False}), 201
     
@@ -67,13 +68,23 @@ def auth_status():
 def me():
     if 'user_id' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-    user = User.query.get(session['user_id'])
+    
+    user_id = UUID(session['user_id'])
+    if not user_id:
+        return jsonify({'error': 'User not found'}), 404
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
     return jsonify({'email': user.email, 'first': user.first, 'last': user.last, 'username': user.username})
 
 ## Helper functions
 
 def hash_password(password):
-    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 def check_password(password, hashed):
+    if isinstance(hashed, str):
+        hashed = hashed.encode('utf-8')
     return bcrypt.checkpw(password.encode('utf-8'), hashed)

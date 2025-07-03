@@ -33,7 +33,7 @@ import type { Socket } from "socket.io-client";
 
 // The API handle we will expose to the parent
 export interface ChildHandle {
-  centerGridOnPoint: (id: number) => void;
+  centerGridOnPoint: (id: string) => void;
 }
 
 type MapPageProps = {
@@ -48,13 +48,13 @@ type MapPageProps = {
   markerColor: string;
   wallColor: string;
   socket: Socket;
-  mapId: number;
+  mapId: string;
   getMapStateRef: React.MutableRefObject<
     (() => { markers: Marker[]; lines: Line[] }) | undefined
   >;
   isDM: boolean;
   isGridOn: boolean;
-  characterId: number;
+  characterId: string;
   isAxesOn: boolean;
   playerTokenSelected: Character | null;
 };
@@ -258,7 +258,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
     ctx.restore();
   };
 
-  const centerGridOnPoint = (id: number, duration: number = 500) => {
+  const centerGridOnPoint = (id: string, duration: number = 500) => {
     // find marker position from character id
     const marker = markerFromCharId(id, markers.current);
     if (!marker) return;
@@ -448,8 +448,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
           ) * gridSize;
         // Find marker at this position
         const markerAt = markers.current.find(
-          (m) =>
-            m.pos.x === gridX && m.pos.y === gridY && typeof m.id === "number"
+          (m) => m.pos.x === gridX && m.pos.y === gridY
         );
         // Updated logic: allow player to always drag canvas, but only interact with own marker
         if (markerAt) {
@@ -585,10 +584,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
           !samePoint(lineDrawingStart.current, highlightedVertex.current)
         ) {
           const newLine: Line = {
-            id:
-              lines.current.length > 0
-                ? lines.current[lines.current.length - 1].id + 1
-                : 1,
+            id: crypto.randomUUID(),
             start: lineDrawingStart.current,
             end: highlightedVertex.current,
             color: wallColor,
@@ -649,10 +645,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
           if (noZeroLines) {
             pointsForLines.forEach(([startPoint, endPoint], index) => {
               const newLine: Line = {
-                id:
-                  lines.current.length > 0
-                    ? lines.current[lines.current.length - 1].id + 1
-                    : 1,
+                id: crypto.randomUUID(),
                 start: startPoint,
                 end: endPoint,
                 color: wallColor,
@@ -728,10 +721,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
                   uniqueMarker(playerTokenSelected, markers.current))
               ) {
                 const newMarker: Marker = {
-                  id:
-                    markers.current.length > 0
-                      ? markers.current[markers.current.length - 1].id + 1
-                      : 1,
+                  id: crypto.randomUUID(),
                   pos: { x: gridX, y: gridY },
                   color: markerColor,
                 };
@@ -948,7 +938,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
       }
     };
 
-    const handleMarkerRemoved = (data: { marker_id: number }) => {
+    const handleMarkerRemoved = (data: { marker_id: string }) => {
       const index = markers.current.findIndex((m) => m.id === data.marker_id);
       if (index !== -1) {
         markers.current.splice(index, 1);
@@ -957,7 +947,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
     };
 
     const handleMarkerMoved = (data: {
-      marker_id: number;
+      marker_id: string;
       new_position: Point;
     }) => {
       const marker = markers.current.find((m) => m.id === data.marker_id);
@@ -974,7 +964,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
       }
     };
 
-    const handleLineRemoved = (data: { line_id: number }) => {
+    const handleLineRemoved = (data: { line_id: string }) => {
       const index = lines.current.findIndex((l) => l.id === data.line_id);
       if (index !== -1) {
         lines.current.splice(index, 1);
@@ -1015,7 +1005,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
 
   useEffect(() => {
     const handleInitializeMapState = (data: {
-      map_id: number;
+      map_id: string;
       markers: Marker[];
       lines: Line[];
     }) => {
@@ -1025,7 +1015,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
     };
 
     const handleRequestMapState = (data: {
-      map_id: number;
+      map_id: string;
       target_sid: string;
     }) => {
       if (mapId !== data.map_id) return;

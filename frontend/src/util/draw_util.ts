@@ -212,7 +212,7 @@ export const uniqueMarker = (playerToken: Character, markers: Marker[]) => {
 //
 // return marker object of marker matching charid in markers
 //
-export const markerFromCharId = (id: number, markers: Marker[]) => {
+export const markerFromCharId = (id: string, markers: Marker[]) => {
   for (const marker of markers) {
     if (marker.characterId === id) {
       return marker;

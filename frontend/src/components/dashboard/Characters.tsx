@@ -28,14 +28,14 @@ const Characters: React.FC = () => {
     fetchCharacters();
   }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     await fetch(`/api/character/delete_character/${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({ id: id }),
+      body: JSON.stringify({ id }),
     });
 
     fetchCharacters();

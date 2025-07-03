@@ -26,8 +26,8 @@ interface WelcomeProps {
 const Welcome: React.FC<WelcomeProps> = ({ userData }) => {
   const { fetchCampaigns, invites, fetchInvites } = useCampaigns();
   const [isSelecting, setIsSelecting] = React.useState<boolean>(false);
-  const [campaignId, setCampaignId] = React.useState<number>(0);
-  const [characterId, setCharacterId] = React.useState<number>(0);
+  const [campaignId, setCampaignId] = React.useState<string>("");
+  const [characterId, setCharacterId] = React.useState<string>("");
   const [characters, setCharacters] = React.useState<any[]>([]);
   const [error, setError] = React.useState<string | null>(null);
   const anchorRef = React.useRef<HTMLButtonElement | null>(null);
@@ -53,7 +53,7 @@ const Welcome: React.FC<WelcomeProps> = ({ userData }) => {
         throw new Error(data.message || "Failed to get characters");
 
       setCharacters(data.characters);
-      setCharacterId(data.characters[0].id);
+      setCharacterId(String(data.characters[0].id));
     } catch (err: any) {
       setError(err.message);
     }
@@ -90,16 +90,16 @@ const Welcome: React.FC<WelcomeProps> = ({ userData }) => {
     }
   };
 
-  const handleSelectClick = (character_id: number) => {
+  const handleSelectClick = (character_id: string) => {
     setCharacterId(character_id);
   };
 
-  const handleAcceptClick = (campaign_id: number) => {
+  const handleAcceptClick = (campaign_id: string) => {
     setCampaignId(campaign_id);
     setIsSelecting((prev) => !prev);
   };
 
-  const handleDecline = async (campaign_id: number) => {
+  const handleDecline = async (campaign_id: string) => {
     try {
       const response = await fetch("api/campaign/decline_invite", {
         method: "POST",
@@ -149,14 +149,14 @@ const Welcome: React.FC<WelcomeProps> = ({ userData }) => {
         <>
           <Typography variant="h5">Invites</Typography>
           {invites.map((invite) => (
-            <Box key={invite.id} display={"flex"} flexDirection={"row"}>
-              <Typography key={invite.id} variant="body1">
+            <Box key={String(invite.id)} display={"flex"} flexDirection={"row"}>
+              <Typography key={String(invite.id)} variant="body1">
                 {invite.dm} invited you to join {invite.name}
               </Typography>
               <ButtonGroup variant="text" color="secondary">
                 <Button
                   color="success"
-                  onClick={() => handleAcceptClick(invite.id)}
+                  onClick={() => handleAcceptClick(String(invite.id))}
                   ref={anchorRef}
                 >
                   Accept
@@ -194,11 +194,14 @@ const Welcome: React.FC<WelcomeProps> = ({ userData }) => {
                             label="Select Character"
                             onMouseDown={(e) => e.stopPropagation()}
                             onChange={(e) => {
-                              handleSelectClick(Number(e.target.value));
+                              handleSelectClick(e.target.value);
                             }}
                           >
                             {characters.map((character: any) => (
-                              <MenuItem key={character.id} value={character.id}>
+                              <MenuItem
+                                key={String(character.id)}
+                                value={String(character.id)}
+                              >
                                 {character.name}
                               </MenuItem>
                             ))}
@@ -215,7 +218,10 @@ const Welcome: React.FC<WelcomeProps> = ({ userData }) => {
                     </Box>
                   </Paper>
                 </Popper>
-                <Button color="error" onClick={() => handleDecline(invite.id)}>
+                <Button
+                  color="error"
+                  onClick={() => handleDecline(String(invite.id))}
+                >
                   Decline
                 </Button>
               </ButtonGroup>

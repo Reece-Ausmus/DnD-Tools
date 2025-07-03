@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, session
 from app import db
 from app.models import ClassType, User, Character, Race
+from uuid import UUID
 
 ## Character routes
 
@@ -8,7 +9,7 @@ character_bp = Blueprint('character', __name__, url_prefix='/character')
 
 @character_bp.route('/create_character', methods=['POST'])
 def create_character():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401 
 
@@ -53,13 +54,13 @@ def create_character():
     return jsonify({
         "message": f"Character {new_character.name} created successfully!",
         "character": {
-            "id": new_character.id,
+            "id": str(new_character.id),
             "name": new_character.name,
             "gender": new_character.gender,
             "race": new_character.race.name,
             "class_type": new_character.class_type.name,
             "level": new_character.level,
-            "user_id": new_character.user_id,
+            "user_id": str(new_character.user_id),
             "speed": new_character.speed,
             "size": new_character.size,
             "marker_color": new_character.marker_color
@@ -68,7 +69,7 @@ def create_character():
 
 @character_bp.route('/get_characters', methods=['GET'])
 def get_characters():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
 
@@ -81,7 +82,7 @@ def get_characters():
     return jsonify({
         "characters": [
             {
-                "id": character.id,
+                "id": str(character.id),
                 "name": character.name,
                 "gender": character.gender,
                 "race_id": character.race_id,
@@ -89,7 +90,7 @@ def get_characters():
                 "class_id": character.class_id,
                 "classType": character.class_type.name,
                 "level": character.level,
-                "user_id": character.user_id,
+                "user_id": str(character.user_id),
                 "speed": character.speed,
                 "size": character.size,
                 "marker_color": character.marker_color
@@ -97,15 +98,17 @@ def get_characters():
         ]
     }), 200
 
-@character_bp.route('/get_character/<int:character_id>', methods=['GET'])
+@character_bp.route('/get_character/<string:character_id>', methods=['GET'])
 def get_character(character_id):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
 
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
+    
+    character_id = UUID(character_id)
 
     character = Character.query.get(character_id)
     if not character:
@@ -116,30 +119,32 @@ def get_character(character_id):
 
     return jsonify({
         "character": {
-            "id": character.id,
+            "id": str(character.id),
             "name": character.name,
             "gender": character.gender,
-            "race_id": character.race_id,
+            "race_id": str(character.race_id),
             "race": character.race.name,
-            "class_id": character.class_id,
+            "class_id": str(character.class_id),
             "classType": character.class_type.name,
             "level": character.level,
-            "user_id": character.user_id,
+            "user_id": str(character.user_id),
             "speed": character.speed,
             "size": character.size,
             "marker_color": character.marker_color
         }
     }), 200
 
-@character_bp.route('/edit_character/<int:character_id>', methods=['PUT'])
+@character_bp.route('/edit_character/<string:character_id>', methods=['PUT'])
 def update_character(character_id):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
 
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
+    
+    character_id = UUID(character_id)
 
     character = Character.query.get(character_id)
     if not character:
@@ -181,20 +186,22 @@ def update_character(character_id):
     return jsonify({
         "message": f"Character {character.name} updated successfully!",
         "character": {
-            "id": character.id,
+            "id": str(character.id),
             "name": character.name
         }
     }), 200
 
-@character_bp.route('/delete_character/<int:character_id>', methods=['DELETE'])
+@character_bp.route('/delete_character/<string:character_id>', methods=['DELETE'])
 def delete_character(character_id):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
 
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
+    
+    character_id = UUID(character_id)
 
     character = Character.query.get(character_id)
     if not character:
@@ -212,7 +219,7 @@ def delete_character(character_id):
 
 @character_bp.route('/get_races', methods=['GET'])
 def get_races():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
     
@@ -225,7 +232,7 @@ def get_races():
     return jsonify({
         "races": [
             {
-                "id": race.id,
+                "id": str(race.id),
                 "name": race.name,
                 "description": race.description
             } for race in races
@@ -234,18 +241,20 @@ def get_races():
 
 @character_bp.route('/get_classes', methods=['GET'])
 def get_classes():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
+    
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
+    
     classes = ClassType.query.order_by(ClassType.name).all()
 
     return jsonify({
         "classes": [
             {
-                "id": class_type.id,
+                "id": str(class_type.id),
                 "name": class_type.name,
                 "description": class_type.description
             } for class_type in classes

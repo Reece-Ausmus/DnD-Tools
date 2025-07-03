@@ -2,6 +2,7 @@ from ..socket_events import socketio, user_sockets
 from flask import Blueprint, jsonify, request, session
 from ..models import Map, User
 from .. import db
+from uuid import UUID
 
 ## Map routes
 
@@ -9,7 +10,7 @@ map_bp = Blueprint('map', __name__, url_prefix='/map')
 
 @map_bp.route('/get_dm_maps', methods=['GET'])
 def get_dm_maps():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401 
 
@@ -22,9 +23,9 @@ def get_dm_maps():
 
     maps_data = [
         {
-            "id": map.id,
+            "id": str(map.id),
             "name": map.name,
-            "campaign_id": map.campaign_id,
+            "campaign_id": str(map.campaign_id),
         }
         for map in maps
     ]
@@ -33,7 +34,7 @@ def get_dm_maps():
 
 @map_bp.route('/get_player_maps', methods=['GET'])
 def get_player_maps():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401 
 
@@ -46,9 +47,9 @@ def get_player_maps():
 
     maps_data = [
         {
-            "id": map.id,
+            "id": str(map.id),
             "name": map.name,
-            "campaign_id": map.campaign_id,
+            "campaign_id": str(map.campaign_id),
         }
         for map in maps
     ]
@@ -58,12 +59,13 @@ def get_player_maps():
 
 @map_bp.route('/save_state', methods=['POST'])
 def save_map_state():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "Not logged in"}), 401
 
     data = request.get_json()
-    map_id = data.get('map_id')
+    
+    map_id = UUID(data.get('map_id'))
     markers = data.get('markers', [])
     lines = data.get('lines', [])
 
@@ -80,11 +82,13 @@ def save_map_state():
 
     return jsonify({"message": "Map state saved successfully."}), 200
 
-@map_bp.route('set_visibility/<int:map_id>', methods=['POST'])
+@map_bp.route('set_visibility/<string:map_id>', methods=['POST'])
 def set_visibility(map_id):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
+
+    map_id = UUID(map_id)
 
     map = Map.query.get(map_id)
     if not map:
@@ -114,10 +118,9 @@ def set_visibility(map_id):
     return jsonify({
         "message": f"Map {map.name} is now {'open' if visible else 'closed'}.",
         "map": {
-            "id": map.id,
+            "id": str(map.id),
             "name": map.name,
             "markers": map.markers,
             "lines": map.lines
         }
         }), 200
-

@@ -1,22 +1,24 @@
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
 from . import db
 
 # Define a many-to-many relationship between Campaign and Character
 campaign_users = db.Table('campaign_users',
-    db.Column('campaign_id', db.Integer, db.ForeignKey('campaign.id'), primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('character_id', db.Integer, db.ForeignKey('character.id'), nullable=True)
+    db.Column('campaign_id', UUID(as_uuid=True), db.ForeignKey('campaign.id'), primary_key=True),
+    db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id'), primary_key=True),
+    db.Column('character_id', UUID(as_uuid=True), db.ForeignKey('character.id'), nullable=True)
 )
 
 campaign_invites = db.Table('campaign_invites',
-    db.Column('campaign_id', db.Integer, db.ForeignKey('campaign.id'), primary_key=True),
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    db.Column('campaign_id', UUID(as_uuid=True), db.ForeignKey('campaign.id'), primary_key=True),
+    db.Column('user_id', UUID(as_uuid=True), db.ForeignKey('user.id'), primary_key=True)
 )
 
 class Campaign(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(255), nullable=False)
-    dm_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    dm_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False)
     dm = db.relationship("User", back_populates="dm_campaigns")
     players = db.relationship("User", secondary=campaign_users, back_populates="player_campaigns")
     invited_users = db.relationship("User", secondary=campaign_invites, back_populates="invited_campaigns")
@@ -38,7 +40,7 @@ class Campaign(db.Model):
         self.meeting_frequency = meeting_frequency
     
     def __repr__(self):
-        return f'<Campaign: {self.name}>'
+        return f'<Campaign: {self.name}, DM: {self.dm.id}, ID: {self.id}>'
     
     __table_args__ = (
         db.Index('ix_campaign_dm_id', 'dm_id'),
@@ -46,7 +48,7 @@ class Campaign(db.Model):
     )
     
 class ClassType(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(255), nullable=False)
 
@@ -58,7 +60,7 @@ class ClassType(db.Model):
         return f'<ClassType: {self.name}>'
     
 class Race(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(255), nullable=False)
 
@@ -70,11 +72,11 @@ class Race(db.Model):
         return f'<Race: {self.name}>'
     
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     first = db.Column(db.String(50), nullable=False)
     last = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(50), nullable=False)
-    password = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(128), nullable=False)
     username = db.Column(db.String(50), nullable=False)
     characters = db.relationship("Character", back_populates="user", cascade="all, delete-orphan")
     dm_campaigns = db.relationship("Campaign", back_populates="dm", cascade="all, delete-orphan")
@@ -107,15 +109,15 @@ class User(db.Model):
     )
     
 class Character(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(50), nullable=False)
     gender = db.Column(db.String(50), nullable=False)
-    race_id = db.Column(db.Integer, db.ForeignKey("race.id"), nullable=False)
+    race_id = db.Column(UUID(as_uuid=True), db.ForeignKey("race.id"), nullable=False)
     race = db.relationship("Race")
-    class_id = db.Column(db.Integer, db.ForeignKey("class_type.id"), nullable=False)
+    class_id = db.Column(UUID(as_uuid=True), db.ForeignKey("class_type.id"), nullable=False)
     class_type = db.relationship("ClassType")
     level = db.Column(db.Integer, default=1)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False)
     user = db.relationship("User", back_populates="characters")
     speed = db.Column(db.Integer, default=30)
     size = db.Column(db.String(50), default='medium')
@@ -142,10 +144,10 @@ class Character(db.Model):
     )
 
 class Map(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = db.Column(db.String(50), nullable=False)
-    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    campaign_id = db.Column(db.Integer, db.ForeignKey("campaign.id"), nullable=False)
+    owner_id = db.Column(UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False)
+    campaign_id = db.Column(UUID(as_uuid=True), db.ForeignKey("campaign.id"), nullable=False)
     markers = db.Column(db.JSON, nullable=True, default=[])
     lines = db.Column(db.JSON, nullable=True, default=[])
     is_open = db.Column(db.Boolean, default=False)
@@ -160,10 +162,10 @@ class Map(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
+            'id': str(self.id),
             'name': self.name,
-            'owner_id': self.owner_id,
-            'campaign_id': self.campaign_id,
+            'owner_id': str(self.owner_id),
+            'campaign_id': str(self.campaign_id),
             'markers': self.markers or [],
             'lines': self.lines or [],
             'is_open': self.is_open

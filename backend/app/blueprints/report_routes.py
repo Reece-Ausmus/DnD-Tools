@@ -148,7 +148,7 @@ HAVING {having_clause}
             campaign_id = row.campaign_id
             if campaign_id not in campaign_map:
                 campaign_map[campaign_id] = {
-                    "id": row.campaign_id,
+                    "id": str(row.campaign_id),
                     "name": row.campaign_name,
                     "description": row.description,
                     "dm": row.dm_name,
@@ -163,12 +163,12 @@ HAVING {having_clause}
             
             if row.character_id is not None:
                 campaign_map[campaign_id]["characters"].append({
-                    "id": row.character_id,
+                    "id": str(row.character_id),
                     "name": row.character_name,
                     "gender": row.character_gender,
-                    "race_id": row.character_race_id,
+                    "race_id": str(row.character_race_id),
                     "race": row.character_race_name,
-                    "class_id": row.character_class_id,
+                    "class_id": str(row.character_class_id),
                     "classType": row.character_class_type,
                     "level": row.character_level,
                     "username": row.character_owner_username
@@ -295,7 +295,7 @@ WHERE {where_clause}
         result = []
         for row in characters:
             result.append({
-                "id": row.id,
+                "id": str(row.id),
                 "name": row.name,
                 "gender": row.gender,
                 "level": row.level,

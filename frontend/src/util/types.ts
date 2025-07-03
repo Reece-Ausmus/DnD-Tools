@@ -1,5 +1,5 @@
 export interface Character {
-  id: number;
+  id: string;
   name: string;
   gender: string;
   race: string;
@@ -12,7 +12,7 @@ export interface Character {
 }
 
 export interface Campaign {
-  id: number;
+  id: string;
   name: string;
   description: string;
   start_date: string;
@@ -27,7 +27,7 @@ export interface Campaign {
 }
 
 export interface Invite {
-  id: number;
+  id: string;
   name: string;
   description: string;
   start_date: string;
@@ -39,10 +39,10 @@ export interface Invite {
 }
 
 export interface Map {
-  id: number;
+  id: string;
   name: string;
-  owner_id: number;
-  campaign_id: number;
+  owner_id: string;
+  campaign_id: string;
   is_open: boolean;
 }
 
@@ -54,13 +54,13 @@ export interface Point {
   y: number;
 }
 export interface Marker {
-  id: number;
+  id: string;
   pos: Point;
   color: string;
-  characterId?: number; // Optional, for character markers
+  characterId?: string; // Optional, for character markers
 }
 export interface Line {
-  id: number;
+  id: string;
   start: Point;
   end: Point;
   color: string;

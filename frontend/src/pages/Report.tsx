@@ -624,7 +624,7 @@ const Report: React.FC = () => {
                   </TableHead>
                   <TableBody>
                     {campaigns.map((campaign) => (
-                      <TableRow key={campaign.id}>
+                      <TableRow key={String(campaign.id)}>
                         <TableCell align="center">{campaign.name}</TableCell>
                         <TableCell align="center">
                           {campaign.description.length > 25
@@ -736,7 +736,7 @@ const Report: React.FC = () => {
                   </TableHead>
                   <TableBody>
                     {characters.map((character) => (
-                      <TableRow key={character.id}>
+                      <TableRow key={String(character.id)}>
                         <TableCell align="center">{character.name}</TableCell>
                         <TableCell align="center">{character.gender}</TableCell>
                         <TableCell align="center">{character.race}</TableCell>

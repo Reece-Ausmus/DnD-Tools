@@ -1,3 +1,4 @@
+from uuid import UUID
 from datetime import datetime
 from flask import Blueprint, jsonify, request, session
 from ..models import User, Campaign, Character, campaign_users
@@ -9,7 +10,7 @@ campaign_bp = Blueprint('campaign', __name__, url_prefix='/campaign')
 
 @campaign_bp.route('/create_campaign', methods=['POST'])
 def create_campaign():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401 
     
@@ -64,10 +65,10 @@ def create_campaign():
         return jsonify({
             "message": f"Campaign {new_campaign.name} created successfully!",
             "campaign": {
-                "id": new_campaign.id,
+                "id": str(new_campaign.id),
                 "name": new_campaign.name,
                 "description": new_campaign.description,
-                "dm_id": new_campaign.dm_id,
+                "dm_id": str(new_campaign.dm_id),
                 "start_date": str(new_campaign.start_date),
                 "end_date": str(new_campaign.end_date) if new_campaign.end_date else None,
                 "meeting_time": new_campaign.meeting_time.strftime('%H:%M'),
@@ -79,17 +80,17 @@ def create_campaign():
         db.session.rollback()
         return jsonify({"error": f"Database error: {str(e)}"}), 500
     
-@campaign_bp.route('/edit_campaign/<int:campaign_id>', methods=['PUT'])
+@campaign_bp.route('/edit_campaign/<string:campaign_id>', methods=['PUT'])
 def edit_campaign(campaign_id):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
     
-    user = User.query.get(user_id)
+    user = User.query.get(UUID(user_id))
     if not user:
         return jsonify({"error": "User not found"}), 404
     
-    campaign = Campaign.query.get(campaign_id)
+    campaign = Campaign.query.get(UUID(campaign_id))
     if not campaign:
         return jsonify({"error": "Campaign not found"}), 404
     
@@ -148,15 +149,17 @@ def edit_campaign(campaign_id):
         db.session.rollback()
         return jsonify({"error": f"Database error: {str(e)}"}), 500
     
-@campaign_bp.route('/delete_campaign/<int:campaign_id>', methods=['DELETE'])
+@campaign_bp.route('/delete_campaign/<string:campaign_id>', methods=['DELETE'])
 def delete_campaign(campaign_id):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
     
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
+    
+    campaign_id = UUID(campaign_id)
 
     campaign = Campaign.query.get(campaign_id)
     if not campaign:
@@ -177,20 +180,26 @@ def delete_campaign(campaign_id):
         db.session.rollback()
         return jsonify({"error": f"Database error: {str(e)}"}), 500
     
-@campaign_bp.route('/leave_campaign/<int:campaign_id>', methods=['DELETE'])
+@campaign_bp.route('/leave_campaign/<string:campaign_id>', methods=['DELETE'])
 def leave_campaign(campaign_id):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
-    user = User.query.get(user_id)
+    
+    user = User.query.get(UUID(user_id))
     if not user:
         return jsonify({"error": "User not found"}), 404
+    
+    campaign_id = UUID(campaign_id)
+
     campaign = Campaign.query.get(campaign_id)
     if not campaign:
         return jsonify({"error": "Campaign not found"}), 404
+    
     # Check if user is a player in the campaign
     if user not in campaign.players:
         return jsonify({"error": "User is not a player in the campaign"}), 403
+    
     try:
         # Remove user from campaign
         campaign.players.remove(user)
@@ -203,17 +212,22 @@ def leave_campaign(campaign_id):
         db.session.rollback()
         return jsonify({"error": f"Database error: {str(e)}"}), 500
     
-@campaign_bp.route('/remove_character/<int:campaign_id>/<int:character_id>', methods=['DELETE'])
+@campaign_bp.route('/remove_character/<string:campaign_id>/<string:character_id>', methods=['DELETE'])
 def remove_character(campaign_id, character_id):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
+    
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
+    
+    campaign_id = UUID(campaign_id)
+
     campaign = Campaign.query.get(campaign_id)
     if not campaign:
         return jsonify({"error": "Campaign not found"}), 404
+    
     # Check if user is a player in the campaign
     if user not in campaign.players:
         return jsonify({"error": "User is not a player in the campaign"}), 403
@@ -221,12 +235,17 @@ def remove_character(campaign_id, character_id):
     # Check if user is the DM of the campaign
     if user.id != campaign.dm_id:
         return jsonify({"error": "User is not the DM of the campaign"}), 403
+    
+    character_id = UUID(character_id)
+
     character = Character.query.get(character_id)
     if not character:
         return jsonify({"error": "Character not found"}), 404
+    
     # Check if character is in the campaign
     if not db.session.query(campaign_users).filter_by(campaign_id=campaign.id, character_id=character.id).first():
         return jsonify({"error": "Character is not in the campaign"}), 403
+    
     try:
         # Remove character from campaign
         db.session.execute(campaign_users.delete().where(
@@ -244,7 +263,7 @@ def remove_character(campaign_id, character_id):
 
 @campaign_bp.route('/get_campaigns', methods=['GET'])
 def get_campaigns():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401 
     
@@ -290,10 +309,10 @@ def get_campaigns():
     campaign_maps = {
         c.id: [
             {
-                "id": m.id,
+                "id": str(m.id),
                 "name": m.name,
-                "owner_id": m.owner_id,
-                "campaign_id": m.campaign_id,
+                "owner_id": str(m.owner_id),
+                "campaign_id": str(m.campaign_id),
                 "is_open": m.is_open
             } for m in c.maps
         ] for c in campaigns
@@ -302,7 +321,7 @@ def get_campaigns():
     return jsonify({
         "campaigns": [
             {
-                "id": campaign.id,
+                "id": str(campaign.id),
                 "name": campaign.name,
                 "description": campaign.description,
                 "dm": dm_usernames.get(campaign.dm_id),
@@ -318,15 +337,17 @@ def get_campaigns():
         ]
     }), 200
 
-@campaign_bp.route('/get_campaign/<int:campaign_id>', methods=['GET'])
+@campaign_bp.route('/get_campaign/<string:campaign_id>', methods=['GET'])
 def get_campaign(campaign_id):
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401
     
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
+    
+    campaign_id = UUID(campaign_id)
     
     campaign = Campaign.query.get(campaign_id)
     if not campaign:
@@ -344,7 +365,7 @@ def get_campaign(campaign_id):
 
     return jsonify({
         "campaign": {
-            "id": campaign.id,
+            "id": str(campaign.id),
             "name": campaign.name,
             "description": campaign.description,
             "dm": dm_username,
@@ -355,12 +376,12 @@ def get_campaign(campaign_id):
             "meeting_frequency": campaign.meeting_frequency,
             "characters": [
                 {
-                    "id": character.id,
+                    "id": str(character.id),
                     "name": character.name,
                     "gender": character.gender,
-                    "race_id": character.race_id,
+                    "race_id": str(character.race_id),
                     "race": character.race.name,
-                    "class_id": character.class_id,
+                    "class_id": str(character.class_id),
                     "classType": character.class_type.name,
                     "level": character.level
                 } for character in characters
@@ -370,7 +391,7 @@ def get_campaign(campaign_id):
 
 @campaign_bp.route('/invite', methods=['POST'])
 def invite():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401 
     
@@ -386,7 +407,7 @@ def invite():
     if missing_fields:
         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
-    campaign_id = data.get('campaign_id')
+    campaign_id = UUID(data.get('campaign_id'))
     username = data.get('username')
 
     campaign = Campaign.query.get(campaign_id)
@@ -421,7 +442,7 @@ def invite():
     
 @campaign_bp.route('/get_invites', methods=['GET'])
 def get_invites():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401 
     
@@ -440,7 +461,7 @@ def get_invites():
     return jsonify({
         "invites": [
             {
-                "id": campaign.id,
+                "id": str(campaign.id),
                 "name": campaign.name,
                 "description": campaign.description,
                 "dm": dm_usernames.get(campaign.dm_id),
@@ -455,7 +476,7 @@ def get_invites():
 
 @campaign_bp.route('/accept_invite', methods=['POST'])
 def accept_invite():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401 
     
@@ -471,8 +492,8 @@ def accept_invite():
     if missing_fields:
         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
-    campaign_id = data.get('campaign_id')
-    character_id = data.get('character_id')
+    campaign_id = UUID(data.get('campaign_id'))
+    character_id = UUID(data.get('character_id'))
 
     campaign = Campaign.query.get(campaign_id)
     if not campaign:
@@ -501,7 +522,7 @@ def accept_invite():
     
 @campaign_bp.route('/decline_invite', methods=['POST'])
 def decline_invite():
-    user_id = session.get('user_id')
+    user_id = UUID(session.get('user_id'))
     if not user_id:
         return jsonify({"error": "User not logged in"}), 401 
     
@@ -517,7 +538,7 @@ def decline_invite():
     if missing_fields:
         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
 
-    campaign_id = data.get('campaign_id')
+    campaign_id = UUID(data.get('campaign_id'))
 
     campaign = Campaign.query.get(campaign_id)
     if not campaign:

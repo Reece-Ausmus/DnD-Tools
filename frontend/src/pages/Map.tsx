@@ -88,12 +88,11 @@ const Map: React.FC = () => {
   const [playerTokenSelected, setPlayerTokenSelected] =
     useState<Character | null>(null);
 
-  const updateCurrentCampaign = (campaign_id: number) => {
-    // find campaign by id
+  const updateCurrentCampaign = (campaign_id: string) => {
+    // find campaign by id (compare as string)
     const foundCampaign = campaigns.find(
-      (campaign) => campaign.id === campaign_id
+      (campaign) => String(campaign.id) === campaign_id
     );
-
     setCurrentCampaign(foundCampaign || null);
   };
 
@@ -138,10 +137,10 @@ const Map: React.FC = () => {
   };
 
   const [mapConnected, setMapConnected] = useState(false);
-  const [mapId, setMapId] = useState<number | null>(null);
+  const [mapId, setMapId] = useState<string | null>(null);
   const [currentMap, setCurrentMap] = useState<MapType | null>(null);
   const [isDM, setIsDM] = useState(false);
-  const [characterId, setCharacterId] = useState<number | null>(null);
+  const [characterId, setCharacterId] = useState<string | null>(null);
   const [mapVisibility, setMapVisibility] = useState<boolean>(false);
 
   const handleToggleMapVisibility = async () => {
@@ -168,7 +167,7 @@ const Map: React.FC = () => {
   };
 
   // Create a map and emit to server
-  const handleCreateMap = async (campaignId: number, mapName: string) => {
+  const handleCreateMap = async (campaignId: string, mapName: string) => {
     if (!socket.connected) {
       console.error("Socket is not connected.");
       return;
@@ -177,7 +176,7 @@ const Map: React.FC = () => {
       console.error("Map name cannot be empty.");
       return;
     }
-    if (campaignId === null || campaignId < 0) {
+    if (!campaignId) {
       console.error("Please select a valid campaign.");
       return;
     }
@@ -189,12 +188,12 @@ const Map: React.FC = () => {
   };
 
   // Join a map room
-  const handleJoinMapRoom = (mapId: number) => {
+  const handleJoinMapRoom = (mapId: string) => {
     if (!socket.connected) {
       console.error("Socket is not connected.");
       return;
     }
-    if (mapId === null || mapId < 0) {
+    if (!mapId) {
       console.error("Invalid map ID.");
       return;
     }
@@ -207,7 +206,7 @@ const Map: React.FC = () => {
       console.error("Socket is not connected.");
       return;
     }
-    if (mapId === null || mapId < 0) {
+    if (!mapId) {
       console.error("Invalid map ID.");
       return;
     }
@@ -221,8 +220,8 @@ const Map: React.FC = () => {
 
     const lastMapId = localStorage.getItem("mapId");
     if (lastMapId) {
-      const mapId = Number(lastMapId);
-      if (!isNaN(mapId) && mapId > 0) {
+      const mapId = lastMapId;
+      if (mapId) {
         socket.emit("join_map_room", { map_id: mapId });
       }
     }
@@ -646,11 +645,11 @@ const Map: React.FC = () => {
                   markerColor={markerColor}
                   wallColor={wallColor}
                   socket={socket}
-                  mapId={mapId ?? -1}
+                  mapId={mapId || ""}
                   getMapStateRef={getMapStateRef}
                   isDM={isDM}
                   isGridOn={isGridOn}
-                  characterId={characterId ?? -1}
+                  characterId={characterId || ""}
                   isAxesOn={isAxesOn}
                   playerTokenSelected={playerTokenSelected}
                   ref={infiniteCanvasRef}
