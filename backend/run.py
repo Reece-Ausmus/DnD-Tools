@@ -65,4 +65,4 @@ if __name__ == '__main__':
 
     # app.run(debug=True, port=os.getenv('PORT') or 5001)
     # sockio.run() essentially wraps app.run() to enable socket support
-    socketio.run(app, debug=True, host="0.0.0.0", port=os.getenv('PORT') or 5001)
+    socketio.run(app, debug=True, host="0.0.0.0", port=5001)
