@@ -82,6 +82,37 @@ export const draw_circle_highlight_full = (
   const dy = highlightedVertex.y - lineDrawingStart.y;
   const radius = Math.sqrt(dx * dx + dy * dy);
 
+  // draw radius line
+  preview_line(ctx, lineDrawingStart, highlightedVertex, scale, wallColor);
+
+  // draw circle
+  ctx.beginPath();
+  ctx.arc(lineDrawingStart.x, lineDrawingStart.y, radius, 0, 2 * Math.PI);
+  ctx.stroke();
+
+  ctx.restore();
+};
+
+export const draw_circle_highlight_stage_2 = (
+  ctx: CanvasRenderingContext2D,
+  lineDrawingStart: Point,
+  highlightedVertex: Point,
+  radius: number,
+  scale: number,
+  wallColor: string
+) => {
+  ctx.save();
+  ctx.strokeStyle = wallColor;
+  ctx.setLineDash([8 / scale, 4 / scale]);
+  ctx.lineWidth = 3 / scale;
+
+  // calculate radius
+  const dx = highlightedVertex.x - lineDrawingStart.x;
+  const dy = highlightedVertex.y - lineDrawingStart.y;
+
+  // draw radius line
+  preview_line(ctx, lineDrawingStart, highlightedVertex, scale, wallColor);
+
   // draw circle
   ctx.beginPath();
   ctx.arc(lineDrawingStart.x, lineDrawingStart.y, radius, 0, 2 * Math.PI);
@@ -220,4 +251,14 @@ export const markerFromCharId = (id: string, markers: Marker[]) => {
   }
 
   return false;
+};
+
+//
+// return length of line between two points
+//
+export const distBetweenPoints = (p1: Point, p2: Point) => {
+  const a = Math.abs(p1.x - p2.x);
+  const b = Math.abs(p1.y - p2.y);
+
+  return Math.sqrt(a ** 2 + b ** 2);
 };

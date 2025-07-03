@@ -17,6 +17,9 @@ import {
   samePoint,
   uniqueMarker,
   markerFromCharId,
+  draw_circle_highlight_full,
+  distBetweenPoints,
+  draw_circle_highlight_stage_2,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -119,6 +122,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
   const dragStartMarkerPos = useRef<Point | null>(null);
   const hasMovedMarker = useRef<boolean>(false);
   const isErasing = useRef<boolean>(false);
+  const currentCircleRadius = useRef<number | null>(null);
   const { showSnackbar } = useSnackbar();
 
   const selectedObject = useRef<Selection | null>(null);
@@ -235,6 +239,33 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         scale,
         wallColor
       );
+    }
+
+    // Draw preview lines (circle)
+    if (
+      activeDrawButton === "draw-circle" &&
+      !isShiftDown.current &&
+      lineDrawingStart.current &&
+      highlightedVertex.current
+    ) {
+      if (!currentCircleRadius.current) {
+        draw_circle_highlight_full(
+          ctx,
+          lineDrawingStart.current,
+          highlightedVertex.current,
+          scale,
+          wallColor
+        );
+      } else {
+        draw_circle_highlight_stage_2(
+          ctx,
+          lineDrawingStart.current,
+          highlightedVertex.current,
+          currentCircleRadius.current,
+          scale,
+          wallColor
+        );
+      }
     }
 
     // Draw vertex highlight
@@ -411,6 +442,46 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
       }
     };
 
+    const updateHighlightOnCircle = (
+      clientX: number,
+      clientY: number,
+      center: Point,
+      radius: number
+    ) => {
+      const rect = canvas.getBoundingClientRect();
+      const worldX = (clientX - rect.left - s.offsetX) / s.scale;
+      const worldY = (clientY - rect.top - s.offsetY) / s.scale;
+
+      // 1. Calculate the vector from the circle's center to the mouse position.
+      const dx = worldX - center.x;
+      const dy = worldY - center.y;
+
+      // 2. Calculate the distance from the center to the mouse.
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // 3. Calculate the nearest point on the circle.
+      // If the distance is 0 (mouse is at the center), we default to a point
+      // to avoid division by zero. Otherwise, we normalize the vector (dx/distance, dy/distance)
+      // and scale it by the radius.
+      const nearestXOnCircle =
+        distance === 0
+          ? center.x + radius
+          : center.x + (dx / distance) * radius;
+      const nearestYOnCircle =
+        distance === 0 ? center.y : center.y + (dy / distance) * radius;
+
+      if (
+        highlightedVertex.current?.x !== nearestXOnCircle ||
+        highlightedVertex.current?.y !== nearestYOnCircle
+      ) {
+        highlightedVertex.current = {
+          x: nearestXOnCircle,
+          y: nearestYOnCircle,
+        };
+        draw();
+      }
+    };
+
     const clearHighlight = () => {
       if (highlightedVertex.current) {
         highlightedVertex.current = null;
@@ -487,8 +558,22 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         return;
       }
 
-      // hightlight nearest vertex if in line drawing mode or box drawing mode
+      // hightlight nearest vertex if in a drawing mode
       if (
+        isDM &&
+        isCircleDrawingMode &&
+        currentCircleRadius.current &&
+        !s.isDragging &&
+        !draggingMarker.current &&
+        lineDrawingStart.current
+      ) {
+        updateHighlightOnCircle(
+          e.clientX,
+          e.clientY,
+          lineDrawingStart.current,
+          currentCircleRadius.current
+        );
+      } else if (
         isDM &&
         (isLineDrawingMode || isBoxDrawingMode || isCircleDrawingMode) &&
         !s.isDragging &&
@@ -661,6 +746,31 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
           }
         } else {
           lineDrawingStart.current = highlightedVertex.current;
+        }
+      } else if (
+        isDM &&
+        isCircleDrawingMode &&
+        !moved &&
+        highlightedVertex.current
+      ) {
+        // CIRCLE CLICK LOGIC HERE
+        if (
+          lineDrawingStart.current &&
+          !samePoint(lineDrawingStart.current, highlightedVertex.current) &&
+          !currentCircleRadius.current
+        ) {
+          currentCircleRadius.current = distBetweenPoints(
+            lineDrawingStart.current,
+            highlightedVertex.current
+          );
+          console.log("radius: ", currentCircleRadius.current);
+          //lineDrawingStart.current = null;
+        } else if (currentCircleRadius.current) {
+          lineDrawingStart.current = null;
+          currentCircleRadius.current = null;
+        } else {
+          lineDrawingStart.current = highlightedVertex.current;
+          currentCircleRadius.current = null;
         }
       } else if (!moved) {
         const rect = canvas.getBoundingClientRect();
@@ -851,6 +961,9 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
       }
 
       if (e.key === "Escape") {
+        if (currentCircleRadius.current) {
+          currentCircleRadius.current = null;
+        }
         if (lineDrawingStart.current) {
           lineDrawingStart.current = null;
         } else if (selectedObject.current) {
