@@ -4,8 +4,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+USER = os.getenv('user')
+PASSWORD = os.getenv('password')
+HOST = os.getenv('host')
+PORT = os.getenv('port')
+DBNAME = os.getenv('dbname')
+
+SQLALCHEMY_DATABASE_URI = f'postgresql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require'
+
 class Config:
-    SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SESSION_TYPE = 'sqlalchemy'
     SESSION_SQLALCHEMY_TABLE = 'sessions'

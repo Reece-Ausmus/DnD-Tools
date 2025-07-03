@@ -59,7 +59,7 @@ def populate_races():
 
 if __name__ == '__main__':
     with app.app_context():
-        # db.create_all()
+        db.create_all()
         populate_class_types()
         populate_races()
 
