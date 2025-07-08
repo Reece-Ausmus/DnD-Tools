@@ -264,6 +264,69 @@ export const isPointOnLine = (
   return Math.sqrt(distSq) < threshold;
 };
 
+export const isPointOnCircle = (
+  point: Point,
+  circle: Circle,
+  threshold: number
+): boolean => {
+  // check if point on edge of circle
+  const dx = point.x - circle.center.x;
+  const dy = point.y - circle.center.y;
+  const distanceToCenter = Math.sqrt(dx * dx + dy * dy);
+
+  // check if point within threshold of radius
+  if (Math.abs(distanceToCenter - circle.radius) > threshold) {
+    return false;
+  }
+
+  // angle check
+  const pointAngle = Math.atan2(dy, dx);
+
+  const normalizedPointAngle = pointAngle;
+  const normalizedStartAngle = circle.startAngle;
+  let normalizedEndAngle = circle.endAngle;
+
+  // Special case: a full circle circle (start and end are the same)
+  // After normalization, if start and end are very close, treat as full circle
+  // unless it's a zero-length circle, which the logic handles anyway.
+  if (Math.abs(normalizedStartAngle - normalizedEndAngle) < 1e-9) {
+    normalizedEndAngle += 2 * Math.PI;
+  }
+
+  if (false) {
+    // For a counter-clockwise circle, the angle must be between end and start.
+    // e.g., from 270 degrees (end) to 90 degrees (start).
+    if (normalizedEndAngle <= normalizedStartAngle) {
+      // Normal case (e.g., from 90 to 270 degrees)
+      return (
+        normalizedPointAngle >= normalizedEndAngle &&
+        normalizedPointAngle <= normalizedStartAngle
+      );
+    } else {
+      // Wrap-around case (e.g., from 270 to 90 degrees)
+      return (
+        normalizedPointAngle >= normalizedEndAngle ||
+        normalizedPointAngle <= normalizedStartAngle
+      );
+    }
+  } else {
+    // For a clockwise circle, the angle must be between start and end.
+    if (normalizedStartAngle <= normalizedEndAngle) {
+      // Normal case (e.g., from 90 to 270 degrees)
+      return (
+        normalizedPointAngle >= normalizedStartAngle &&
+        normalizedPointAngle <= normalizedEndAngle
+      );
+    } else {
+      // Wrap-around case (e.g., from 270 to 90 degrees)
+      return (
+        normalizedPointAngle >= normalizedStartAngle ||
+        normalizedPointAngle <= normalizedEndAngle
+      );
+    }
+  }
+};
+
 //
 // returns true if two points have the same x and y values
 //

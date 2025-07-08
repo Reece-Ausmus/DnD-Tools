@@ -29,6 +29,7 @@ import {
   draw_circle_highlight_stage_2,
   calculateAngle,
   draw_circles,
+  isPointOnCircle,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -81,7 +82,8 @@ type HistoryEntry =
       type: "MOVE_MARKER";
       payload: { oldPos: Point; newPos: Point; marker: Marker };
     }
-  | { type: "ADD_CIRCLE"; payload: { circle: Circle } };
+  | { type: "ADD_CIRCLE"; payload: { circle: Circle } }
+  | { type: "DELETE_CIRCLE"; payload: { circle: Circle } };
 
 const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
   // 2. DESTRUCTURE PROPS INSIDE THE COMPONENT
@@ -427,9 +429,8 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         const [deletedLine] = lines.current.splice(lineIndex, 1);
         addHistoryEntry({
           type: "DELETE_LINE",
-          payload: { line: deletedLine }, // V&@H payload might change with refactor
+          payload: { line: deletedLine },
         });
-        // V&@H check uses line index logic
         if (
           selectedObject.current?.type === "line" &&
           selectedObject.current.index >= lineIndex
@@ -439,6 +440,27 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         }
         draw();
         socket.emit("remove_line", { map_id: mapId, line_id: deletedLine.id });
+      }
+
+      const circleIndex = circles.current.findIndex((circle) =>
+        isPointOnCircle({ x: worldX, y: worldY }, circle, eraseThreshold)
+      );
+
+      if (circleIndex !== -1) {
+        const [deletedCircle] = circles.current.splice(circleIndex, 1);
+        addHistoryEntry({
+          type: "DELETE_CIRCLE",
+          payload: { circle: deletedCircle },
+        });
+        if (
+          selectedObject.current?.type === "circle" &&
+          selectedObject.current.index >= circleIndex
+        ) {
+          // Deselect or update index if needed. Deselecting is simplest.
+          selectedObject.current = null;
+        }
+        draw();
+        // ADD DELETE LINE SOCKET EVENT
       }
     };
 
@@ -975,6 +997,9 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         }
         case "ADD_CIRCLE":
           circles.current.pop();
+          break;
+        case "DELETE_CIRCLE":
+          circles.current.push(lastAction.payload.circle);
           break;
       }
       selectedObject.current = null; // Deselect after undoing
