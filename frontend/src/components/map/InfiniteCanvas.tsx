@@ -80,7 +80,8 @@ type HistoryEntry =
   | {
       type: "MOVE_MARKER";
       payload: { oldPos: Point; newPos: Point; marker: Marker };
-    };
+    }
+  | { type: "ADD_CIRCLE"; payload: { circle: Circle } };
 
 const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
   // 2. DESTRUCTURE PROPS INSIDE THE COMPONENT
@@ -820,7 +821,10 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
 
           // add to circle array
           circles.current.push(newCircle);
-          // ADD HISTORY EVENT
+          addHistoryEntry({
+            type: "ADD_CIRCLE",
+            payload: { circle: newCircle },
+          });
           // ADD SOCKET EVENT
 
           lineDrawingStart.current = null;
@@ -969,6 +973,9 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
             markerToUpdate.pos = oldPos;
           }
         }
+        case "ADD_CIRCLE":
+          circles.current.pop();
+          break;
       }
       selectedObject.current = null; // Deselect after undoing
       draw();
