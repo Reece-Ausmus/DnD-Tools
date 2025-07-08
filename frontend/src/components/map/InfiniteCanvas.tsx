@@ -899,6 +899,19 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
               break;
             }
           }
+          for (let i = circles.current.length - 1; i >= 0; i--) {
+            if (
+              isPointOnCircle(
+                { x: mouseWorldX, y: mouseWorldY },
+                circles.current[i],
+                clickThreshold
+              )
+            ) {
+              selectedObject.current = { type: "circle", index: i };
+              didSelectSomething = true;
+              break;
+            }
+          }
         }
         if (isDM && !didSelectSomething && isMarkerPlaceMode) {
           if (selectedObject.current) {
@@ -1039,6 +1052,17 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
               map_id: mapId,
               line_id: deletedLine.id,
             });
+          }
+        } else if (selectedObject.current.type === "circle") {
+          const { index } = selectedObject.current;
+          const deletedCircle = circles.current[index];
+          if (deletedCircle) {
+            circles.current.splice(index, 1);
+            addHistoryEntry({
+              type: "DELETE_CIRCLE",
+              payload: { circle: deletedCircle },
+            });
+            // ADD DELETE CIRCLE SOCKET EVENT
           }
         }
         selectedObject.current = null;
