@@ -6,7 +6,14 @@ import React, {
 } from "react";
 import { useSnackbar } from "@/context/SnackbarContext";
 
-import { Point, Marker, Line, Selection, Character } from "@/util/types";
+import {
+  Point,
+  Marker,
+  Line,
+  Circle,
+  Selection,
+  Character,
+} from "@/util/types";
 import {
   preview_line,
   isPointOnLine,
@@ -128,6 +135,9 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
   const currentCircleArcStart = useRef<number | null>(null);
   const currentCircleArcEnd = useRef<number | null>(null);
   const { showSnackbar } = useSnackbar();
+
+  // MOVE UP SO THEY CAN BE SAVED
+  const circles = useRef<Circle[]>([]);
 
   const selectedObject = useRef<Selection | null>(null);
 

@@ -65,6 +65,13 @@ export interface Line {
   end: Point;
   color: string;
 }
+export interface Circle {
+  id: string;
+  cetner: Point;
+  radius: number;
+  startAngle: number;
+  endAngle: number;
+}
 // Selection Type
 interface SelectionBase {
   readonly type: "marker" | "line";
