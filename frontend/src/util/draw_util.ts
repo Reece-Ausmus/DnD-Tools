@@ -293,37 +293,18 @@ export const isPointOnCircle = (
     normalizedEndAngle += 2 * Math.PI;
   }
 
-  if (false) {
-    // For a counter-clockwise circle, the angle must be between end and start.
-    // e.g., from 270 degrees (end) to 90 degrees (start).
-    if (normalizedEndAngle <= normalizedStartAngle) {
-      // Normal case (e.g., from 90 to 270 degrees)
-      return (
-        normalizedPointAngle >= normalizedEndAngle &&
-        normalizedPointAngle <= normalizedStartAngle
-      );
-    } else {
-      // Wrap-around case (e.g., from 270 to 90 degrees)
-      return (
-        normalizedPointAngle >= normalizedEndAngle ||
-        normalizedPointAngle <= normalizedStartAngle
-      );
-    }
+  if (normalizedStartAngle <= normalizedEndAngle) {
+    // Normal case (90 to 270 degrees)
+    return (
+      normalizedPointAngle >= normalizedStartAngle &&
+      normalizedPointAngle <= normalizedEndAngle
+    );
   } else {
-    // For a clockwise circle, the angle must be between start and end.
-    if (normalizedStartAngle <= normalizedEndAngle) {
-      // Normal case (e.g., from 90 to 270 degrees)
-      return (
-        normalizedPointAngle >= normalizedStartAngle &&
-        normalizedPointAngle <= normalizedEndAngle
-      );
-    } else {
-      // Wrap-around case (e.g., from 270 to 90 degrees)
-      return (
-        normalizedPointAngle >= normalizedStartAngle ||
-        normalizedPointAngle <= normalizedEndAngle
-      );
-    }
+    // Wrap-around case (270 to 90 degrees)
+    return (
+      normalizedPointAngle >= normalizedStartAngle ||
+      normalizedPointAngle <= normalizedEndAngle
+    );
   }
 };
 
