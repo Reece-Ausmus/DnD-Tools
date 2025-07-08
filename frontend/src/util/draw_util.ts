@@ -262,3 +262,12 @@ export const distBetweenPoints = (p1: Point, p2: Point) => {
 
   return Math.sqrt(a ** 2 + b ** 2);
 };
+
+export const calculateAngle = (center: Point, p1: Point) => {
+  const dx = p1.x - center.x;
+  const dy = p1.y - center.y;
+
+  const angleInRadians = Math.atan2(dy, dx);
+
+  return angleInRadians;
+};

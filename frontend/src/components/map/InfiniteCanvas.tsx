@@ -20,6 +20,7 @@ import {
   draw_circle_highlight_full,
   distBetweenPoints,
   draw_circle_highlight_stage_2,
+  calculateAngle,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -123,6 +124,9 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
   const hasMovedMarker = useRef<boolean>(false);
   const isErasing = useRef<boolean>(false);
   const currentCircleRadius = useRef<number | null>(null);
+  const currentCircleCenter = useRef<Point | null>(null);
+  const currentCircleArcStart = useRef<number | null>(null);
+  const currentCircleArcEnd = useRef<number | null>(null);
   const { showSnackbar } = useSnackbar();
 
   const selectedObject = useRef<Selection | null>(null);
@@ -759,15 +763,34 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
           !samePoint(lineDrawingStart.current, highlightedVertex.current) &&
           !currentCircleRadius.current
         ) {
+          // radius, center, and first angle setting click
+          currentCircleCenter.current = lineDrawingStart.current;
+          console.log("center: ", currentCircleCenter.current);
           currentCircleRadius.current = distBetweenPoints(
             lineDrawingStart.current,
             highlightedVertex.current
           );
           console.log("radius: ", currentCircleRadius.current);
-          //lineDrawingStart.current = null;
-        } else if (currentCircleRadius.current) {
+          currentCircleArcStart.current = calculateAngle(
+            lineDrawingStart.current,
+            highlightedVertex.current
+          );
+          console.log("angle 1: ", currentCircleArcStart.current);
+        } else if (currentCircleRadius.current && currentCircleCenter.current) {
+          // second angle setting click
+          lineDrawingStart.current = highlightedVertex.current;
+
+          currentCircleArcEnd.current = calculateAngle(
+            currentCircleCenter.current,
+            highlightedVertex.current
+          );
+          console.log("angle 2: ", currentCircleArcEnd.current);
+
           lineDrawingStart.current = null;
           currentCircleRadius.current = null;
+          currentCircleCenter.current = null;
+          currentCircleArcStart.current = null;
+          currentCircleArcEnd.current = null;
         } else {
           lineDrawingStart.current = highlightedVertex.current;
           currentCircleRadius.current = null;
