@@ -1,4 +1,11 @@
-import { Point, Marker, Line, Selection, Character } from "@/util/types";
+import {
+  Point,
+  Marker,
+  Line,
+  Circle,
+  Selection,
+  Character,
+} from "@/util/types";
 import { Mark } from "@mui/material/Slider/useSlider.types";
 import { colord } from "colord";
 
@@ -190,6 +197,43 @@ export const draw_marker_selection_highlight = (
     ctx.lineWidth = 2 / scale;
     ctx.stroke();
   }
+};
+
+// ========================
+// Circle drawing functions
+// ========================
+
+//
+// draw circles, highlight circle if selected
+//
+export const draw_circles = (
+  ctx: CanvasRenderingContext2D,
+  circle: Circle,
+  index: number,
+  selectedObject: Selection | null,
+  scale: number
+) => {
+  if (
+    selectedObject &&
+    selectedObject.type === "circle" &&
+    selectedObject.index === index
+  ) {
+    ctx.strokeStyle = "cyan";
+    ctx.lineWidth = 5 / scale;
+  } else {
+    ctx.strokeStyle = circle.color;
+    ctx.lineWidth = 3 / scale;
+  }
+  ctx.beginPath();
+  ctx.arc(
+    circle.center.x,
+    circle.center.y,
+    circle.radius,
+    circle.startAngle,
+    circle.endAngle,
+    false
+  );
+  ctx.stroke();
 };
 
 // ============================

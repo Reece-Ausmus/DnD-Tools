@@ -28,6 +28,7 @@ import {
   distBetweenPoints,
   draw_circle_highlight_stage_2,
   calculateAngle,
+  draw_circles,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -221,6 +222,13 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         selectedObject.current,
         scale
       );
+    });
+    ctx.restore();
+
+    // Draw circles with selection highlight
+    ctx.save();
+    circles.current.forEach((circle, index) => {
+      draw_circles(ctx, circle, index, selectedObject.current, scale);
     });
     ctx.restore();
 
@@ -786,7 +794,11 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
             highlightedVertex.current
           );
           console.log("angle 1: ", currentCircleArcStart.current);
-        } else if (currentCircleRadius.current && currentCircleCenter.current) {
+        } else if (
+          currentCircleRadius.current &&
+          currentCircleCenter.current &&
+          currentCircleArcStart.current
+        ) {
           // second angle setting click
           lineDrawingStart.current = highlightedVertex.current;
 
@@ -795,6 +807,21 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
             highlightedVertex.current
           );
           console.log("angle 2: ", currentCircleArcEnd.current);
+
+          // make new circle
+          const newCircle: Circle = {
+            id: crypto.randomUUID(),
+            center: currentCircleCenter.current,
+            radius: currentCircleRadius.current,
+            startAngle: currentCircleArcStart.current,
+            endAngle: currentCircleArcEnd.current,
+            color: wallColor,
+          };
+
+          // add to circle array
+          circles.current.push(newCircle);
+          // ADD HISTORY EVENT
+          // ADD SOCKET EVENT
 
           lineDrawingStart.current = null;
           currentCircleRadius.current = null;

@@ -67,14 +67,15 @@ export interface Line {
 }
 export interface Circle {
   id: string;
-  cetner: Point;
+  center: Point;
   radius: number;
   startAngle: number;
   endAngle: number;
+  color: string;
 }
 // Selection Type
 interface SelectionBase {
-  readonly type: "marker" | "line";
+  readonly type: "marker" | "line" | "circle";
 }
 export interface MarkerSelection extends SelectionBase {
   readonly type: "marker";
@@ -84,4 +85,8 @@ export interface LineSelection extends SelectionBase {
   readonly type: "line";
   index: number;
 }
-export type Selection = MarkerSelection | LineSelection;
+export interface CircleSelection extends SelectionBase {
+  readonly type: "circle";
+  index: number;
+}
+export type Selection = MarkerSelection | LineSelection | CircleSelection;
