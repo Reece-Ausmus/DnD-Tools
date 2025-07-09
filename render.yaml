@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: dndtoolbox-backend
+    env: docker
+    repo: https://github.com/Reece-Ausmus/DnD-Tools
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    envVars:
+      - key: FLASK_ENV
+        value: production
+    autoDeploy: true
+
+  - type: web
+    name: dndtoolbox-frontend
+    env: docker
+    repo: https://github.com/Reece-Ausmus/DnD-Tools
+    dockerfilePath: ./frontend/Dockerfile
+    plan: free
+    autoDeploy: true
