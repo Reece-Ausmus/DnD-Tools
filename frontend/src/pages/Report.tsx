@@ -208,7 +208,7 @@ const Report: React.FC = () => {
     let response = null;
     try {
       if (reportType === "campaign") {
-        response = await fetch("api/report/generate_campaign", {
+        response = await fetch("/api/report/generate_campaign", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -230,7 +230,7 @@ const Report: React.FC = () => {
           }),
         });
       } else {
-        response = await fetch("api/report/generate_character", {
+        response = await fetch("/api/report/generate_character", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

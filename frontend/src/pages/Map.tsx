@@ -35,7 +35,8 @@ const Map: React.FC = () => {
   // Initialize socket connection
   const socket: Socket = useMemo(
     () =>
-      io("http://localhost:5001", {
+      io({
+        path: "/socket.io",
         withCredentials: true,
         transports: ["websocket"],
       }),

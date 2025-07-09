@@ -39,7 +39,7 @@ const Welcome: React.FC<WelcomeProps> = ({ userData }) => {
 
   const fetchCharacters = async () => {
     try {
-      const response = await fetch("api/character/get_characters", {
+      const response = await fetch("/api/character/get_characters", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -65,7 +65,7 @@ const Welcome: React.FC<WelcomeProps> = ({ userData }) => {
 
   const accept = async () => {
     try {
-      const response = await fetch("api/campaign/accept_invite", {
+      const response = await fetch("/api/campaign/accept_invite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,7 +101,7 @@ const Welcome: React.FC<WelcomeProps> = ({ userData }) => {
 
   const handleDecline = async (campaign_id: string) => {
     try {
-      const response = await fetch("api/campaign/decline_invite", {
+      const response = await fetch("/api/campaign/decline_invite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

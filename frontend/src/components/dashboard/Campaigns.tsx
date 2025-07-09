@@ -92,7 +92,7 @@ const Campaigns: React.FC = () => {
     };
 
   const sendInvite = async () => {
-    const response = await fetch("api/campaign/invite", {
+    const response = await fetch("/api/campaign/invite", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -13,7 +13,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch("api/user/me", {
+        const response = await fetch("/api/user/me", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
