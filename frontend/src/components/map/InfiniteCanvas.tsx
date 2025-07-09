@@ -46,7 +46,8 @@ import type { Socket } from "socket.io-client";
 
 // The API handle we will expose to the parent
 export interface ChildHandle {
-  centerGridOnPoint: (id: string) => void;
+  centerGridOnMarker: (id: string) => void;
+  centerGridOnPoint: (point: Point) => void;
 }
 
 type MapPageProps = {
@@ -314,7 +315,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
     ctx.restore();
   };
 
-  const centerGridOnPoint = (id: string, duration: number = 500) => {
+  const centerGridOnMarker = (id: string, duration: number = 500) => {
     // find marker position from character id
     const marker = markerFromCharId(id, markers.current);
     if (!marker) return;
@@ -355,7 +356,43 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
     requestAnimationFrame(animate);
   };
 
+  const centerGridOnPoint = (point: Point, duration: number = 500) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const { width, height } = canvas;
+    const { scale } = state.current;
+
+    const targetX = width / 2 - point.x * scale;
+    const targetY = height / 2 - point.y * scale;
+
+    const startX = state.current.offsetX;
+    const startY = state.current.offsetY;
+
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsedTime = currentTime - startTime;
+      const progress = Math.min(elapsedTime / duration, 1); // Clamp at 1
+
+      // Ease-out function for a smoother stop
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+      state.current.offsetX = startX + (targetX - startX) * easedProgress;
+      state.current.offsetY = startY + (targetY - startY) * easedProgress;
+
+      draw();
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  };
+
   useImperativeHandle(ref, () => ({
+    centerGridOnMarker: centerGridOnMarker,
     centerGridOnPoint: centerGridOnPoint,
   }));
 

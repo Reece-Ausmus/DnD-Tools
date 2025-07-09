@@ -15,7 +15,7 @@ import {
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InfiniteCanvas, { ChildHandle } from "@/components/map/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
-import { Campaign, Character, Marker, Line } from "@/util/types";
+import { Campaign, Character, Marker, Line, Point } from "@/util/types";
 import { io, Socket } from "socket.io-client";
 import { Map as MapType } from "@/util/types";
 import MapExplorer from "@/components/map/MapExplorer";
@@ -107,7 +107,7 @@ const Map: React.FC = () => {
   };
 
   const handleDoubleClick = (character: Character) => {
-    infiniteCanvasRef.current?.centerGridOnPoint(character.id);
+    infiniteCanvasRef.current?.centerGridOnMarker(character.id);
   };
 
   const clickTimeoutRef = useRef<number | null>(null);
@@ -134,6 +134,14 @@ const Map: React.FC = () => {
 
   const handleAxesOnPress = () => {
     isAxesOn ? setAxesOn(false) : setAxesOn(true);
+  };
+
+  const handleCenterGridPress = () => {
+    const centerPoint: Point = {
+      x: 0,
+      y: 0,
+    };
+    infiniteCanvasRef.current?.centerGridOnPoint(centerPoint);
   };
 
   const [mapConnected, setMapConnected] = useState(false);
@@ -677,6 +685,19 @@ const Map: React.FC = () => {
                 }}
               >
                 {/* Slider container buttons */}
+                <Button
+                  variant="contained"
+                  color="inherit"
+                  onClick={() => handleCenterGridPress()}
+                  sx={{
+                    minWidth: 0,
+                    width: "35px",
+                    height: "35px",
+                    borderRadius: "15px",
+                  }}
+                >
+                  center
+                </Button>
                 <Button
                   variant="contained"
                   color={isGridOn === true ? "primary" : "inherit"}
