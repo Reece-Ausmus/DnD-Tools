@@ -4,7 +4,6 @@ services:
     env: docker
     repo: https://github.com/Reece-Ausmus/DnD-Tools
     dockerfilePath: ./backend/Dockerfile
-    buildContext: ./backend
     plan: free
     envVars:
       - key: FLASK_ENV
@@ -16,6 +15,5 @@ services:
     env: docker
     repo: https://github.com/Reece-Ausmus/DnD-Tools
     dockerfilePath: ./frontend/Dockerfile
-    buildContext: ./frontend
     plan: free
     autoDeploy: true
