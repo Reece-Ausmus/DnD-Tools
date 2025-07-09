@@ -13,12 +13,8 @@ MAP SECTION:
 - ability to import/export map
 - select size of marker to place based on character size or enemy size selection
 
-- make circles
-  - triple click technology (first click: center, second click: radius and start of arc, third click: define end of arc)
-- make player tokens placeable
-
-  - button greys out when token on board
-  - dialog when clicking greyed out player token - (recall token: deletes it from board, go to token: center canvas view on token)
+- button greys out when token on board
+- dialog when clicking greyed out player token - (recall token: deletes it from board, go to token: center canvas view on token)
 
 - BIG MARKER
 
