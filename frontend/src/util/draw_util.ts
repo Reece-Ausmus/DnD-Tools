@@ -6,7 +6,6 @@ import {
   Selection,
   Character,
 } from "@/util/types";
-import { Mark } from "@mui/material/Slider/useSlider.types";
 import { colord } from "colord";
 
 // ======================

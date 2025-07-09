@@ -10,7 +10,7 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   React.useEffect(() => {
     const checkLoggedIn = async () => {
       try {
-        const res = await fetch("api/user/auth/status", {
+        const res = await fetch("/api/user/auth/status", {
           credentials: "include",
         });
 
@@ -34,7 +34,7 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   }, []);
 
   const setUser = async (email: string, password: string) => {
-    const res = await fetch("api/user/login", {
+    const res = await fetch("/api/user/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -49,7 +49,7 @@ const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   };
 
   const logout = async () => {
-    await fetch("api/user/logout", { method: "POST", credentials: "include" });
+    await fetch("/api/user/logout", { method: "POST", credentials: "include" });
     setUsername("");
     setIsLoggedIn(false);
   };

@@ -10,7 +10,7 @@ const CharacterProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchCharacters = async () => {
     try {
-      const response = await fetch("api/character/get_characters", {
+      const response = await fetch("/api/character/get_characters", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

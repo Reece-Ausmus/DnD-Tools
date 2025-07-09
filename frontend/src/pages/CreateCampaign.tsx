@@ -47,7 +47,7 @@ const CreateCampaign: React.FC = () => {
         ? meetingTime.format("HH:mm")
         : null;
 
-      const response = await fetch("api/campaign/create_campaign", {
+      const response = await fetch("/api/campaign/create_campaign", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

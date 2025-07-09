@@ -41,7 +41,7 @@ const CreateCharacter: React.FC = () => {
     setSuccessMessage("");
 
     try {
-      const response = await fetch("api/character/create_character", {
+      const response = await fetch("/api/character/create_character", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

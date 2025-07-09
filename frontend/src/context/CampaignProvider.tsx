@@ -11,7 +11,7 @@ const CampaignProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchCampaigns = async () => {
     try {
       setCampaignsLoading(true);
-      const response = await fetch("api/campaign/get_campaigns", {
+      const response = await fetch("/api/campaign/get_campaigns", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -32,7 +32,7 @@ const CampaignProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchInvites = async () => {
     try {
       setInvitesLoading(true);
-      const response = await fetch("api/campaign/get_invites", {
+      const response = await fetch("/api/campaign/get_invites", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
