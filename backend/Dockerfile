@@ -15,12 +15,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
+# Copy source code and install Python dependencies
+COPY backend/ .
 RUN pip install --upgrade pip && pip install -r requirements.txt
-
-# Copy the backend source code
-COPY . /app
 
 # Expose the backend port
 EXPOSE 5000
