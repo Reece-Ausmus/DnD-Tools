@@ -20,7 +20,7 @@ COPY . .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Expose the backend port
-EXPOSE 5000
+EXPOSE 5001
 
 # Start the app with Gunicorn using the Eventlet worker
-CMD ["gunicorn", "-k", "eventlet", "-w", "1", "run:app", "--bind", "0.0.0.0:5000"]
+CMD ["gunicorn", "-k", "eventlet", "-w", "1", "run:app", "--bind", "0.0.0.0:5001"]

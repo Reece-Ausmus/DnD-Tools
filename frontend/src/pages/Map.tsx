@@ -581,6 +581,7 @@ const Map: React.FC = () => {
                       border: "1px solid gray",
                       margin: "20px",
                       padding: "10px",
+                      borderRadius: "10px",
                     }}
                   >
                     {currentCampaign?.characters.map((character) => (

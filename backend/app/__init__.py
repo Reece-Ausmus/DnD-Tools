@@ -13,7 +13,10 @@ def create_app():
     app.config.from_object(Config)
 
     init_extensions(app, db)
-    socketio.init_app(app)
+    socketio.init_app(app, cors_allowed_origins=[
+      "https://dndtoolbox.com",    # Your production frontend
+      "http://localhost:5173"      # Your local development frontend
+    ])
     migrate.init_app(app, db)
 
     from flask_session import Session
