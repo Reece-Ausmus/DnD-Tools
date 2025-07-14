@@ -973,6 +973,9 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
                 };
                 if (playerTokenSelected) {
                   newMarker.characterId = playerTokenSelected.id;
+                  if (playerTokenSelected.marker_color) {
+                    newMarker.color = playerTokenSelected.marker_color;
+                  }
                 }
                 markers.current.push(newMarker);
                 addHistoryEntry({

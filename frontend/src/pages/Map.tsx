@@ -615,7 +615,9 @@ const Map: React.FC = () => {
                             height: "35px",
                             borderRadius: "35px",
                             cursor: "pointer",
-                            backgroundColor: "blueviolet",
+                            backgroundColor: character.marker_color
+                              ? character.marker_color
+                              : "blueviolet",
                             "&:hover": {
                               border:
                                 playerTokenSelected &&
