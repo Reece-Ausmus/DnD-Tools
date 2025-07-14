@@ -63,6 +63,6 @@ if __name__ == '__main__':
         populate_class_types()
         populate_races()
 
-    # app.run(debug=True, port=os.getenv('PORT') or 5001)
+    # app.run(debug=True, port=os.getenv('PORT') or 5000)
     # sockio.run() essentially wraps app.run() to enable socket support
-    socketio.run(app, debug=True, host="0.0.0.0", port=5001)
+    socketio.run(app, debug=True, host="0.0.0.0", port=5000)

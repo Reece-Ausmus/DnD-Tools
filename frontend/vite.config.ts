@@ -26,13 +26,13 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: "http://backend:5001",
+        target: "http://backend:5000",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
 
       "/socket.io": {
-        target: "http://backend:5001",
+        target: "http://backend:5000",
         ws: true,
         changeOrigin: true,
       },

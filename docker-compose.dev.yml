@@ -16,7 +16,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: docker.dev
+      dockerfile: Dockerfile.dev
     ports:
       # We still need to access the Vite server from our browser
       - "5173:5173"
