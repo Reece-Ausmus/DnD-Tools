@@ -593,6 +593,8 @@ const Map: React.FC = () => {
                           flexDirection: "column",
                           alignItems: "center",
                           margin: "5px",
+                          position: "relative",
+                          marginBottom: "15px",
                         }}
                       >
                         <Tooltip title={character.name} arrow>
@@ -600,9 +602,9 @@ const Map: React.FC = () => {
                             noWrap
                             sx={{
                               overflow: "hidden",
-                              textOverflow: "ellipsis",
+                              textOverflow: "elipsis",
                               cursor: "default",
-                              paddingRight: "10px",
+                              paddingRight: "40px",
                             }}
                           >
                             {character.name}:
@@ -615,6 +617,8 @@ const Map: React.FC = () => {
                             height: "35px",
                             borderRadius: "35px",
                             cursor: "pointer",
+                            position: "absolute",
+                            right: 0,
                             backgroundColor: character.marker_color
                               ? character.marker_color
                               : "blueviolet",
