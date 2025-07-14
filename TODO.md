@@ -21,3 +21,6 @@ MAP SECTION:
 # BUGS TO FIX:
 
 - ctrl z event doesnt emit change to socket
+
+- idea for how to solve map initialization when joining room as player:
+  - have separate useEffect() that only has `socket` in the dependency array not campaigns
