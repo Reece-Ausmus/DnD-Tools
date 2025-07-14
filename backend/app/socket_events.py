@@ -147,7 +147,7 @@ def handle_join_map_room(data):
     print(f'\033[94mUser {user.username} joined map room {map_id} (campaign id: {campaign_id})\033[0m')
 
     # If the joining user is the map owner (DM), send the saved map state directly to them
-    if isDM:
+    if isDM or map.is_open:
         emit('initialize_map_state', {
             'map_id': str(map_id),
             'markers': map.markers or [],

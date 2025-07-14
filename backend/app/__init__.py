@@ -6,7 +6,7 @@ from flask_socketio import SocketIO
 
 db = SQLAlchemy()
 migrate = Migrate()
-socketio = SocketIO(cors_allowed_origins="http://localhost", manage_session=False, async_mode='eventlet')
+socketio = SocketIO(cors_allowed_origins="https://dndtoolbox.com", manage_session=False, async_mode='eventlet')
 
 def create_app():
     app = Flask(__name__)
@@ -20,7 +20,7 @@ def create_app():
     Session(app)
 
     from flask_cors import CORS
-    CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
+    CORS(app, resources={r"/*": {"origins": "https://dndtoolbox.com"}}, supports_credentials=True)
 
     from .routes import blueprints
     for blueprint in blueprints:
