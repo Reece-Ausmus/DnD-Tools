@@ -302,7 +302,7 @@ def get_campaigns():
             "class_id": character.class_id,
             "classType": character.class_type.name,
             "level": character.level,
-            "username": username
+            "marker_color": character.marker_color
         })
 
     
@@ -383,7 +383,8 @@ def get_campaign(campaign_id):
                     "race": character.race.name,
                     "class_id": str(character.class_id),
                     "classType": character.class_type.name,
-                    "level": character.level
+                    "level": character.level,
+                    "marker_color": character.marker_color
                 } for character in characters
             ]
         }
