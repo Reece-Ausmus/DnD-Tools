@@ -9,13 +9,8 @@
 MAP SECTION:
 
 - dance time spinning sphere
-- player can change their marker appearance
 - ability to import/export map
 - select size of marker to place based on character size or enemy size selection
-
-- button greys out when token on board
-- dialog when clicking greyed out player token - (recall token: deletes it from board, go to token: center canvas view on token)
-
 - BIG MARKER
 
 # BUGS TO FIX:
