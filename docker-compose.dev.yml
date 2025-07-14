@@ -1,0 +1,40 @@
+services:
+  # --- The Backend Service ---
+  backend:
+    # Tells Compose to build the image from the 'backend' directory
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      # Map host port 5000 to container port 5000
+      - "5000:5000"
+    volumes:
+      # Mount the local backend source code for live-reloading
+      - ./backend:/app
+      # Persist node_modules in a volume to avoid being overwritten
+      - /app/node_modules
+    # You can add environment variables for the backend here if needed
+    # environment:
+    #   - DATABASE_URL=mongodb://mongo:27017/mydatabase
+
+  # --- The Frontend Service ---
+  frontend:
+    # Tells Compose to build from the 'frontend' directory using docker.dev
+    build:
+      context: ./frontend
+      dockerfile: docker.dev
+    ports:
+      # Map host port 5173 to container port 5173
+      - "5173:5173"
+    volumes:
+      # Mount the local frontend source code for hot-reloading
+      - ./frontend:/app
+      # Persist node_modules
+      - /app/node_modules
+    environment:
+      # This is CRITICAL. It tells the frontend how to reach the backend.
+      # The service name 'backend' acts as a DNS hostname inside Docker's network.
+      - VITE_API_BASE_URL=http://backend:5000
+    # Make sure the frontend starts after the backend is likely ready
+    depends_on:
+      - backend
