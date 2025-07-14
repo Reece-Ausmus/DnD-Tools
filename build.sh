@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "Building Docker Compose services..."
-docker-compose build
+echo "Building in production mode..."
+docker-compose -f docker-compose.yml build

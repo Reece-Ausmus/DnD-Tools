@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "Running Docker Compose services..."
-docker-compose up -d
+echo "Running in production mode..."
+docker-compose -f docker-compose.yml up -d
