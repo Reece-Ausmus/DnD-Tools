@@ -949,6 +949,10 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
               break;
             }
           }
+          // deselect object if blank space clicked
+          if (!didSelectSomething) {
+            selectedObject.current = null;
+          }
         }
         if (isDM && !didSelectSomething && isMarkerPlaceMode) {
           if (selectedObject.current) {
