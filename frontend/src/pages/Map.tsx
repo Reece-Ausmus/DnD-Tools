@@ -301,7 +301,7 @@ const Map: React.FC = () => {
 
       socket.disconnect();
     };
-  }, [socket, campaigns]);
+  }, [socket]);
 
   // ActiveIndex holds the index of currently selecting drawing button
   const [activeDrawButtonIndex, setActiveDrawButtonIndex] = useState<
