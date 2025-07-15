@@ -1,6 +1,3 @@
-# docker-compose.yml (Updated for Proxy)
-version: "3.8"
-
 services:
   # The Backend Service
   backend:
