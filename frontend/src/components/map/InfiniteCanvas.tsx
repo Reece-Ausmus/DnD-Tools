@@ -944,21 +944,21 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         const gridX = Math.floor(mouseWorldX / gridSize) * gridSize;
         const gridY = Math.floor(mouseWorldY / gridSize) * gridSize;
         // Find marker at this position
-        const markerAt = markers.current.find(
-          (m) => m.pos.x === gridX && m.pos.y === gridY
-        );
-        if (isDM && markerAt) {
-          const markerCenterX = gridX + gridSize / 2;
-          const markerCenterY = gridY + gridSize / 2;
-          const markerRadius = gridSize / 4;
+        const markerAt = markers.current.find((marker) => {
+          const sizeScale = getMarkerScaleFromSize(marker);
+          const markerCenterX = marker.pos.x + (gridSize / 2) * sizeScale;
+          const markerCenterY = marker.pos.y + (gridSize / 2) * sizeScale;
+          const markerRadius =
+            (gridSize / 4) * sizeScale + (sizeScale - 1) * 10 + 1; // marker size adjustment
           const distance = Math.sqrt(
             (mouseWorldX - markerCenterX) ** 2 +
               (mouseWorldY - markerCenterY) ** 2
           );
-          if (distance <= markerRadius) {
-            selectedObject.current = { type: "marker", marker: markerAt };
-            didSelectSomething = true;
-          }
+          return distance <= markerRadius;
+        });
+        if (isDM && markerAt) {
+          selectedObject.current = { type: "marker", marker: markerAt };
+          didSelectSomething = true;
         }
 
         if (isDM && !didSelectSomething) {
