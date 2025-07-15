@@ -592,9 +592,8 @@ const Map: React.FC = () => {
                           gridTemplateColumns: "auto 1fr",
                           flexDirection: "column",
                           alignItems: "center",
-                          margin: "5px",
+                          margin: "15px 0px 15px 0px",
                           position: "relative",
-                          marginBottom: "15px",
                         }}
                       >
                         <Tooltip title={character.name} arrow>
