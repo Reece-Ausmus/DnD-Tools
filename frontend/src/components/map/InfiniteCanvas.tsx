@@ -308,6 +308,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         ctx,
         marker,
         selectedObject.current,
+        playerTokenSelected,
         scale,
         gridSize
       );

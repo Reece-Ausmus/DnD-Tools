@@ -179,6 +179,7 @@ export const draw_marker_selection_highlight = (
   ctx: CanvasRenderingContext2D,
   marker: Marker,
   selectedObject: Selection | null,
+  playerTokenSelected: Character | null,
   scale: number,
   gridSize: number
 ) => {
@@ -193,6 +194,15 @@ export const draw_marker_selection_highlight = (
     selectedObject.marker === marker
   ) {
     ctx.strokeStyle = "cyan";
+    ctx.lineWidth = 2 / scale;
+    ctx.stroke();
+  } else if (
+    marker.characterId &&
+    playerTokenSelected &&
+    playerTokenSelected.id === marker.characterId
+  ) {
+    // player token selected on map page, show highlight
+    ctx.strokeStyle = "orange";
     ctx.lineWidth = 2 / scale;
     ctx.stroke();
   }
