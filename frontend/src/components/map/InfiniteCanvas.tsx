@@ -431,9 +431,11 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
       if (!isDM) return;
       // Check for markers first
       const markerIndex = markers.current.findIndex((marker) => {
-        const markerCenterX = marker.pos.x + gridSize / 2;
-        const markerCenterY = marker.pos.y + gridSize / 2;
-        const markerRadius = gridSize / 4;
+        const sizeScale = getMarkerScaleFromSize(marker);
+        const markerCenterX = marker.pos.x + (gridSize / 2) * sizeScale;
+        const markerCenterY = marker.pos.y + (gridSize / 2) * sizeScale;
+        const markerRadius =
+          (gridSize / 4) * sizeScale + (sizeScale - 1) * 10 + 1; // marker size adjustment
         const distance = Math.sqrt(
           (worldX - markerCenterX) ** 2 + (worldY - markerCenterY) ** 2
         );
