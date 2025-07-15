@@ -2,18 +2,16 @@
 
 ## To Run
 
-### Backend
+### Development
 
 ```
-cd backend
-pip install -r requirements.txt
-python run.py
+./build.dev.sh
+./run.dev.sh
 ```
 
 ### Frontend
 
 ```
-cd frontend
-npm install
-npm run dev
+./build.sh
+./run.sh
 ```
