@@ -30,6 +30,7 @@ import {
   calculateAngle,
   draw_circles,
   isPointOnCircle,
+  getMarkerScaleFromSize,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -601,10 +602,21 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
               gridSize
           ) * gridSize;
         // Find marker at this position
-        const markerAt = markers.current.find(
-          (m) => m.pos.x === gridX && m.pos.y === gridY
-        );
-        // Updated logic: allow player to always drag canvas, but only interact with own marker
+        const markerAt = markers.current.find((m) => {
+          const sizeInGridUnits = getMarkerScaleFromSize(m) ?? 1;
+
+          const markerStartX = m.pos.x;
+          const markerStartY = m.pos.y;
+          const markerEndX = m.pos.x + sizeInGridUnits * gridSize;
+          const markerEndY = m.pos.y + sizeInGridUnits * gridSize;
+
+          // Check if the clicked grid position is within the marker area
+          const isWithinX = gridX >= markerStartX && gridX < markerEndX;
+          const isWithinY = gridY >= markerStartY && gridY < markerEndY;
+
+          return isWithinX && isWithinY;
+        });
+        // allow player to always drag canvas, but only interact with own marker
         if (markerAt) {
           if (!isDM && markerAt.characterId !== characterId) {
             // Not allowed to interact with this marker; drag canvas instead
@@ -682,14 +694,42 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         const y = (mouseY - s.offsetY) / s.scale;
         const gridX = Math.floor(x / gridSize) * gridSize;
         const gridY = Math.floor(y / gridSize) * gridSize;
+        const sizeScale = getMarkerScaleFromSize(draggingMarker.current);
+        // Calculate the boundaries of the NEW marker we want to place
+        const markerStartX = gridX;
+        const markerEndX = gridX + sizeScale * gridSize;
+        const markerStartY = gridY;
+        const markerEndY = gridY + sizeScale * gridSize;
         // Only move if new position and no marker there
         if (
           (draggingMarker.current.pos.x !== gridX ||
             draggingMarker.current.pos.y !== gridY) &&
-          !markers.current.some((m) => m.pos.x === gridX && m.pos.y === gridY)
+          !markers.current.some((m) => {
+            if (draggingMarker.current && draggingMarker.current.id === m.id) {
+              return false;
+            }
+            const mSize = getMarkerScaleFromSize(m) ?? 1;
+
+            // Calculate the boundaries of the marker from the array
+            const mStartX = m.pos.x;
+            const mEndX = m.pos.x + mSize * gridSize;
+            const mStartY = m.pos.y;
+            const mEndY = m.pos.y + mSize * gridSize;
+            // check if overlapping with moving marker
+            const isOverlapping =
+              markerStartX < mEndX &&
+              markerEndX > mStartX &&
+              markerStartY < mEndY &&
+              markerEndY > mStartY;
+
+            return isOverlapping;
+          })
         ) {
           // Update marker position
-          draggingMarker.current.pos = { x: gridX, y: gridY };
+          draggingMarker.current.pos = {
+            x: gridX,
+            y: gridY,
+          };
           hasMovedMarker.current = true;
           draw();
           socket.emit("move_marker", {
