@@ -885,17 +885,14 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         ) {
           // radius, center, and first angle setting click
           currentCircleCenter.current = lineDrawingStart.current;
-          console.log("center: ", currentCircleCenter.current);
           currentCircleRadius.current = distBetweenPoints(
             lineDrawingStart.current,
             highlightedVertex.current
           );
-          console.log("radius: ", currentCircleRadius.current);
           currentCircleArcStart.current = calculateAngle(
             lineDrawingStart.current,
             highlightedVertex.current
           );
-          console.log("angle 1: ", currentCircleArcStart.current);
         } else if (
           currentCircleRadius.current &&
           currentCircleCenter.current &&
@@ -908,7 +905,6 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
             currentCircleCenter.current,
             highlightedVertex.current
           );
-          console.log("angle 2: ", currentCircleArcEnd.current);
 
           // make new circle
           const newCircle: Circle = {
