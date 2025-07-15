@@ -329,9 +329,10 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
     const { scale } = state.current;
 
     const point = marker.pos;
+    const sizeScale = getMarkerScaleFromSize(marker);
 
-    const targetX = width / 2 - point.x * scale - (50 * scale) / 2;
-    const targetY = height / 2 - point.y * scale - (50 * scale) / 2;
+    const targetX = width / 2 - point.x * scale - (50 * scale * sizeScale) / 2;
+    const targetY = height / 2 - point.y * scale - (50 * scale * sizeScale) / 2;
 
     const startX = state.current.offsetX;
     const startY = state.current.offsetY;
