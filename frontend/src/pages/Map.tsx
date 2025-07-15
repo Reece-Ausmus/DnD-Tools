@@ -101,6 +101,7 @@ const Map: React.FC = () => {
     if (playerTokenSelected && character.id === playerTokenSelected.id) {
       setPlayerTokenSelected(null);
     } else {
+      console.log(character);
       setPlayerTokenSelected(character);
     }
 

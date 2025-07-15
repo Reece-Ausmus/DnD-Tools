@@ -302,7 +302,8 @@ def get_campaigns():
             "class_id": character.class_id,
             "classType": character.class_type.name,
             "level": character.level,
-            "marker_color": character.marker_color
+            "marker_color": character.marker_color,
+            "size": character.size,
         })
 
     

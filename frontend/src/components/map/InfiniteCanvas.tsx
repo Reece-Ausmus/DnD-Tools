@@ -974,12 +974,14 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
                 const newMarker: Marker = {
                   id: crypto.randomUUID(),
                   pos: { x: gridX, y: gridY },
+                  size: "medium",
                   color: markerColor,
                 };
                 if (playerTokenSelected) {
                   newMarker.characterId = playerTokenSelected.id;
                   if (playerTokenSelected.marker_color) {
                     newMarker.color = playerTokenSelected.marker_color;
+                    newMarker.size = playerTokenSelected.size;
                   }
                 }
                 markers.current.push(newMarker);

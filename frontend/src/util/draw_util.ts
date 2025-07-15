@@ -185,8 +185,15 @@ export const draw_marker_selection_highlight = (
 ) => {
   const { x, y } = marker.pos;
   ctx.fillStyle = marker.color;
+  const sizeScale = getMarkerScaleFromSize(marker);
   ctx.beginPath();
-  ctx.arc(x + gridSize / 2, y + gridSize / 2, gridSize / 4, 0, Math.PI * 2);
+  ctx.arc(
+    x + (gridSize / 2) * sizeScale,
+    y + (gridSize / 2) * sizeScale,
+    (gridSize / 4) * sizeScale,
+    0,
+    Math.PI * 2
+  );
   ctx.fill();
   if (
     selectedObject &&
@@ -367,4 +374,20 @@ export const calculateAngle = (center: Point, p1: Point) => {
   const angleInRadians = Math.atan2(dy, dx);
 
   return angleInRadians;
+};
+
+export const getMarkerScaleFromSize = (marker: Marker) => {
+  switch (marker.size) {
+    case "small":
+      return 1;
+    case "medium":
+      return 1;
+    case "large":
+      return 2;
+    case "huge":
+      return 3;
+    case "gargantuan":
+      return 4;
+  }
+  return 1;
 };

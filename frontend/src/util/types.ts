@@ -57,6 +57,7 @@ export interface Marker {
   id: string;
   pos: Point;
   color: string;
+  size: string;
   characterId?: string; // Optional, for character markers
 }
 export interface Line {
