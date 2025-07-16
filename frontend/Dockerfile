@@ -2,6 +2,8 @@ FROM node:20-slim
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y curl
+
 COPY . .
 
 ENV NODE_OPTIONS=--max_old_space_size=2048

@@ -7,7 +7,7 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://backend:5000/test"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/test"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,7 +22,7 @@ services:
     ports:
       - "80:80"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://frontend:5173/"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 10s
       timeout: 5s
       retries: 5

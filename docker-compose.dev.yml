@@ -7,7 +7,7 @@ services:
     volumes:
       - ./backend:/app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://backend:5000/test"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/test"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,7 +26,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://frontend:5173/"]
+      test: ["CMD", "curl", "-f", "http://localhost:5173/"]
       interval: 10s
       timeout: 5s
       retries: 5
