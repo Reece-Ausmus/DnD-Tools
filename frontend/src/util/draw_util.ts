@@ -190,7 +190,7 @@ export const draw_marker_selection_highlight = (
   ctx.arc(
     x + (gridSize / 2) * sizeScale,
     y + (gridSize / 2) * sizeScale,
-    (gridSize / 4) * sizeScale,
+    (gridSize / 4) * sizeScale + (sizeScale - 1) * 10 + 1, // marker size adjustment
     0,
     Math.PI * 2
   );

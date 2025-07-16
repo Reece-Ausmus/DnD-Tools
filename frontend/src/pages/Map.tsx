@@ -101,7 +101,6 @@ const Map: React.FC = () => {
     if (playerTokenSelected && character.id === playerTokenSelected.id) {
       setPlayerTokenSelected(null);
     } else {
-      console.log(character);
       setPlayerTokenSelected(character);
     }
 
@@ -301,7 +300,7 @@ const Map: React.FC = () => {
 
       socket.disconnect();
     };
-  }, [socket]);
+  }, [socket, campaigns]);
 
   // ActiveIndex holds the index of currently selecting drawing button
   const [activeDrawButtonIndex, setActiveDrawButtonIndex] = useState<
@@ -472,106 +471,119 @@ const Map: React.FC = () => {
                 }}
               >
                 {/* Map over the `drawButtonOptions` data array */}
-                {isDM &&
-                  drawButtonOptions.map((option, index) => (
-                    <Container
-                      key={option.id}
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: "auto 1fr",
-                        alignItems: "center",
-                      }}
-                    >
-                      {/* First Column: button */}
-                      <Button
-                        variant="contained"
-                        color={
-                          activeDrawButtonIndex === index
-                            ? "primary"
-                            : "inherit"
-                        }
-                        onClick={() => handleDrawButtonClick(index)}
+                {isDM && (
+                  <Box
+                    sx={{
+                      alignSelf: "stretch",
+                      border: "1px solid gray",
+                      margin: "20px",
+                      padding: "10px 15px 10px 15px",
+                      borderRadius: "10px",
+                    }}
+                  >
+                    {drawButtonOptions.map((option, index) => (
+                      <Box
+                        key={option.id}
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: "auto 1fr",
+                          alignItems: "center",
+                          padding: "5px 0px 5px 0px",
+                          position: "relative",
+                        }}
                       >
-                        {option.label}
-                      </Button>
-                      {/* Second Column: marker color circle */}
-                      {option.id === "place-marker" && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "left",
-                            marginLeft: "20px",
-                          }}
+                        {/* First Column: button */}
+                        <Button
+                          variant="contained"
+                          color={
+                            activeDrawButtonIndex === index
+                              ? "primary"
+                              : "inherit"
+                          }
+                          onClick={() => handleDrawButtonClick(index)}
                         >
+                          {option.label}
+                        </Button>
+                        {/* Second Column: marker color circle */}
+                        {option.id === "place-marker" && (
                           <Box
-                            component="label"
-                            htmlFor="marker-color-picker"
                             sx={{
-                              width: "35px",
-                              height: "35px",
-                              borderRadius: "35px",
-                              cursor: "pointer",
-                              backgroundColor: markerColor,
-                              "&:hover": {
-                                border: "2px solid gray",
-                              },
-                            }}
-                          />
-                          <input
-                            type="color"
-                            id="marker-color-picker"
-                            value={markerColor}
-                            onChange={(e) => setMarkerColor(e.target.value)}
-                            style={{
-                              visibility: "hidden",
-                              width: 0,
-                              height: 0,
+                              display: "flex",
+                              flexDirection: "column",
                               position: "absolute",
+                              right: 0,
                             }}
-                          />
-                        </Box>
-                      )}
-                      {/* Second Column: wall color circle */}
-                      {option.id === "draw-lines" && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "left",
-                            marginLeft: "20px",
-                          }}
-                        >
+                          >
+                            <Box
+                              component="label"
+                              htmlFor="marker-color-picker"
+                              sx={{
+                                width: "35px",
+                                height: "35px",
+                                borderRadius: "35px",
+                                cursor: "pointer",
+                                backgroundColor: markerColor,
+                                "&:hover": {
+                                  border: "2px solid gray",
+                                },
+                              }}
+                            />
+                            <input
+                              type="color"
+                              id="marker-color-picker"
+                              value={markerColor}
+                              onChange={(e) => setMarkerColor(e.target.value)}
+                              style={{
+                                visibility: "hidden",
+                                width: 0,
+                                height: 0,
+                                position: "absolute",
+                              }}
+                            />
+                          </Box>
+                        )}
+                        {/* Second Column: wall color circle */}
+                        {option.id === "draw-lines" && (
                           <Box
-                            component="label"
-                            htmlFor="wall-color-picker"
                             sx={{
-                              width: "35px",
-                              height: "35px",
-                              borderRadius: "8px",
-                              cursor: "pointer",
-                              backgroundColor: wallColor,
-                              "&:hover": {
-                                border: "2px solid gray",
-                              },
-                            }}
-                          />
-                          <input
-                            type="color"
-                            id="wall-color-picker"
-                            value={wallColor}
-                            onChange={(e) => setWallColor(e.target.value)}
-                            style={{
-                              visibility: "hidden",
-                              width: 0,
-                              height: 0,
+                              display: "flex",
+                              flexDirection: "column",
                               position: "absolute",
+                              right: 0,
                             }}
-                          />
-                        </Box>
-                      )}
-                    </Container>
-                  ))}
+                          >
+                            <Box
+                              component="label"
+                              htmlFor="wall-color-picker"
+                              sx={{
+                                width: "35px",
+                                height: "35px",
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                backgroundColor: wallColor,
+                                "&:hover": {
+                                  border: "2px solid gray",
+                                },
+                              }}
+                            />
+                            <input
+                              type="color"
+                              id="wall-color-picker"
+                              value={wallColor}
+                              onChange={(e) => setWallColor(e.target.value)}
+                              style={{
+                                visibility: "hidden",
+                                width: 0,
+                                height: 0,
+                                position: "absolute",
+                              }}
+                            />
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
                 {/* player token area */}
                 <div style={{ border: "1px solid gray", width: "100%" }}>
                   <Typography variant="h2" align="left" sx={{ margin: "20px" }}>
@@ -579,9 +591,10 @@ const Map: React.FC = () => {
                   </Typography>
                   <Box
                     sx={{
+                      alignSelf: "stretch",
                       border: "1px solid gray",
                       margin: "20px",
-                      padding: "10px",
+                      padding: "5px 15px 5px 15px",
                       borderRadius: "10px",
                     }}
                   >

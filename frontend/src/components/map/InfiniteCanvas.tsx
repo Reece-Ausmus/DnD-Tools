@@ -30,6 +30,7 @@ import {
   calculateAngle,
   draw_circles,
   isPointOnCircle,
+  getMarkerScaleFromSize,
 } from "@/util/draw_util";
 
 // --- TYPES ---
@@ -328,9 +329,10 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
     const { scale } = state.current;
 
     const point = marker.pos;
+    const sizeScale = getMarkerScaleFromSize(marker);
 
-    const targetX = width / 2 - point.x * scale - (50 * scale) / 2;
-    const targetY = height / 2 - point.y * scale - (50 * scale) / 2;
+    const targetX = width / 2 - point.x * scale - (50 * scale * sizeScale) / 2;
+    const targetY = height / 2 - point.y * scale - (50 * scale * sizeScale) / 2;
 
     const startX = state.current.offsetX;
     const startY = state.current.offsetY;
@@ -429,9 +431,11 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
       if (!isDM) return;
       // Check for markers first
       const markerIndex = markers.current.findIndex((marker) => {
-        const markerCenterX = marker.pos.x + gridSize / 2;
-        const markerCenterY = marker.pos.y + gridSize / 2;
-        const markerRadius = gridSize / 4;
+        const sizeScale = getMarkerScaleFromSize(marker);
+        const markerCenterX = marker.pos.x + (gridSize / 2) * sizeScale;
+        const markerCenterY = marker.pos.y + (gridSize / 2) * sizeScale;
+        const markerRadius =
+          (gridSize / 4) * sizeScale + (sizeScale - 1) * 10 + 1; // marker size adjustment
         const distance = Math.sqrt(
           (worldX - markerCenterX) ** 2 + (worldY - markerCenterY) ** 2
         );
@@ -601,10 +605,21 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
               gridSize
           ) * gridSize;
         // Find marker at this position
-        const markerAt = markers.current.find(
-          (m) => m.pos.x === gridX && m.pos.y === gridY
-        );
-        // Updated logic: allow player to always drag canvas, but only interact with own marker
+        const markerAt = markers.current.find((m) => {
+          const sizeInGridUnits = getMarkerScaleFromSize(m) ?? 1;
+
+          const markerStartX = m.pos.x;
+          const markerStartY = m.pos.y;
+          const markerEndX = m.pos.x + sizeInGridUnits * gridSize;
+          const markerEndY = m.pos.y + sizeInGridUnits * gridSize;
+
+          // Check if the clicked grid position is within the marker area
+          const isWithinX = gridX >= markerStartX && gridX < markerEndX;
+          const isWithinY = gridY >= markerStartY && gridY < markerEndY;
+
+          return isWithinX && isWithinY;
+        });
+        // allow player to always drag canvas, but only interact with own marker
         if (markerAt) {
           if (!isDM && markerAt.characterId !== characterId) {
             // Not allowed to interact with this marker; drag canvas instead
@@ -682,14 +697,42 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         const y = (mouseY - s.offsetY) / s.scale;
         const gridX = Math.floor(x / gridSize) * gridSize;
         const gridY = Math.floor(y / gridSize) * gridSize;
+        const sizeScale = getMarkerScaleFromSize(draggingMarker.current);
+        // Calculate the boundaries of the NEW marker we want to place
+        const markerStartX = gridX;
+        const markerEndX = gridX + sizeScale * gridSize;
+        const markerStartY = gridY;
+        const markerEndY = gridY + sizeScale * gridSize;
         // Only move if new position and no marker there
         if (
           (draggingMarker.current.pos.x !== gridX ||
             draggingMarker.current.pos.y !== gridY) &&
-          !markers.current.some((m) => m.pos.x === gridX && m.pos.y === gridY)
+          !markers.current.some((m) => {
+            if (draggingMarker.current && draggingMarker.current.id === m.id) {
+              return false;
+            }
+            const mSize = getMarkerScaleFromSize(m) ?? 1;
+
+            // Calculate the boundaries of the marker from the array
+            const mStartX = m.pos.x;
+            const mEndX = m.pos.x + mSize * gridSize;
+            const mStartY = m.pos.y;
+            const mEndY = m.pos.y + mSize * gridSize;
+            // check if overlapping with moving marker
+            const isOverlapping =
+              markerStartX < mEndX &&
+              markerEndX > mStartX &&
+              markerStartY < mEndY &&
+              markerEndY > mStartY;
+
+            return isOverlapping;
+          })
         ) {
           // Update marker position
-          draggingMarker.current.pos = { x: gridX, y: gridY };
+          draggingMarker.current.pos = {
+            x: gridX,
+            y: gridY,
+          };
           hasMovedMarker.current = true;
           draw();
           socket.emit("move_marker", {
@@ -844,17 +887,14 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         ) {
           // radius, center, and first angle setting click
           currentCircleCenter.current = lineDrawingStart.current;
-          console.log("center: ", currentCircleCenter.current);
           currentCircleRadius.current = distBetweenPoints(
             lineDrawingStart.current,
             highlightedVertex.current
           );
-          console.log("radius: ", currentCircleRadius.current);
           currentCircleArcStart.current = calculateAngle(
             lineDrawingStart.current,
             highlightedVertex.current
           );
-          console.log("angle 1: ", currentCircleArcStart.current);
         } else if (
           currentCircleRadius.current &&
           currentCircleCenter.current &&
@@ -867,7 +907,6 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
             currentCircleCenter.current,
             highlightedVertex.current
           );
-          console.log("angle 2: ", currentCircleArcEnd.current);
 
           // make new circle
           const newCircle: Circle = {
@@ -905,21 +944,21 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         const gridX = Math.floor(mouseWorldX / gridSize) * gridSize;
         const gridY = Math.floor(mouseWorldY / gridSize) * gridSize;
         // Find marker at this position
-        const markerAt = markers.current.find(
-          (m) => m.pos.x === gridX && m.pos.y === gridY
-        );
-        if (isDM && markerAt) {
-          const markerCenterX = gridX + gridSize / 2;
-          const markerCenterY = gridY + gridSize / 2;
-          const markerRadius = gridSize / 4;
+        const markerAt = markers.current.find((marker) => {
+          const sizeScale = getMarkerScaleFromSize(marker);
+          const markerCenterX = marker.pos.x + (gridSize / 2) * sizeScale;
+          const markerCenterY = marker.pos.y + (gridSize / 2) * sizeScale;
+          const markerRadius =
+            (gridSize / 4) * sizeScale + (sizeScale - 1) * 10 + 1; // marker size adjustment
           const distance = Math.sqrt(
             (mouseWorldX - markerCenterX) ** 2 +
               (mouseWorldY - markerCenterY) ** 2
           );
-          if (distance <= markerRadius) {
-            selectedObject.current = { type: "marker", marker: markerAt };
-            didSelectSomething = true;
-          }
+          return distance <= markerRadius;
+        });
+        if (isDM && markerAt) {
+          selectedObject.current = { type: "marker", marker: markerAt };
+          didSelectSomething = true;
         }
 
         if (isDM && !didSelectSomething) {
