@@ -15,7 +15,7 @@ import {
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import InfiniteCanvas, { ChildHandle } from "@/components/map/InfiniteCanvas";
 import useCampaigns from "@/hooks/useCampaigns";
-import { Campaign, Character, Marker, Line, Point } from "@/util/types";
+import { Campaign, Character, Marker, Line, Point, Circle } from "@/util/types";
 import { io, Socket } from "socket.io-client";
 import { Map as MapType } from "@/util/types";
 import MapExplorer from "@/components/map/MapExplorer";
@@ -44,11 +44,12 @@ const Map: React.FC = () => {
   );
 
   // Ref to get map state from InfiniteCanvas
-  const getMapStateRef = useRef<() => { markers: Marker[]; lines: Line[] }>();
+  const getMapStateRef =
+    useRef<() => { markers: Marker[]; lines: Line[]; circles: Circle[] }>();
   // Save map state to server
   const handleSaveMap = async () => {
     if (!mapId || !getMapStateRef.current) return;
-    const { markers, lines } = getMapStateRef.current();
+    const { markers, lines, circles } = getMapStateRef.current();
     try {
       const response = await fetch("/api/map/save_state", {
         method: "POST",
@@ -56,7 +57,7 @@ const Map: React.FC = () => {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ map_id: mapId, markers, lines }),
+        body: JSON.stringify({ map_id: mapId, markers, lines, circles }),
       });
       if (!response.ok) throw new Error("Failed to save map.");
       console.log("Map saved.");

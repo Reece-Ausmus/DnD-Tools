@@ -108,6 +108,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
     getMapStateRef.current = () => ({
       markers: markers.current,
       lines: lines.current,
+      circles: circles.current,
     });
     return () => {
       getMapStateRef.current = undefined;
@@ -1323,9 +1324,11 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
       map_id: string;
       markers: Marker[];
       lines: Line[];
+      circles: Circle[];
     }) => {
       markers.current = data.markers;
       lines.current = data.lines;
+      circles.current = data.circles;
       draw();
     };
 
@@ -1340,6 +1343,7 @@ const InfiniteCanvas = forwardRef<ChildHandle, MapPageProps>((props, ref) => {
         map_id: data.map_id,
         markers: markers.current,
         lines: lines.current,
+        circles: circles.current,
       });
     };
 

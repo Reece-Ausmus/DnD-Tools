@@ -68,6 +68,7 @@ def save_map_state():
     map_id = UUID(data.get('map_id'))
     markers = data.get('markers', [])
     lines = data.get('lines', [])
+    circles = data.get('circles', [])
 
     if not map_id:
         return jsonify({"error": "Map ID is required"}), 400
@@ -78,6 +79,7 @@ def save_map_state():
 
     map.markers = markers
     map.lines = lines
+    map.circles = circles
     db.session.commit()
 
     return jsonify({"message": "Map state saved successfully."}), 200
@@ -121,6 +123,7 @@ def set_visibility(map_id):
             "id": str(map.id),
             "name": map.name,
             "markers": map.markers,
-            "lines": map.lines
+            "lines": map.lines,
+            "circles": map.circles
         }
         }), 200

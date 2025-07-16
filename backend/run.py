@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 from app.models import ClassType, Race
 import app.socket_events  # Import socket events to register them with the app
-from backend.app.populate_db import populate_class_types, populate_races
+from app.populate_db import populate_class_types, populate_races
 
 load_dotenv()
 

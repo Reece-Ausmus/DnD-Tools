@@ -152,6 +152,7 @@ def handle_join_map_room(data):
             'map_id': str(map_id),
             'markers': map.markers or [],
             'lines': map.lines or [],
+            'circles': map.circles or []
         }, to=request.sid)
     elif map.owner_id in user_sockets:
         owner_sid = user_sockets[map.owner_id]
@@ -375,9 +376,15 @@ def handle_send_map_state(data):
     if not lines:
         emit('error', {'message': 'lines data is required'})
         return
+    
+    circles = data.get('circles', [])
+    if not circles:
+        emit('error', {'message': 'circles data is required'})
+        return
 
     emit('initialize_map_state', {
         'map_id': str(map_id),
         'markers': markers,
-        'lines': lines
+        'lines': lines,
+        'circles': circles
     }, to=target_sid)
