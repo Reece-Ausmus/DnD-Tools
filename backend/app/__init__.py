@@ -1,11 +1,9 @@
 from flask import Flask
 from .config import Config
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask_socketio import SocketIO
 
 db = SQLAlchemy()
-migrate = Migrate()
 socketio = SocketIO(cors_allowed_origins="https://dndtoolbox.com", manage_session=False, async_mode='eventlet')
 
 def create_app(test_config=None):
@@ -24,7 +22,6 @@ def create_app(test_config=None):
         "https://dndtoolbox.com",
         "http://localhost:5173"
     ])
-    migrate.init_app(app, db)
 
     from flask_session import Session
     Session(app)
