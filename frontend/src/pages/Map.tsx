@@ -347,7 +347,7 @@ const Map: React.FC = () => {
       : null;
 
   return (
-    <Container sx={{ border: "1px solid gray" }}>
+    <Box sx={{ border: "1px solid gray", padding: "15px" }}>
       <Typography variant="h1" align="center" sx={{ margin: "20px" }}>
         Map Page
       </Typography>
@@ -451,23 +451,19 @@ const Map: React.FC = () => {
               )}
             </ButtonGroup>
           </Box>
-          <Container sx={{ display: "grid", gridTemplateColumns: "auto 1fr" }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "auto 1fr" }}>
             {/* Left column */}
             <Box
               sx={{
-                border: "1px solid gray",
                 marginTop: "20px",
               }}
             >
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: "column", // Stacks buttons vertically
+                  flexDirection: "column", // stack buttons vertically
                   alignItems: "flex-start",
-                  gap: 2, // Adds space between buttons
-                  paddingTop: "20px",
                   width: "300px",
-                  border: "1px solid gray",
                 }}
               >
                 {/* Map over the `drawButtonOptions` data array */}
@@ -585,7 +581,7 @@ const Map: React.FC = () => {
                   </Box>
                 )}
                 {/* player token area */}
-                <div style={{ border: "1px solid gray", width: "100%" }}>
+                <div style={{ width: "100%" }}>
                   <Typography variant="h2" align="left" sx={{ margin: "20px" }}>
                     Player tokens:
                   </Typography>
@@ -663,7 +659,6 @@ const Map: React.FC = () => {
                 height: "800px",
                 border: "1px solid gray",
                 overflow: "hidden",
-                margin: "auto",
                 marginTop: "20px",
                 position: "relative",
               }}
@@ -784,10 +779,10 @@ const Map: React.FC = () => {
                 />
               </Button>
             </Box>
-          </Container>
+          </Box>
         </>
       )}
-    </Container>
+    </Box>
   );
 };
 
