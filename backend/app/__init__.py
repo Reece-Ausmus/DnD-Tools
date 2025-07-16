@@ -1,5 +1,5 @@
 from flask import Flask
-from .config import Config, init_extensions
+from .config import Config
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_socketio import SocketIO
@@ -8,14 +8,21 @@ db = SQLAlchemy()
 migrate = Migrate()
 socketio = SocketIO(cors_allowed_origins="https://dndtoolbox.com", manage_session=False, async_mode='eventlet')
 
-def create_app():
+def create_app(test_config=None):
     app = Flask(__name__)
-    app.config.from_object(Config)
 
-    init_extensions(app, db)
+    # Apply test configuration if passed in
+    if test_config:
+        app.config.update(test_config)
+    else:
+        app.config.from_object(Config)
+
+    db.init_app(app)
+    app.config["SESSION_SQLALCHEMY"] = db
+
     socketio.init_app(app, cors_allowed_origins=[
-      "https://dndtoolbox.com",    # Your production frontend
-      "http://localhost:5173"      # Your local development frontend
+        "https://dndtoolbox.com",
+        "http://localhost:5173"
     ])
     migrate.init_app(app, db)
 

@@ -25,7 +25,3 @@ class Config:
     SESSION_USE_SIGNER = True
     PERMANENT_SESSION_LIFETIME = 3600
     SECRET_KEY = secrets.token_hex(16)
-
-def init_extensions(app, db):
-    app.config['SESSION_SQLALCHEMY'] = db
-    db.init_app(app)

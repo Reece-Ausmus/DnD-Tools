@@ -4,10 +4,16 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    # The 'ports' section for the backend can be removed!
-    # The frontend will access it via the internal Docker network.
     volumes:
       - ./backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://backend:5000/test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - dev-network
 
   # The Frontend Service
   frontend:
@@ -15,11 +21,22 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     ports:
-      # We still need to access the Vite server from our browser
       - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    # The 'environment' section is no longer needed here.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://frontend:5173/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    networks:
+      - dev-network
+
+networks:
+  dev-network:
+    driver: bridge

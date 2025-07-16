@@ -6,6 +6,12 @@ services:
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://backend:5000/test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     networks:
       - app-network
 
@@ -15,8 +21,15 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://frontend:5173/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - app-network
 

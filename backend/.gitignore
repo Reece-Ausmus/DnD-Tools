@@ -3,3 +3,4 @@ venv/
 __pycache__/
 instance/
 migrations/
+.pytest_cache/
